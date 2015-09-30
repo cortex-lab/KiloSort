@@ -42,7 +42,7 @@ end
 fid = fopen(fullfile(root, fnameTW), 'r');
 
 msg = [];
-fprintf('Optimizing templates ...\n')
+fprintf('Time %3.0fs. Optimizing templates ...\n', toc)
 while (i<Nbatch * ops.nfullpasses)
     i = i+1;
     if i>Nbatch && ismember(rem(i,Nbatch), iUpdate)
@@ -98,13 +98,17 @@ while (i<Nbatch * ops.nfullpasses)
     if rem(i,100)==1
         nsort = sort(sum(nspikes,2), 'descend');
         fprintf(repmat('\b', 1, numel(msg)));
-        msg = sprintf('Time %2.2f, batch %d/%d, err %2.6f, NTOT %d, n100 %d, n200 %d, n300 %d, n400 %d \n', ...
+        msg = sprintf('Time %2.2f, batch %d/%d, err %2.6f, NTOT %d, n100 %d, n200 %d, n300 %d, n400 %d', ...
             toc, i,Nbatch * ops.nfullpasses, nanmean(delta), sum(nspikes(:)), nsort(100), nsort(200), ...
                 nsort(min(size(W,2), 300)), nsort(min(size(W,2), 400)));
         fprintf(msg);        
     end
     
 end
+fprintf(repmat('\b', 1, numel(msg)));
+msg = sprintf('Time %2.2f, batch %d/%d, err %2.6f, NTOT %d, n100 %d, n200 %d, n300 %d, n400 %d', ...
+    toc, i,Nbatch * ops.nfullpasses, nanmean(delta), sum(nspikes(:)), nsort(100), nsort(200), ...
+    nsort(min(size(W,2), 300)), nsort(min(size(W,2), 400)));
 fprintf('\n')
 
 % final templates computed here

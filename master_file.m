@@ -1,5 +1,5 @@
 
-ops.Nfilt       = 512; % number of filters to use 
+ops.Nfilt               = 512; % number of filters to use 
 ops.nfullpasses         = 6; % number of complete passes through data
 ops.ForceMaxRAMforDat   = Inf;
 
