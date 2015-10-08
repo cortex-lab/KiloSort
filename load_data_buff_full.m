@@ -1,7 +1,23 @@
+ops.ForceMaxRAMforDat   = 0;
+
+ops.whitening 	= 'full'; % type of whitening, only full for now
+ops.fs          = 25000; % sampling rate
+ops.fshigh      = 500;
+ops.NchanTOT    = 129; % total number of channels
+ops.Nchan       = 129; % number of active channels 
+ops.ntbuff      = 64;  % samples of symmetrical buffer for whitening and spike detection
+ops.scaleproc   = 200; % int16 scaling of whitened data
+ops.verbose     = 1;
+
+root    = 'C:\DATA\Spikes';
+fname   = '20141202_allGT.dat';
+fnameTW = '20141202_allGT_tw.dat';
+
+%%
 if ~exist('loaded', 'var')
     tic    
     load('C:\DATA\Spikes\forPRBimecToWhisper.mat');
-    chanMapConn = chanMap(connected>1e-6);
+    conn0 = chanMap(connected<0.1);
     
     batch_path = fullfile(root, 'batches');
     if ~exist(batch_path, 'dir')
@@ -19,7 +35,7 @@ if ~exist('loaded', 'var')
     nint16s      = memallocated/2;
     
     NT          = 128*1024+ ops.ntbuff;
-    NTbuff      = NT + 4*ops.ntbuff;
+    NTbuff      = NT + 2*ops.ntbuff;
     Nbatch      = ceil(d.bytes/2/NchanTOT /(NT-ops.ntbuff));
     Nbatch_buff = floor(nint16s/ops.Nchan /(NT-ops.ntbuff));
     Nbatch_buff = min(Nbatch_buff, Nbatch-1);
@@ -41,7 +57,7 @@ if ~exist('loaded', 'var')
     while 1
         ibatch = ibatch + 1;
             
-        offset = max(0, 2*NchanTOT*((NT - ops.ntbuff) * (ibatch-1) - 2*ops.ntbuff));
+        offset = max(0, 2*NchanTOT*((NT - ops.ntbuff) * (ibatch-1) - ops.ntbuff));
         if ibatch==1
             ioffset = 0;
         else
@@ -60,7 +76,7 @@ if ~exist('loaded', 'var')
         dataRAW = gpuArray(buff);
         dataRAW = dataRAW';
         dataRAW = single(dataRAW);
-        dataRAW = dataRAW(:, chanMapConn);
+%         dataRAW = dataRAW(:, chanMap);
 
         datr = filter(b1, a1, dataRAW);
         datr = flipud(datr);
@@ -79,10 +95,12 @@ if ~exist('loaded', 'var')
 
     fprintf('Time %3.0fs. Loading raw data and applying filters... \n', toc);
     
+    CC(conn0<1e-6, :) = 0;
+    CC(:, conn0<1e-6) = 0;
     [E, D] 	= svd(CC);
     eps 	= 1e-6;
     Wrot 	= E * diag(1./(diag(D) + eps).^.5) * E';
-    Wrot    = ops.scaleproc * Wrot;
+    Wrot = ops.scaleproc * Wrot;
     %%
     ibatch = 0;
     fid = fopen(fullfile(root, fname), 'r');
@@ -93,7 +111,7 @@ if ~exist('loaded', 'var')
         if ibatch<=Nbatch_buff
             datr = single(gpuArray(DATA(:,:,ibatch)));
         else
-            offset = max(0, 2*NchanTOT*((NT - ops.ntbuff) * (ibatch-1) - 2*ops.ntbuff));
+            offset = max(0, 2*NchanTOT*((NT - ops.ntbuff) * (ibatch-1) - ops.ntbuff));
             if ibatch==1
                 ioffset = 0; 
             else
@@ -113,14 +131,14 @@ if ~exist('loaded', 'var')
             dataRAW = gpuArray(buff);
             dataRAW = dataRAW';
             dataRAW = single(dataRAW);
-            dataRAW = dataRAW(:, chanMapConn);
+%             dataRAW = dataRAW(:, chanMap);
             
             datr = filter(b1, a1, dataRAW);
             datr = flipud(datr);
             datr = filter(b1, a1, datr);
             datr = flipud(datr);
             
-            datr = datr(ioffset + (1:NT),:);
+            datr = datr(ioffset + (1:(NT-ops.ntbuff)),:);
         end
         
         datr    = datr * Wrot;

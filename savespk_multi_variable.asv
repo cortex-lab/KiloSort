@@ -1,0 +1,19 @@
+%%
+spk = cell(Nfilt,1);
+for iNN = 1:Nfilt
+   spk{iNN} = int32(rez.st3pos(rez.st3pos(:,2)==iNN, 1)); 
+end
+
+%% create templates
+spktimes = [];
+for iNN = 1:Nfilt
+    eval(sprintf('spktimes.temp_%d = spk{iNN};', iNN-1));
+end
+%%
+save('my_spiktimes.mat','-struct','spktimes');
+%%
+for iNN = 1:Nfilt
+   templates(:,:,iNN) = squeeze(W(:,40,:)) * squeeze(U(:,40,:))'; 
+end
+%%
+save('my_templates', 'templates')

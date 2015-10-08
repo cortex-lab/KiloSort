@@ -28,7 +28,8 @@ if ~exist('initialized')
 
    
     nspikes = zeros(Nfilt+1, Nbatch);
-
+    lam = 0 * ops.lam * ones(Nfilt, 1, 'single');
+ 
     freqUpdate = 100;
     NbinsUpdate = ceil(Nbatch/freqUpdate);
     dWUtot= gpuArray.zeros(nt0, Nchan, Nfilt, NbinsUpdate, 'single');
@@ -109,6 +110,7 @@ fprintf(repmat('\b', 1, numel(msg)));
 msg = sprintf('Time %2.2f, batch %d/%d, err %2.6f, NTOT %d, n100 %d, n200 %d, n300 %d, n400 %d', ...
     toc, i,Nbatch * ops.nfullpasses, nanmean(delta), sum(nspikes(:)), nsort(100), nsort(200), ...
     nsort(min(size(W,2), 300)), nsort(min(size(W,2), 400)));
+fprintf(msg);        
 fprintf('\n')
 
 % final templates computed here
