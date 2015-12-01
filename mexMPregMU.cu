@@ -56,7 +56,7 @@ __global__ void	Conv1D(const double *Params, const float *data, const float *W, 
       __syncthreads();
   }
 }
-//////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 __global__ void  bestFilter(const double *Params, const float *data, 
         const float *mu, const float *lam, float *xbest, float *err, int *ftype){
 
@@ -76,7 +76,7 @@ __global__ void  bestFilter(const double *Params, const float *data,
       Cf = Ci * Ci / (lam[i] + 1.0f) - lam[i]*mu[i]*mu[i];
 		if (Cf > Cbest){
 			Cbest 	= Cf;
-			xb 	= Ci / (lam[i] + 1);
+			xb      = Ci  - mu[i] * lam[i]; /// (lam[i] + 1);
 			ibest 	= i;
 		}
     }

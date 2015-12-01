@@ -1,8 +1,11 @@
 if ~exist('loaded', 'var')
-    tic    
-    load('C:\DATA\Spikes\forPRBimecToWhisper.mat');
-    chanMapConn = chanMap(connected>1e-6);
-    
+    tic 
+    if ~isempty(ops.chanMap)
+        load(ops.chanMap);
+        chanMapConn = chanMap(connected>1e-6);
+    else
+        chanMapConn = 1:ops.Nchan;
+    end
     batch_path = fullfile(root, 'batches');
     if ~exist(batch_path, 'dir')
         mkdir(batch_path);
@@ -13,7 +16,7 @@ if ~exist('loaded', 'var')
     ops.sampsToRead = floor(d.bytes/NchanTOT/2);
     
     dmem         = memory;
-    memfree      = 4 * 2^30;
+    memfree      = 6 * 2^30;
     memallocated = min(ops.ForceMaxRAMforDat, dmem.MemAvailableAllArrays) - memfree;
     memallocated = max(0, memallocated);
     nint16s      = memallocated/2;
@@ -24,7 +27,7 @@ if ~exist('loaded', 'var')
     Nbatch_buff = floor(nint16s/ops.Nchan /(NT-ops.ntbuff));
     Nbatch_buff = min(Nbatch_buff, Nbatch-1);
     
-     % load data into patches, filter, compute covariance, write back to
+     %% load data into patches, filter, compute covariance, write back to
     % disk
     [b1, a1] = butter(3, ops.fshigh/ops.fs, 'high');
     
@@ -79,11 +82,17 @@ if ~exist('loaded', 'var')
 
     fprintf('Time %3.0fs. Loading raw data and applying filters... \n', toc);
     
+
+    switch ops.whitening
+        case 'diag'
+            CC = diag(diag(CC));
+    end
+    
     [E, D] 	= svd(CC);
     eps 	= 1e-6;
     Wrot 	= E * diag(1./(diag(D) + eps).^.5) * E';
     Wrot    = ops.scaleproc * Wrot;
-    %%
+    %
     ibatch = 0;
     fid = fopen(fullfile(root, fname), 'r');
     fidW = fopen(fullfile(root, fnameTW), 'w');

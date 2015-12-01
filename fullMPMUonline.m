@@ -2,8 +2,7 @@
 % Params(4) = 50000;
 % Params(5) = 25; 
 
-lam(:)    = ops.lam(3);
-Params(3) = ops.Th(3);
+Params(3) = ops.Thfinal;
 Params(4) = 50000;
 Params(5) = 50; 
 
@@ -23,8 +22,7 @@ for i = 1:Nrank
         WtW = WtW + wtw0;
     end
 end
-
-%%
+%
 
 mWtW = max(WtW, [], 3);
 murep = repmat(mu, 1, Nfilt);
@@ -52,6 +50,58 @@ fid = fopen(fullfile(root, fnameTW), 'r');
 msg = [];
 %
 for ibatch = 1:Nbatch
+    if ibatch>1 && ismember(rem(ibatch,Nbatch), iUpdate) %&& i>Nbatch
+        dWUtotCPU = gather(dWUtot);
+        ntot = sum(nspikes,2);
+
+        for k = 1:maxNfilt(i)
+            if ntot(k)>5
+                [Uall, Sv, Vall] = svd(gather(dWUtotCPU(:,:,k)), 0);
+                
+                Sv = diag(Sv);
+                sumSv2 = sum(Sv(1:Nrank).^2).^.5;
+                for irank = 1:Nrank
+                    [~, imax] = max(abs(Uall(:,irank)), [], 1);
+                    W(:,k,irank) = - Uall(:,irank) * sign(Uall(imax,irank)) * Sv(irank)/sumSv2;
+                    U(:,k,irank) = - Vall(:,irank) * sign(Uall(imax,irank));
+                end
+                mmax = max(abs(U(:,k,1)));
+                Usize = squeeze(abs(U(:,k,:)));
+                Usize = Usize .* repmat(Sv(1:Nrank)'/Sv(1), Nchan, 1);
+                ibad = max(Usize, [], 2) < .1 * mmax;
+                
+                U(ibad,k,:) = 0;
+            end
+        end
+        
+        for k = 1:maxNfilt(i)
+            if ntot(k)>5                
+                wu = squeeze(W(:,k,:)) * squeeze(U(:,k,:))';
+                mu(k) = sum(sum(wu.*squeeze(dWUtotCPU(:,:,k))))/npm(k);
+            end
+        end
+        if i<Nbatch * ops.nfullpasses
+            W = alignW(W);
+        end
+        for k = 1:maxNfilt(i)
+            if ntot(k)>5
+                wu = squeeze(W(:,k,:)) * squeeze(U(:,k,:))';
+                newnorm = sum(wu(:).^2).^.5;
+                W(:,k,:) = W(:,k,:)/newnorm;
+            end
+        end
+        
+        if i>Nbatch * ops.nfullpasses
+            break;
+        end
+                
+        rez.errall(ceil(i/freqUpdate))          = nanmean(delta);
+
+        plot(sort(mu))
+        axis tight
+        drawnow
+    end
+    
     if ibatch>Nbatch_buff
         offset = 2 * ops.Nchan*batchstart(ibatch-Nbatch_buff); % - ioffset;
         fseek(fid, offset, 'bof');
@@ -93,12 +143,12 @@ for ibatch = 1:Nbatch
         fprintf(msg);
     end
 end
-%%
+%
 nsort = sort(sum(nspikes2,2), 'descend');
 fprintf('Time %3.0fs. ExpVar %2.6f, n10 %d, n20 %d, n30 %d, n40 %d \n', toc, nanmean(delta), nsort(10), nsort(20), ...
     nsort(min(size(W,2), 30)), nsort(min(size(W,2), 40)));
 
-%
+%%
 fprintf('Time %3.0fs. Thresholding spikes at false positive rate...\n', toc) 
 st3pos = [];
 fprate = ops.fprate;
@@ -107,7 +157,7 @@ for idd = 1:1:Nfilt
     ix = find(st3(:,2)==idd);
     xs = st3(ix, 3);
     
-    Mu = 10*ops.Th(3);
+    Mu = 10*ops.Th;
     Nbins = 1000;
     
     bbins = linspace(0, Mu, Nbins);
@@ -154,13 +204,6 @@ fclose(fid);
 % gather_raw_mean_spikes;
 % rez.Wraw = Wraw;
 
-tClu{idset} = st3pos(:,2);
-tRes{idset} = st3pos(:,1) + 20; 
-
-% time_run(idset) = toc;
-
-save(sprintf('//zserver/Lab/Share/Marius/Spikes/Bench/rez%d.mat', idset), 'rez')
-% save('\\zserver\Lab\Share\Marius\Spikes\Bench\results.mat', 'tRes', 'tClu', 'time_run')
 
 %%
 % testCode;

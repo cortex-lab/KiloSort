@@ -102,7 +102,7 @@ __global__ void	cleanup_spikes(const double *Params, const float *xbest, const f
   tid0 		= bid * Nthreads;
 
 
-  if(tid0<NT-Nthreads-2*lockout-1){       
+  if(tid0<NT-Nthreads-lockout+1){       
     if (tid<2*lockout)
       sdata[tid] = err[tid0 + tid];
     sdata[tid+2*lockout] = err[2*lockout + tid0 + tid];
@@ -144,7 +144,9 @@ __global__ void	subSpikes(const double *Params, const int *st, const int *id, co
   }
 }
 //////////////////////////////////////////////////////////////////////////////////////////
-__global__ void	subtract_spikes(const double *Params,  const int *st, const int *id, const float *x, const int *counter, float *dataraw, const float *W, const float *U){
+__global__ void	subtract_spikes(const double *Params,  const int *st, 
+        const int *id, const float *x, const int *counter, float *dataraw, 
+        const float *W, const float *U){
   int tid, bid, Nblocks, i, NT, ind, Nchan;
   __shared__ float sh_W[nt0], sh_U[NchanMax];
   tid 		= threadIdx.x;
