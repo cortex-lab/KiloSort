@@ -68,7 +68,7 @@ for ibatch = 1:Nbatch
     
     data 	= dataRAW * U(:,:); 
     
-    [st, id, x] = mexMPmuLITE(Params,data,W,WtW, mu, lam); % * 20./mu);
+    [st, id, x] = mexMPmuLITE(Params,data,W,WtW, mu, lam * 20./mu);
     %     [drez, dW, dU, st, id, x] = mexMPsub(Params,dataRAW,W,U,data,WtW);
     if ibatch==1
         ioffset = 0;
@@ -159,7 +159,7 @@ tRes{idset} = st3pos(:,1) + 20;
 
 % time_run(idset) = toc;
 
-save(sprintf('//zserver/Lab/Share/Marius/Spikes/Bench/rez%d.mat', idset), 'rez')
+% save(sprintf('//zserver/Lab/Share/Marius/Spikes/Bench/rez%d.mat', idset), 'rez')
 % save('\\zserver\Lab\Share\Marius\Spikes\Bench\results.mat', 'tRes', 'tClu', 'time_run')
 
 %%

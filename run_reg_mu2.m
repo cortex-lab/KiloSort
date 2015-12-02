@@ -35,7 +35,7 @@ if ~exist('initialized')
             W(:,k,:) = W(:,k,:)/newnorm;
     end
     
-    mu = 15 * ones(Nfilt, 1, 'single');
+    mu = 7 * ones(Nfilt, 1, 'single');
     
     nspikes = zeros(Nfilt, Nbatch);
     lam =  ones(Nfilt, 1, 'single');
@@ -195,7 +195,7 @@ while (i<=Nbatch * ops.nfullpasses+1)
     end
     UtU = logical(utu);
     
-    [dWU, st, id, x,Cost] = mexMPregMU(Params,dataRAW,W(:,:),data,UtU,mu, lam); % * 20./mu);
+    [dWU, st, id, x,Cost] = mexMPregMU(Params,dataRAW,W(:,:),data,UtU,mu, lam * 20./mu);
     nsp = histc(id, 0:1:size(W,2));
     nsp = nsp(1:Nfilt);
     nspikes(:, ibatch) = nsp;

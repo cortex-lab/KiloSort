@@ -2,7 +2,11 @@ if ~exist('loaded', 'var')
     tic 
     if ~isempty(ops.chanMap)
         load(ops.chanMap);
-        chanMapConn = chanMap(connected>1e-6);
+        try
+            chanMapConn = chanMap(connected>1e-6);
+        catch
+            chanMapConn = 1+chanNums(connected>1e-6);
+        end
     else
         chanMapConn = 1:ops.Nchan;
     end
@@ -41,6 +45,7 @@ if ~exist('loaded', 'var')
         DATA = zeros(NT, ops.Nchan, Nbatch_buff, 'int16');
     end
     
+    
     while 1
         ibatch = ibatch + 1;
             
@@ -52,6 +57,8 @@ if ~exist('loaded', 'var')
         end
         fseek(fid, offset, 'bof');
         buff = fread(fid, [NchanTOT NTbuff], '*int16');
+        
+%         keyboard;
         
         if isempty(buff)
             break;
