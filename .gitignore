@@ -8,8 +8,7 @@ Desktop.ini
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
 
-# Compiled source #
-###################
+# Compiled source 
 *.mexa64
 *.mexw64
 
