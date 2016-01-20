@@ -130,6 +130,25 @@ __global__ void	cleanup_spikes(const double *Params, const float *xbest, const f
   }
 }
 //////////////////////////////////////////////////////////////////////////////////////////
+__global__ void	extractFEAT(const double *Params, const int *st, const int *id, 
+        const float *x, const int *counter, const float *dout, const float *WtW, 
+        float *d_feat){
+  int tid, bid,  NT, ind, tcurr, Nfilt;
+  tid 		= threadIdx.x;
+  bid 		= blockIdx.x;
+  NT 		= (int) Params[0];
+  Nfilt 	= (int) Params[1];
+
+  ind = bid;
+          
+  while(ind<=counter[0]){
+      tcurr = st[ind];
+      d_feat[tid + ind * Nfilt] = dout[tcurr + tid*NT] + 
+               x[ind] * WtW[nt0 + id[ind]*(2*nt0-1) + (2*nt0-1)*Nfilt*tid];
+      ind += Nfilt;
+  }
+ }
+//////////////////////////////////////////////////////////////////////////////////////////
 __global__ void	subSpikes(const double *Params, const int *st, const int *id, 
         const float *x, const int *counter, float *dout, const float *WtW){
   int tid, bid,  NT, ind, tcurr, Nfilt;
@@ -266,7 +285,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
   d_lam     	= (float const *)(mxGPUGetDataReadOnly(lam));
 
   /* allocate new GPU variables*/  
-  float *d_err,*d_C, *d_xbest, *d_x, *d_dout;
+  float *d_err,*d_C, *d_xbest, *d_x, *d_dout, *d_feat;
   int *d_st,  *d_ftype,  *d_id, *d_counter;
 
   cudaMalloc(&d_dout,   NT * blocksPerGrid* sizeof(float));
@@ -279,13 +298,15 @@ void mexFunction(int nlhs, mxArray *plhs[],
   cudaMalloc(&d_x,     maxFR * sizeof(float));
   cudaMalloc(&d_C,     maxFR * sizeof(float));
   cudaMalloc(&d_counter,   2*sizeof(int));
- 
+  cudaMalloc(&d_feat,     maxFR * blocksPerGrid * sizeof(float));
+  
   cudaMemset(d_dout,    0, NT * blocksPerGrid * sizeof(float));
   cudaMemset(d_counter, 0, 2*sizeof(int));
   cudaMemset(d_st,      0, maxFR *   sizeof(int));
   cudaMemset(d_id,      0, maxFR *   sizeof(int));
   cudaMemset(d_x,       0, maxFR *    sizeof(float));
   cudaMemset(d_C,       0, maxFR *    sizeof(float));
+  cudaMemset(d_feat,       0, maxFR * blocksPerGrid *   sizeof(float));
 
   int *counter;
   counter = (int*) calloc(1,sizeof(int));
@@ -304,16 +325,20 @@ void mexFunction(int nlhs, mxArray *plhs[],
       counter[0] = maxFR;
       cudaMemcpy(d_counter, counter, sizeof(int), cudaMemcpyHostToDevice);      
     }
-        
+    
+//    extractFEAT<<<blocksPerGrid, blocksPerGrid>>>(d_Params, d_st, d_id, d_x, d_counter, d_dout,    d_feat);
+    
     subSpikes<<<blocksPerGrid, 2*nt0-1>>>(d_Params, d_st, d_id, d_x, d_counter, d_dout,    d_WtW);
 
-    cudaMemcpy(d_counter+1, d_counter, sizeof(int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(d_counter+1, d_counter, sizeof(int), cudaMemcpyDeviceToDevice);
 
     if(counter[0]==maxFR)
       break;
   }
+  
+  extractFEAT<<<blocksPerGrid, blocksPerGrid>>>(d_Params, d_st, d_id, d_x, d_counter, d_dout, d_WtW,   d_feat);
 
-  float *x, *C;
+  float *x, *C, *feat;
   int *st, *id;
   int minSize;
   if (counter[0]<maxFR)  minSize = counter[0];
@@ -327,10 +352,16 @@ void mexFunction(int nlhs, mxArray *plhs[],
   x =  (float*) mxGetData(plhs[2]);
   plhs[3] = mxCreateNumericArray(2, dimst, mxSINGLE_CLASS, mxREAL);
   C =  (float*) mxGetData(plhs[3]);
+  
+  const mwSize dimsf[] 	= {blocksPerGrid, minSize}; 
+  plhs[4] = mxCreateNumericArray(2, dimsf, mxSINGLE_CLASS, mxREAL);
+  feat =  (float*) mxGetData(plhs[4]);
+  
   cudaMemcpy(st, d_st, minSize * sizeof(int),   cudaMemcpyDeviceToHost);
   cudaMemcpy(id, d_id, minSize * sizeof(int),   cudaMemcpyDeviceToHost);
   cudaMemcpy(x,   d_x, minSize * sizeof(float), cudaMemcpyDeviceToHost);
   cudaMemcpy(C,   d_C, minSize * sizeof(float), cudaMemcpyDeviceToHost);
+  cudaMemcpy(feat,   d_feat, minSize * blocksPerGrid*sizeof(float), cudaMemcpyDeviceToHost);
 
   cudaFree(d_ftype);
   cudaFree(d_err);
@@ -338,6 +369,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
   cudaFree(d_st);
   cudaFree(d_id);
   cudaFree(d_x);
+  cudaFree(d_feat);
   cudaFree(d_C);
   cudaFree(d_counter);
   cudaFree(d_Params);

@@ -53,17 +53,16 @@ if Nbatch_buff<Nbatch
 end
 msg = [];
 
-nNeigh    = ops.nNeigh;
-rez.cProj = zeros(5e6, nNeigh, 'single');
+clear cProj
+cProj = zeros(5e6, Nfilt, 'single');
 % cProj = sparse(5e6, Nfilt);
-%
+%%
 cr    = gather(squeeze( WtW(nt0, :,:))); 
 cr(isnan(cr)) = 0; 
-[crsort, iNgsort] = sort(cr, 1, 'descend');
-thr = crsort(nNeigh+1,:)+1e-20;
+crsort = sort(cr, 1, 'descend');
+thr = crsort(17,:);
 cr = single(cr>repmat(thr, Nfilt, 1));
-rez.iNeigh = iNgsort(1:nNeigh, :);
-%
+%% 
 irun = 0;
 %
 for ibatch = 1:Nbatch
@@ -103,8 +102,8 @@ for ibatch = 1:Nbatch
     mask = cr(:, id+1);
 %     proj = sparse(double(mask .* proj));
     proj = mask .* proj;
-    iPP = reshape(find(abs(proj)>0), nNeigh, []);
-    rez.cProj(irun + (1:numel(st)), :) = proj(iPP)';
+    PP = reshape(find(proj), 
+    cProj(irun + (1:numel(st)), :) = proj';
     irun = irun + numel(st);
 %     max(st(:))
     
@@ -118,7 +117,7 @@ for ibatch = 1:Nbatch
     end
 end
 % 
-
+cProj = sparse(cProj);
 % cProj(irun+1:end, :) = [];
 %%
 nsort = sort(sum(nspikes2,2), 'descend');

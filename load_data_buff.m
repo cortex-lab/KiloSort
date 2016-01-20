@@ -1,11 +1,15 @@
 if ~exist('loaded', 'var')
     tic 
     if ~isempty(ops.chanMap)
-        load(ops.chanMap);
-        try
-            chanMapConn = chanMap(connected>1e-6);
-        catch
-            chanMapConn = 1+chanNums(connected>1e-6);
+        if ischar(ops.chanMap)
+            load(ops.chanMap);
+            try
+                chanMapConn = chanMap(connected>1e-6);
+            catch
+                chanMapConn = 1+chanNums(connected>1e-6);
+            end
+        else
+            chanMapConn = ops.chanMap;
         end
     else
         chanMapConn = 1:ops.Nchan;

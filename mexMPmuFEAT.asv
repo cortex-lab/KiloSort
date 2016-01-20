@@ -130,6 +130,26 @@ __global__ void	cleanup_spikes(const double *Params, const float *xbest, const f
   }
 }
 //////////////////////////////////////////////////////////////////////////////////////////
+__global__ void	extractFEAT(const double *Params, const int *st, const int *id, 
+        const float *x, const int *counter, float *dout, const float *d_feat){
+  int tid, bid,  NT, ind, tcurr, Nfilt;
+  tid 		= threadIdx.x;
+  bid 		= blockIdx.x;
+  NT 		= (int) Params[0];
+  Nfilt 	= (int) Params[1];
+
+  ind=counter[1] + tid;
+          
+  while(ind=<counter[0]){
+      tcurr = st[ind];
+      d_feat[] = dout[tcurr + bid*NT];
+             
+     ind += Nthreads;
+  }
+           
+
+}
+//////////////////////////////////////////////////////////////////////////////////////////
 __global__ void	subSpikes(const double *Params, const int *st, const int *id, 
         const float *x, const int *counter, float *dout, const float *WtW){
   int tid, bid,  NT, ind, tcurr, Nfilt;
@@ -304,7 +324,9 @@ void mexFunction(int nlhs, mxArray *plhs[],
       counter[0] = maxFR;
       cudaMemcpy(d_counter, counter, sizeof(int), cudaMemcpyHostToDevice);      
     }
-        
+    
+    extractFEAT<<<blocksPerGrid, Nthreads>>>(d_Params, d_st, d_id, d_x, d_counter, d_dout,    d_feat);
+    
     subSpikes<<<blocksPerGrid, 2*nt0-1>>>(d_Params, d_st, d_id, d_x, d_counter, d_dout,    d_WtW);
 
     cudaMemcpy(d_counter+1, d_counter, sizeof(int), cudaMemcpyDeviceToHost);

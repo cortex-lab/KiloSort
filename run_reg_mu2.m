@@ -61,10 +61,16 @@ pmi = exp(-1./linspace(ops.momentum(1), ops.momentum(2), Nbatch*ops.nannealpasse
 
 % pmi  = linspace(ops.momentum(1), ops.momentum(2), Nbatch*ops.nannealpasses);
 Thi  = linspace(ops.Th(1),                 ops.Th(2), Nbatch*ops.nannealpasses);
-lami = exp(linspace(log(ops.lam(1)), log(ops.lam(2)), Nbatch*ops.nannealpasses));
+if ops.lam(1)==0
+    lami = linspace(ops.lam(1), ops.lam(2), Nbatch*ops.nannealpasses); 
+else
+    lami = exp(linspace(log(ops.lam(1)), log(ops.lam(2)), Nbatch*ops.nannealpasses));
+end
  
 gpuDevice(1);
-fid = fopen(fullfile(root, fnameTW), 'r');
+if Nbatch_buff<Nbatch
+    fid = fopen(fullfile(root, fnameTW), 'r');
+end
 
 st3 = [];
 
@@ -227,7 +233,9 @@ while (i<=Nbatch * ops.nfullpasses+1)
     end
     i = i+1;
 end
-fclose(fid);
+if Nbatch_buff<Nbatch
+    fclose(fid);
+end
 
 % final templates computed here
 
