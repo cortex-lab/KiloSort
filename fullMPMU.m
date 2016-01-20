@@ -119,6 +119,7 @@ for ibatch = 1:Nbatch
     coefs = coefs .* maskPC(:, id+1);
     iCoefs = reshape(find(abs(coefs)>0), 3*nNeighPC, []);
     rez.cProjPC(irun + (1:numel(st)), :) = gather(coefs(iCoefs)');
+    
     % template coefficients
     proj = maskTT(:, id+1) .* proj;
     iPP = reshape(find(abs(proj)>0), nNeigh, []);
