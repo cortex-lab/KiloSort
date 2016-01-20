@@ -53,18 +53,35 @@ if Nbatch_buff<Nbatch
 end
 msg = [];
 
+nNeighPC  = ops.nNeighPC;
 nNeigh    = ops.nNeigh;
+load PCspikes
+
 rez.cProj = zeros(5e6, nNeigh, 'single');
-% cProj = sparse(5e6, Nfilt);
-%
+rez.cProjPC = zeros(5e6, 3*nNeighPC, 'single');
+
+% sort pairwise templates
 cr    = gather(squeeze( WtW(nt0, :,:))); 
 cr(isnan(cr)) = 0; 
-[crsort, iNgsort] = sort(cr, 1, 'descend');
-thr = crsort(nNeigh+1,:)+1e-20;
-cr = single(cr>repmat(thr, Nfilt, 1));
+[~, iNgsort] = sort(cr, 1, 'descend');
+maskTT = zeros(Nfilt, 'single');
 rez.iNeigh = iNgsort(1:nNeigh, :);
+for i = 1:Nfilt
+   maskTT(rez.iNeigh(:,i),i) = 1; 
+end
+
+% sort best channels
+[~, iNch] = sort(abs(U(:,:,1)), 1, 'descend');
+maskPC = zeros(Nchan, Nfilt, 'single');
+rez.iNeighPC = iNch(1:nNeighPC, :);
+for i = 1:Nfilt
+   maskPC(rez.iNeighPC(:,i),i) = 1; 
+end
+maskPC = reshape(repmat(maskPC, 3, 1), Nchan*3, []);
 %
+
 irun = 0;
+i1nt0 = int32([1:nt0])';
 %
 for ibatch = 1:Nbatch
     %
@@ -79,34 +96,35 @@ for ibatch = 1:Nbatch
     dataRAW = single(dataRAW);
     dataRAW = dataRAW / ops.scaleproc;
     
-    % nonlinearity on raw data
-%     dataRAW = 8*(2./(1+exp(-dataRAW/4)) - 1);
-    
     data 	= dataRAW * U(:,:); 
-    %
+    
 %     [st, id, x] = mexMPmuLITE(Params,data,W,WtW, mu, lam * 20./mu);
     [st, id, x, errC, proj] = mexMPmuFEAT(Params,data,W,WtW, mu, lam * 20./mu);    
     
-    %     [drez, dW, dU, st, id, x] = mexMPsub(Params,dataRAW,W,U,data,WtW);
-    if ibatch==1
-        ioffset = 0;
-    else
-        ioffset = ops.ntbuff;
+    if ibatch==1; ioffset = 0;
+    else ioffset = ops.ntbuff;
     end
     st = st - ioffset;
-    %
+    
     nspikes2(1:size(W,2)+1, ibatch) = histc(id, 0:1:size(W,2));
-    STT = cat(2, double(st) +(NT-ops.ntbuff)*(ibatch-1), double(id)+1, double(x), ibatch*ones(numel(x),1));
+    STT = cat(2, 20 + double(st) +(NT-ops.ntbuff)*(ibatch-1), ...
+        double(id)+1, double(x), ibatch*ones(numel(x),1));
     st3 = cat(1, st3, STT);
     
-    
-    mask = cr(:, id+1);
-%     proj = sparse(double(mask .* proj));
-    proj = mask .* proj;
+     % PCA coefficients
+    inds = repmat(st', nt0, 1) + repmat(i1nt0, 1, numel(st));
+    datSp = reshape(dataRAW(1 + inds, :), [size(inds) Nchan]);
+    coefs = reshape(Wi' * reshape(datSp, nt0, []), size(Wi,2), numel(st), Nchan);
+    coefs = reshape(permute(coefs, [1 3 2]), [], numel(st));
+    coefs = coefs .* maskPC(:, id+1);
+    iCoefs = reshape(find(abs(coefs)>0), 3*nNeighPC, []);
+    rez.cProjPC(irun + (1:numel(st)), :) = gather(coefs(iCoefs)');
+    % template coefficients
+    proj = maskTT(:, id+1) .* proj;
     iPP = reshape(find(abs(proj)>0), nNeigh, []);
     rez.cProj(irun + (1:numel(st)), :) = proj(iPP)';
+    % increment number of spikes
     irun = irun + numel(st);
-%     max(st(:))
     
     if rem(ibatch,100)==1
         nsort = sort(sum(nspikes2,2), 'descend');
@@ -119,7 +137,9 @@ for ibatch = 1:Nbatch
 end
 % 
 
-% cProj(irun+1:end, :) = [];
+rez.cProj(irun+1:end, :) = [];
+rez.cProjPC(irun+1:end, :) = [];
+rez.cProjPC = reshape(rez.cProjPC, size(rez.cProjPC,1), 3, []);
 %%
 nsort = sort(sum(nspikes2,2), 'descend');
 fprintf('Time %3.0fs. ExpVar %2.6f, n10 %d, n20 %d, n30 %d, n40 %d \n', toc, nanmean(delta), nsort(10), nsort(20), ...

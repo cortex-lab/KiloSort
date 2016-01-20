@@ -53,17 +53,31 @@ if Nbatch_buff<Nbatch
 end
 msg = [];
 
-clear cProj
-cProj = zeros(5e6, Nfilt, 'single');
-% cProj = sparse(5e6, Nfilt);
-%%
+nNeigh    = ops.nNeigh;
+rez.cProj = zeros(5e6, nNeigh, 'single');
+
+% sort pairwise templates
 cr    = gather(squeeze( WtW(nt0, :,:))); 
 cr(isnan(cr)) = 0; 
-crsort = sort(cr, 1, 'descend');
-thr = crsort(17,:);
-cr = single(cr>repmat(thr, Nfilt, 1));
-%% 
+[~, iNgsort] = sort(cr, 1, 'descend');
+maskTT = zeros(Nfilt, 'single');
+rez.iNeigh = iNgsort(1:nNeigh, :);
+for i = 1:Nfilt
+   maskTT(rez.iNeigh(:,i),i) = 1; 
+end
+
+% sort best channels
+[~, iNch] = sort(abs(U(:,:,1)), 1, 'descend');
+maskPC = zeros(Nchan, Nfilt, 'single');
+rez.iNeighCh = iNch(1:nNeighPC, :);
+for i = 1:Nfilt
+   maskPC(rez.iNeighCh(:,i),i) = 1; 
+end
+maskPC = reshape(repmat(maskPC, 3, 1), Nchan*3, []);
+%%
+
 irun = 0;
+i1nt0 = int32([1:nt0])';
 %
 for ibatch = 1:Nbatch
     %
@@ -78,13 +92,22 @@ for ibatch = 1:Nbatch
     dataRAW = single(dataRAW);
     dataRAW = dataRAW / ops.scaleproc;
     
-    % nonlinearity on raw data
-%     dataRAW = 8*(2./(1+exp(-dataRAW/4)) - 1);
-    
     data 	= dataRAW * U(:,:); 
-    %
+    
 %     [st, id, x] = mexMPmuLITE(Params,data,W,WtW, mu, lam * 20./mu);
     [st, id, x, errC, proj] = mexMPmuFEAT(Params,data,W,WtW, mu, lam * 20./mu);    
+    
+    %% PCA coefficients
+    inds = repmat(st', nt0, 1) + repmat(i1nt0, 1, numel(st));
+    datSp = reshape(dataRAW(1 + inds, :), [size(inds) Nchan]);
+    coefs = reshape(Wi' * reshape(datSp, nt0, []), size(Wi,2), numel(st), Nchan);
+    coefs = reshape(permute(coefs, [1 3 2]), [], numel(st));
+    coefs = coefs .* maskPC(:, id+1);
+    iCoefs = reshape(find(abs(coefs)>0), 3*nNeighPC, []);
+    rez.cProj(irun + (1:numel(st)), :) = proj(iPP)';
+    %% then adds cross-terms between W and Wi to the result
+    
+    
     
     %     [drez, dW, dU, st, id, x] = mexMPsub(Params,dataRAW,W,U,data,WtW);
     if ibatch==1
@@ -98,12 +121,9 @@ for ibatch = 1:Nbatch
     STT = cat(2, double(st) +(NT-ops.ntbuff)*(ibatch-1), double(id)+1, double(x), ibatch*ones(numel(x),1));
     st3 = cat(1, st3, STT);
     
-    
-    mask = cr(:, id+1);
-%     proj = sparse(double(mask .* proj));
-    proj = mask .* proj;
-    PP = reshape(find(proj), 
-    cProj(irun + (1:numel(st)), :) = proj';
+    proj = maskTT(:, id+1) .* proj;
+    iPP = reshape(find(abs(proj)>0), nNeigh, []);
+    rez.cProj(irun + (1:numel(st)), :) = proj(iPP)';
     irun = irun + numel(st);
 %     max(st(:))
     
@@ -117,7 +137,7 @@ for ibatch = 1:Nbatch
     end
 end
 % 
-cProj = sparse(cProj);
+
 % cProj(irun+1:end, :) = [];
 %%
 nsort = sort(sum(nspikes2,2), 'descend');
