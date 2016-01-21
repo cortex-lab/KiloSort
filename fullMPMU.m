@@ -100,18 +100,8 @@ for ibatch = 1:Nbatch
     
 %     [st, id, x] = mexMPmuLITE(Params,data,W,WtW, mu, lam * 20./mu);
     [st, id, x, errC, proj] = mexMPmuFEAT(Params,data,W,WtW, mu, lam * 20./mu);    
-    
-    if ibatch==1; ioffset = 0;
-    else ioffset = ops.ntbuff;
-    end
-    st = st - ioffset;
-    
-    nspikes2(1:size(W,2)+1, ibatch) = histc(id, 0:1:size(W,2));
-    STT = cat(2, 20 + double(st) +(NT-ops.ntbuff)*(ibatch-1), ...
-        double(id)+1, double(x), ibatch*ones(numel(x),1));
-    st3 = cat(1, st3, STT);
-    
-     % PCA coefficients
+
+    % PCA coefficients
     inds = repmat(st', nt0, 1) + repmat(i1nt0, 1, numel(st));
     datSp = reshape(dataRAW(1 + inds, :), [size(inds) Nchan]);
     coefs = reshape(Wi' * reshape(datSp, nt0, []), size(Wi,2), numel(st), Nchan);
@@ -125,6 +115,17 @@ for ibatch = 1:Nbatch
     rez.cProj(irun + (1:numel(st)), :) = proj(iPP)';
     % increment number of spikes
     irun = irun + numel(st);
+    
+    if ibatch==1; ioffset = 0;
+    else ioffset = ops.ntbuff;
+    end
+    st = st - ioffset;
+    
+    nspikes2(1:size(W,2)+1, ibatch) = histc(id, 0:1:size(W,2));
+    STT = cat(2, 20 + double(st) +(NT-ops.ntbuff)*(ibatch-1), ...
+        double(id)+1, double(x), ibatch*ones(numel(x),1));
+    st3 = cat(1, st3, STT);
+    
     
     if rem(ibatch,100)==1
         nsort = sort(sum(nspikes2,2), 'descend');
