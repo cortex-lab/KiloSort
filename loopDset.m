@@ -28,7 +28,7 @@ ops.momentum      = [20 400]; %[100 500];
 ops.nNeighPC    = 12; % number of channnels to mask the PCs
 ops.nNeig       = 16; % number of neighboring templates to retain projections of
 %%
-ops.ForceMaxRAMforDat   = 0; %Inf;
+ops.ForceMaxRAMforDat   = Inf;
 
 fidname{1}  = '20141202_all_es';
 fidname{2}  = '20150924_1_e';
