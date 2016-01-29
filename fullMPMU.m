@@ -204,7 +204,7 @@ for i = 1:Nfilt
     rez.t2p(i,2) = itrough;   
 end
 
-rez.nbins = histc(rez.st3pos(:,2), .5:1:Nfilt+1);
+rez.nbins = histc(rez.st3(:,2), .5:1:Nfilt+1);
 
 [~, rez.ypos] = max(rez.U(:,:,1), [], 1);
 if Nbatch_buff<Nbatch
