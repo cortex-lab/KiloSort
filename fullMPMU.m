@@ -142,6 +142,16 @@ end
 rez.cProj(irun+1:end, :) = [];
 rez.cProjPC(irun+1:end, :) = [];
 rez.cProjPC = reshape(rez.cProjPC, size(rez.cProjPC,1), 3, []);
+
+for ik = 1:Nfilt
+    iSp = rez.st3(:,2)==ik;
+
+    OneToN = 1:nNeigh;
+    [~, isort] = sort(rez.iNeighPC(:,ik), 'ascend');
+    OneToN(isort) = OneToN; 
+    
+    rez.cProj(iSp, :) = rez.cProj(iSp, OneToN);
+end
 %%
 nsort = sort(sum(nspikes2,2), 'descend');
 fprintf('Time %3.0fs. ExpVar %2.6f, n10 %d, n20 %d, n30 %d, n40 %d \n', toc, nanmean(delta), nsort(10), nsort(20), ...
