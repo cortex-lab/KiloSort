@@ -148,7 +148,7 @@ for ik = 1:Nfilt
     iSp = rez.st3(:,2)==ik;
 
     OneToN = 1:nNeigh;
-    [~, isort] = sort(rez.iNeighPC(:,ik), 'ascend');
+    [~, isort] = sort(rez.iNeigh(:,ik), 'ascend');
     OneToN(isort) = OneToN; 
     
     rez.cProj(iSp, :) = rez.cProj(iSp, OneToN);
