@@ -100,7 +100,8 @@ for ibatch = 1:Nbatch
     
 %     [st, id, x] = mexMPmuLITE(Params,data,W,WtW, mu, lam * 20./mu);
     [st, id, x, errC, proj] = mexMPmuFEAT(Params,data,W,WtW, mu, lam * 20./mu);    
-    
+
+
     % PCA coefficients
     inds = repmat(st', nt0, 1) + repmat(i1nt0, 1, numel(st));
     datSp = reshape(dataRAW(1 + inds, :), [size(inds) Nchan]);
