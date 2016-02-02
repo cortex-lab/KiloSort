@@ -142,6 +142,12 @@ rez.cProj(irun+1:end, :) = [];
 rez.cProjPC(irun+1:end, :) = [];
 rez.cProjPC = reshape(rez.cProjPC, size(rez.cProjPC,1), 3, []);
 
+[~, isort] = sort(st3(:,1), 'ascend');
+st3 = st3(isort,:);
+rez.cProj = rez.cProj(isort, :);
+rez.cProjPC = rez.cProjPC(isort, :,:);
+
+
 rez.st3      = st3; 
 
 for ik = 1:Nfilt
@@ -182,9 +188,6 @@ for idd = 1:1:Nfilt
     
 %     st3pos = cat(1, st3pos, st3(ix(xs>Thx(idd)), :));
 end
-
-% [~, isort] = sort(st3pos(:,1), 'ascend');
-% st3pos = st3pos(isort,:);
 
 % rez.st3pos   = st3pos; 
 rez.ops      = ops;
