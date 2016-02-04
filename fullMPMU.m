@@ -40,9 +40,7 @@ clear wtw0 utu0 U0
 %
 clear nspikes2
 st3 = [];
-st3pos = [];
 rez.st3 = [];
-rez.st3pos = [];
 
 if ops.verbose
    fprintf('Time %3.0fs. Running the final template matching pass...\n', toc) 
@@ -143,6 +141,24 @@ end
 rez.cProj(irun+1:end, :) = [];
 rez.cProjPC(irun+1:end, :) = [];
 rez.cProjPC = reshape(rez.cProjPC, size(rez.cProjPC,1), 3, []);
+
+[~, isort] = sort(st3(:,1), 'ascend');
+st3 = st3(isort,:);
+rez.cProj = rez.cProj(isort, :);
+rez.cProjPC = rez.cProjPC(isort, :,:);
+
+
+rez.st3      = st3; 
+
+for ik = 1:Nfilt
+    iSp = rez.st3(:,2)==ik;
+
+    OneToN = 1:nNeigh;
+    [~, isort] = sort(rez.iNeigh(:,ik), 'ascend');
+    OneToN(isort) = OneToN; 
+    
+    rez.cProj(iSp, :) = rez.cProj(iSp, OneToN);
+end
 %%
 nsort = sort(sum(nspikes2,2), 'descend');
 fprintf('Time %3.0fs. ExpVar %2.6f, n10 %d, n20 %d, n30 %d, n40 %d \n', toc, nanmean(delta), nsort(10), nsort(20), ...
@@ -150,7 +166,7 @@ fprintf('Time %3.0fs. ExpVar %2.6f, n10 %d, n20 %d, n30 %d, n40 %d \n', toc, nan
 
 %
 fprintf('Time %3.0fs. Thresholding spikes at false positive rate...\n', toc) 
-st3pos = [];
+% st3pos = [];
 fprate = ops.fprate;
 Thx = zeros(Nfilt,1);
 for idd = 1:1:Nfilt
@@ -170,14 +186,10 @@ for idd = 1:1:Nfilt
     end
     Thx(idd) = Mu - bbins(ifirst);
     
-    st3pos = cat(1, st3pos, st3(ix(xs>Thx(idd)), :));
+%     st3pos = cat(1, st3pos, st3(ix(xs>Thx(idd)), :));
 end
 
-[~, isort] = sort(st3pos(:,1), 'ascend');
-st3pos = st3pos(isort,:);
-
-rez.st3      = st3; 
-rez.st3pos   = st3pos; 
+% rez.st3pos   = st3pos; 
 rez.ops      = ops;
 
 % WUnorms = sum(sum(dWUtotCPU.^2, 2), 1).^.5;
@@ -195,7 +207,7 @@ for i = 1:Nfilt
     rez.t2p(i,2) = itrough;   
 end
 
-rez.nbins = histc(rez.st3pos(:,2), .5:1:Nfilt+1);
+rez.nbins = histc(rez.st3(:,2), .5:1:Nfilt+1);
 
 [~, rez.ypos] = max(rez.U(:,:,1), [], 1);
 if Nbatch_buff<Nbatch
