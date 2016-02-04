@@ -9,9 +9,10 @@ function [spikeTimes, clusterIDs, amplitudes, templates, templateFeatures, ...
 % spikeTimes will be in samples, not seconds
 
 
-spikeTimes = uint64(rez.st3pos(:,1));
-clusterIDs = uint32(rez.st3pos(:,2));
-amplitudes = rez.st3pos(:,3);
+spikeTimes = uint64(rez.st3(:,1));
+[spikeTimes, ii] = sort(spikeTimes);
+clusterIDs = uint32(rez.st3(ii,2));
+amplitudes = rez.st3(ii,3);
 
 
 load(rez.ops.chanMap);
@@ -31,15 +32,15 @@ for iNN = 1:rez.ops.Nfilt
    templates(:,:,iNN) = squeeze(U(:,iNN,:)) * squeeze(W(:,iNN,:))'; 
 end
 
-templateFeatures = rez.cProj;
+templateFeatures = rez.cProj(ii,:);
 templateFeatureInds = uint32(rez.iNeigh);
-pcFeatures = rez.cProjPC;
+pcFeatures = rez.cProjPC(ii,:,:);
 pcFeatureInds = uint32(rez.iNeighPC);
 
 if ~isempty(savePath)
     
     writeNPY(spikeTimes, fullfile(savePath, 'spikeTimes.npy'));
-    writeNPY(clusterIDs, fullfile(savePath, 'clusterIDs.npy'));
+    writeNPY(clusterIDs-1, fullfile(savePath, 'clusterIDs.npy')); % -1 for zero indexing
     writeNPY(amplitudes, fullfile(savePath, 'amplitudes.npy'));
     writeNPY(templates, fullfile(savePath, 'templates.npy'));
     
@@ -54,9 +55,9 @@ if ~isempty(savePath)
     writeNPY(ycoords(conn), fullfile(savePath, 'ycoords.npy'));
     
     writeNPY(templateFeatures, fullfile(savePath, 'templateFeatures.npy'));
-    writeNPY(templateFeatureInds, fullfile(savePath, 'templateFeatureInds.npy'));
+    writeNPY(templateFeatureInds-1, fullfile(savePath, 'templateFeatureInds.npy'));% -1 for zero indexing
     writeNPY(pcFeatures, fullfile(savePath, 'pcFeatures.npy'));
-    writeNPY(pcFeatureInds, fullfile(savePath, 'pcFeatureInds.npy'));
+    writeNPY(pcFeatureInds-1, fullfile(savePath, 'pcFeatureInds.npy'));% -1 for zero indexing
     
     whiteningMatrix = rez.Wrot;
     writeNPY(whiteningMatrix, fullfile(savePath, 'whiteningMatrix.npy'));
