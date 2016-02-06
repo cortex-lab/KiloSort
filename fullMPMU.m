@@ -148,15 +148,23 @@ rez.cProjPC = rez.cProjPC(isort, :,:);
 
 rez.st3      = st3; 
 
+% re-index the template coefficients
 for ik = 1:Nfilt
     iSp = rez.st3(:,2)==ik;
-
     OneToN = 1:nNeigh;
     [~, isort] = sort(rez.iNeigh(:,ik), 'ascend');
     OneToN(isort) = OneToN; 
-    
     rez.cProj(iSp, :) = rez.cProj(iSp, OneToN);
+	
+	OneToN = 1:nNeighPC;
+    [~, isort] = sort(rez.iNeighPC(:,ik), 'ascend');
+    OneToN(isort) = OneToN; 
+    rez.cProjPC(iSp, :,:) = rez.cProjPC(iSp, :,OneToN);
 end
+
+% 
+
+
 %%
 nsort = sort(sum(nspikes2,2), 'descend');
 fprintf('Time %3.0fs. ExpVar %2.6f, n10 %d, n20 %d, n30 %d, n40 %d \n', toc, nanmean(delta), nsort(10), nsort(20), ...
