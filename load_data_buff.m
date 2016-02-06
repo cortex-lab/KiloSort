@@ -24,7 +24,7 @@ if ~exist('loaded', 'var')
     ops.sampsToRead = floor(d.bytes/NchanTOT/2);
     
     dmem         = memory;
-    memfree      = 6 * 2^30;
+    memfree      = 8 * 2^30;
     memallocated = min(ops.ForceMaxRAMforDat, dmem.MemAvailableAllArrays) - memfree;
     memallocated = max(0, memallocated);
     nint16s      = memallocated/2;
