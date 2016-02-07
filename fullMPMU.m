@@ -97,14 +97,13 @@ for ibatch = 1:Nbatch
     data 	= dataRAW * U(:,:); 
     
 %     [st, id, x] = mexMPmuLITE(Params,data,W,WtW, mu, lam * 20./mu);
-    [st, id, x, errC, proj] = mexMPmuFEAT(Params,data,W,WtW, mu, lam * 20./mu);    
-
+    [st, id, x, errC, proj] = mexMPmuFEAT(Params,data,W,WtW, mu, lam * (20./mu).^2);    
 
     % PCA coefficients
     inds = repmat(st', nt0, 1) + repmat(i1nt0, 1, numel(st));
     datSp = reshape(dataRAW(1 + inds, :), [size(inds) Nchan]);
     coefs = reshape(Wi' * reshape(datSp, nt0, []), size(Wi,2), numel(st), Nchan);
-    coefs = reshape(permute(coefs, [1 3 2]), [], numel(st));
+    coefs = reshape(permute(coefs, [3 1 2]), [], numel(st));
     coefs = coefs .* maskPC(:, id+1);
     iCoefs = reshape(find(abs(coefs)>0), 3*nNeighPC, []);
     rez.cProjPC(irun + (1:numel(st)), :) = gather(coefs(iCoefs)');
@@ -136,7 +135,7 @@ for ibatch = 1:Nbatch
         fprintf(msg);
     end
 end
-% 
+%
 
 rez.cProj(irun+1:end, :) = [];
 rez.cProjPC(irun+1:end, :) = [];
@@ -147,18 +146,25 @@ st3 = st3(isort,:);
 rez.cProj = rez.cProj(isort, :);
 rez.cProjPC = rez.cProjPC(isort, :,:);
 
-
 rez.st3      = st3; 
 
+% re-index the template coefficients
 for ik = 1:Nfilt
     iSp = rez.st3(:,2)==ik;
-
     OneToN = 1:nNeigh;
     [~, isort] = sort(rez.iNeigh(:,ik), 'ascend');
     OneToN(isort) = OneToN; 
-    
     rez.cProj(iSp, :) = rez.cProj(iSp, OneToN);
+	
+	OneToN = 1:nNeighPC;
+    [~, isort] = sort(rez.iNeighPC(:,ik), 'ascend');
+    OneToN(isort) = OneToN; 
+    rez.cProjPC(iSp, :,:) = rez.cProjPC(iSp, :,OneToN);
 end
+
+% 
+
+
 %%
 nsort = sort(sum(nspikes2,2), 'descend');
 fprintf('Time %3.0fs. ExpVar %2.6f, n10 %d, n20 %d, n30 %d, n40 %d \n', toc, nanmean(delta), nsort(10), nsort(20), ...

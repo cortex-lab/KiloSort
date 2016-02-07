@@ -26,7 +26,7 @@ ops.nannealpasses = 4; %4
 ops.momentum      = [20 400]; %[100 500];
 
 ops.nNeighPC    = 12; % number of channnels to mask the PCs
-ops.nNeig       = 16; % number of neighboring templates to retain projections of
+ops.nNeigh       = 16; % number of neighboring templates to retain projections of
 %%
 ops.ForceMaxRAMforDat   = Inf;
 
@@ -45,7 +45,7 @@ for idset = 4
     root        = 'C:\DATA\Spikes';
     fname       = sprintf('set%d//%s.dat', idset, fidname{idset});
     fnameTW     = 'temp_wh.dat'; % (residual from RAM) of whitened data
-    ops.chanMap = 'forPRBimecToWhisper.mat';
+    ops.chanMap = 'C:\DATA\Spikes\forPRBimecToWhisper.mat';
     
     clear loaded
     load_data_buff; % loads data into RAM + residual data on SSD

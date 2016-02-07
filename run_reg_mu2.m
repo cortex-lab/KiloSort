@@ -201,7 +201,7 @@ while (i<=Nbatch * ops.nfullpasses+1)
     end
     UtU = logical(utu);
     
-    [dWU, st, id, x,Cost] = mexMPregMU(Params,dataRAW,W(:,:),data,UtU,mu, lam * 20./mu);
+    [dWU, st, id, x,Cost] = mexMPregMU(Params,dataRAW,W(:,:),data,UtU,mu, lam * (20./mu).^2);
     nsp = histc(id, 0:1:size(W,2));
     nsp = nsp(1:Nfilt);
     nspikes(:, ibatch) = nsp;
