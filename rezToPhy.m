@@ -10,9 +10,9 @@ function [spikeTimes, clusterIDs, amplitudes, templates, templateFeatures, ...
 
 
 spikeTimes = uint64(rez.st3(:,1));
-[spikeTimes, ii] = sort(spikeTimes);
-clusterIDs = uint32(rez.st3(ii,2));
-amplitudes = rez.st3(ii,3);
+% [spikeTimes, ii] = sort(spikeTimes);
+clusterIDs = uint32(rez.st3(:,2));
+amplitudes = rez.st3(:,3);
 
 
 load(rez.ops.chanMap);
@@ -32,9 +32,9 @@ for iNN = 1:rez.ops.Nfilt
    templates(:,:,iNN) = squeeze(U(:,iNN,:)) * squeeze(W(:,iNN,:))'; 
 end
 
-templateFeatures = rez.cProj(ii,:);
+templateFeatures = rez.cProj;
 templateFeatureInds = uint32(rez.iNeigh);
-pcFeatures = rez.cProjPC(ii,:,:);
+pcFeatures = rez.cProjPC;
 pcFeatureInds = uint32(rez.iNeighPC);
 
 if ~isempty(savePath)
