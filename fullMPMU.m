@@ -75,7 +75,7 @@ rez.iNeighPC = iNch(1:nNeighPC, :);
 for i = 1:Nfilt
    maskPC(rez.iNeighPC(:,i),i) = 1; 
 end
-maskPC = reshape(repmat(maskPC, 3, 1), Nchan*3, []);
+maskPC = repmat(maskPC, 3, 1);
 %
 
 irun = 0;
@@ -97,11 +97,11 @@ for ibatch = 1:Nbatch
     data 	= dataRAW * U(:,:); 
     
 %     [st, id, x] = mexMPmuLITE(Params,data,W,WtW, mu, lam * 20./mu);
-    [st, id, x, errC, proj] = mexMPmuFEAT(Params,data,W,WtW, mu, lam * (20./mu).^2);    
+    [st, id, x, errC, proj] = mexMPmuFEAT(Params,data,W,WtW, mu, lam .* (20./mu).^2);    
 
     % PCA coefficients
     inds = repmat(st', nt0, 1) + repmat(i1nt0, 1, numel(st));
-    datSp = reshape(dataRAW(1 + inds, :), [size(inds) Nchan]);
+    datSp = reshape(dataRAW(inds, :), [size(inds) Nchan]);
     coefs = reshape(Wi' * reshape(datSp, nt0, []), size(Wi,2), numel(st), Nchan);
     coefs = reshape(permute(coefs, [3 1 2]), [], numel(st));
     coefs = coefs .* maskPC(:, id+1);
@@ -135,20 +135,20 @@ for ibatch = 1:Nbatch
         fprintf(msg);
     end
 end
-%
+%%
 
-rez.cProj(irun+1:end, :) = [];
-rez.cProjPC(irun+1:end, :) = [];
-rez.cProjPC = reshape(rez.cProjPC, size(rez.cProjPC,1), 3, []);
+rez.cProj(irun+1:end, :)    = [];
+rez.cProjPC(irun+1:end, :)  = [];
+rez.cProjPC                 = reshape(rez.cProjPC, size(rez.cProjPC,1), [], 3);
 
-[~, isort] = sort(st3(:,1), 'ascend');
-st3 = st3(isort,:);
-rez.cProj = rez.cProj(isort, :);
-rez.cProjPC = rez.cProjPC(isort, :,:);
+[~, isort]      = sort(st3(:,1), 'ascend');
+st3             = st3(isort,:);
+rez.cProj       = rez.cProj(isort, :);
+rez.cProjPC     = rez.cProjPC(isort, :,:);
 
-rez.st3      = st3; 
+rez.st3         = st3; 
 
-% re-index the template coefficients
+%% re-index the template coefficients
 for ik = 1:Nfilt
     iSp = rez.st3(:,2)==ik;
     OneToN = 1:nNeigh;
@@ -159,10 +159,10 @@ for ik = 1:Nfilt
 	OneToN = 1:nNeighPC;
     [~, isort] = sort(rez.iNeighPC(:,ik), 'ascend');
     OneToN(isort) = OneToN; 
-    rez.cProjPC(iSp, :,:) = rez.cProjPC(iSp, :,OneToN);
+    rez.cProjPC(iSp, :,:) = rez.cProjPC(iSp, OneToN, :);
 end
 
-% 
+rez.cProjPC = permute(rez.cProjPC, [1 3 2]);
 
 
 %%
