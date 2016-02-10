@@ -222,7 +222,7 @@ end
 
 % center the templates
 rez.W = cat(1, zeros(nt0 - 40, Nfilt, Nrank), rez.W);
-
+rez.WrotInv = (rez.Wrot/200)^-1;
 
 %
 % gather_raw_mean_spikes;
