@@ -219,6 +219,11 @@ rez.nbins = histc(rez.st3(:,2), .5:1:Nfilt+1);
 if Nbatch_buff<Nbatch
     fclose(fid);
 end
+
+% center the templates
+rez.W = cat(1, zeros(nt0 - 40, Nfilt, Nrank), rez.W);
+
+
 %
 % gather_raw_mean_spikes;
 % rez.Wraw = Wraw;
