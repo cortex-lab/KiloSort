@@ -47,7 +47,7 @@ if ~isempty(savePath)
     writeNPY(templates, fullfile(savePath, 'templates.npy'));
     writeNPY(templatesInds, fullfile(savePath, 'templates_ind.npy'));
     
-    Fs = rez.ops.fs;
+%     Fs = rez.ops.fs;
     conn = logical(connected);
     chanMap0ind = int32(chanMap0ind);
     
@@ -61,7 +61,13 @@ if ~isempty(savePath)
     writeNPY(pcFeatures, fullfile(savePath, 'pc_features.npy'));
     writeNPY(pcFeatureInds'-1, fullfile(savePath, 'pc_feature_ind.npy'));% -1 for zero indexing
     
-    whiteningMatrix = rez.Wrot;
+    whiteningMatrix = rez.Wrot/200;
+    whiteningMatrixInv = whiteningMatrix^-1;
     writeNPY(whiteningMatrix, fullfile(savePath, 'whitening_mat.npy'));
+    writeNPY(whiteningMatrixInv, fullfile(savePath, 'whitening_mat_inv.npy'));
     
+    if isfield(rez, 'simScore')
+        similarTemplates = rez.simScore;
+        writeNPY(similarTemplates, fullfile(savePath, 'similar_templates.npy'));
+    end
 end
