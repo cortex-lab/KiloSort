@@ -62,6 +62,7 @@ rez.cProjPC = zeros(5e6, 3*nNeighPC, 'single');
 cr    = gather(squeeze( WtW(nt0, :,:))); 
 cr(isnan(cr)) = 0; 
 [~, iNgsort] = sort(cr, 1, 'descend');
+rez.simScore = cr;
 maskTT = zeros(Nfilt, 'single');
 rez.iNeigh = iNgsort(1:nNeigh, :);
 for i = 1:Nfilt
