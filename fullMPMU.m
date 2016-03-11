@@ -61,6 +61,10 @@ rez.cProjPC = zeros(5e6, 3*nNeighPC, 'single');
 % sort pairwise templates
 cr    = gather(squeeze( WtW(nt0, :,:))); 
 cr(isnan(cr)) = 0; 
+
+% save full similarity score
+rez.simScore = cr;
+
 [~, iNgsort] = sort(cr, 1, 'descend');
 maskTT = zeros(Nfilt, 'single');
 rez.iNeigh = iNgsort(1:nNeigh, :);
