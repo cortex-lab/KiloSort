@@ -83,7 +83,8 @@ while (i<=Nbatch * ops.nfullpasses+1)
         pm      = pmi(i);
     end
     Params = double([NT Nfilt Th maxFR 10 Nchan Nrank]);    
-    %
+    
+    % update the parameters every freqUpdate iterations
     if i>1 &&  ismember(rem(i,Nbatch), iUpdate) %&& i>Nbatch
         dWUtotCPU = gather(dWUtot);
         ntot = sum(nspikes,2);
@@ -136,7 +137,7 @@ while (i<=Nbatch * ops.nfullpasses+1)
         drawnow
         
         
-        %
+        % break bimodal clusters and remove low variance clusters
         if ops.shuffle_clusters && i>Nbatch && rem(rem(i,Nbatch), 400)==1
             %
             uu = Nbatch * dbins/dsum;
@@ -153,9 +154,7 @@ while (i<=Nbatch * ops.nfullpasses+1)
             nswitch = nswitch - 1;
 %             disp(nswitch)
             
-            for k = 1:nswitch
-                
-%                 mu0 = mu(iY1(k));
+            for k = 1:nswitch                
                mu(isort(k)) = mu1(k);
                mu(iY1(k))   = mu2(k);
                
@@ -185,15 +184,15 @@ while (i<=Nbatch * ops.nfullpasses+1)
        dat = DATA(:,:,ibatch); 
     end
     
+    % move data to GPU and scale it
     dataRAW = gpuArray(dat);
     dataRAW = single(dataRAW);
     dataRAW = dataRAW / ops.scaleproc;
     
-    % nonlinearity on the data
-%     dataRAW = 8*(2./(1+exp(-dataRAW/4)) - 1);
-    
+    % project data in low-dim space 
     data 	= dataRAW * U(:,:); 
     
+    % compute adjacency matrix UtU
     U0 = gpuArray(U);
     utu = gpuArray.zeros(Nfilt, 'single');
     for irank = 1:Nrank
@@ -201,25 +200,32 @@ while (i<=Nbatch * ops.nfullpasses+1)
     end
     UtU = logical(utu);
     
+    % run GPU code to get spike times and coefficients
     [dWU, st, id, x,Cost] = mexMPregMU(Params,dataRAW,W(:,:),data,UtU,mu, lam .* (20./mu).^2);
+    
+    % compute numbers of spikes
     nsp = histc(id, 0:1:size(W,2));
     nsp = nsp(1:Nfilt);
     nspikes(:, ibatch) = nsp;
     nsp = nsp(:);
-%     dWU = dWU ./ permute(repmat(max(.1,  nsp(1:Nfilt)), 1, nt0, Nchan), [2 3 1]);
     
+    % bin the amplitudes of the spikes
     x = min(max(1, round(x)), 100);
-    dbins = .9975 * dbins;
+    dbins = .9975 * dbins; % this is a hard-coded forgetting factor, needs to become an option
     for j = 1:length(st)
         dbins(x(j), id(j)+1) = dbins(x(j), id(j)+1) + .0025;
     end
+    % update estimate of amplitude distribution
     dsum = .9975 * dsum +  .0025;
 
+    % factor by which to update each cell depends on how many spikes
     fact = permute(repmat(pm.^nsp, 1, nt0, Nchan), [2 3 1]);
     
+    % update the average waveform for each cell
     dWUtot = fact .* dWUtot + (1-fact) .* gather(dWU);
     npm    = pm.^nsp .* npm    + (1-pm.^nsp) .* nsp;
     
+    % estimate cost function at this time step
     delta(ibatch) = sum(Cost)/1e6;
     
     if rem(i,100)==1
