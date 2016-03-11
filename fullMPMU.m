@@ -66,6 +66,7 @@ cr(isnan(cr)) = 0;
 rez.simScore = cr;
 
 [~, iNgsort] = sort(cr, 1, 'descend');
+rez.simScore = cr;
 maskTT = zeros(Nfilt, 'single');
 rez.iNeigh = iNgsort(1:nNeigh, :);
 for i = 1:Nfilt
