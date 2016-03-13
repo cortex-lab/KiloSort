@@ -1,4 +1,4 @@
-if ~exist('initialized')
+if ~exist('initialized', 'var')
     addpath('C:\CODE\MariusBox\Primitives\')
     rng(1);
     
@@ -43,15 +43,15 @@ if ~exist('initialized')
     freqUpdate = 50;
     dWUtot= zeros(nt0, Nchan, Nfilt, 'single');
     iUpdate = 1:freqUpdate:Nbatch;
-    
-    i = 1;
-    initialized = 1;
 
     npm = ones(Nfilt, 1);
     dbins = zeros(100, Nfilt);
     dsum = 0;
     miniorder = repmat(iperm, 1, ops.nfullpasses);
 %     miniorder = repmat([1:Nbatch Nbatch:-1:1], 1, ops.nfullpasses/2);    
+
+    i = 1;
+    initialized = 1;
 end
 
 
@@ -76,105 +76,43 @@ st3 = [];
 
 msg = [];
 fprintf('Time %3.0fs. Optimizing templates ...\n', toc)
-while (i<=Nbatch * ops.nfullpasses+1)
+while (i<=Nbatch * ops.nfullpasses+1)    
+    % set the annealing parameters
     if i<Nbatch*ops.nannealpasses
         Th      = Thi(i);
         lam(:)  = lami(i);
         pm      = pmi(i);
     end
+    
+    % some of the parameters change with iteration number
     Params = double([NT Nfilt Th maxFR 10 Nchan Nrank]);    
     
     % update the parameters every freqUpdate iterations
-    if i>1 &&  ismember(rem(i,Nbatch), iUpdate) %&& i>Nbatch
-        dWUtotCPU = gather(dWUtot);
-        ntot = sum(nspikes,2);
-
-        for k = 1:Nfilt
-            if ntot(k)>5
-                [Uall, Sv, Vall] = svd(gather(dWUtotCPU(:,:,k)), 0);
-                
-                Sv = diag(Sv);
-                sumSv2 = sum(Sv(1:Nrank).^2).^.5;
-                for irank = 1:Nrank
-                    [~, imax] = max(abs(Uall(:,irank)), [], 1);
-                    W(:,k,irank) = - Uall(:,irank) * sign(Uall(imax,irank)) * Sv(irank)/sumSv2;
-                    U(:,k,irank) = - Vall(:,irank) * sign(Uall(imax,irank));
-                end
-                mmax = max(abs(U(:,k,1)));
-                Usize = squeeze(abs(U(:,k,:)));
-                Usize = Usize .* repmat(Sv(1:Nrank)'/Sv(1), Nchan, 1);
-                ibad = max(Usize, [], 2) < .1 * mmax;
-                
-                U(ibad,k,:) = 0;
-            end
-        end
+    if i>1 &&  ismember(rem(i,Nbatch), iUpdate) %&& i>Nbatch        
+        % parameter update        
+        [W, U, mu] = update_params(W, U, dWUtot, nspikes, npm) ;        
         
-        for k = 1:Nfilt
-            if ntot(k)>5                
-                wu = squeeze(W(:,k,:)) * squeeze(U(:,k,:))';
-                mu(k) = sum(sum(wu.*squeeze(dWUtotCPU(:,:,k))))/npm(k);
-            end
-        end
-        if i<Nbatch * ops.nfullpasses
-            W = alignW(W);
-        end
-        for k = 1:Nfilt
-            if ntot(k)>5
-                wu = squeeze(W(:,k,:)) * squeeze(U(:,k,:))';
-                newnorm = sum(wu(:).^2).^.5;
-                W(:,k,:) = W(:,k,:)/newnorm;
-            end
-        end
+        % align except on last estimation
+        if i<Nbatch * ops.nfullpasses; W = alignW(W); end
         
-        if i>Nbatch * ops.nfullpasses
-            break;
-        end
-                
+        % break if last iteration reached
+        if i>Nbatch * ops.nfullpasses; break; end
+        
+        % record the error function for this iteration
         rez.errall(ceil(i/freqUpdate))          = nanmean(delta);
-
-        plot(sort(mu))
-        axis tight
-        drawnow
         
+        % plot (if option) the decay of spike amplitude 
+        plot(sort(mu)); axis tight; drawnow
         
         % break bimodal clusters and remove low variance clusters
         if ops.shuffle_clusters && i>Nbatch && rem(rem(i,Nbatch), 400)==1
-            %
-            uu = Nbatch * dbins/dsum;
-            nhist = 1:1:100;
-            
-            [score, iY1, mu1, mu2, u1, u2]   = split_clust(uu, nhist);
-            [d2d, iY, drez]                 = distance_betwxt(W, U, mu, sum(uu,1));
-            
-            [dsort, isort] = sort(drez, 'ascend');
-            nswitch = find(score'<dsort(1:numel(score)), 1);
-            if isempty(nswitch)
-                nswitch = numel(score)+1;
-            end
-            nswitch = nswitch - 1;
-%             disp(nswitch)
-            
-            for k = 1:nswitch                
-               mu(isort(k)) = mu1(k);
-               mu(iY1(k))   = mu2(k);
-               
-               dbins(:, isort(k)) = u1(:, k) * dsum/Nbatch;
-               dbins(:, iY1(k))   = u2(:, k) * dsum/Nbatch;
-
-               W(:,isort(k),:) = W(:,iY1(k),:);
-               U(:,isort(k),:) = U(:,iY1(k),:);
-
-               ratio = sum(u1(:, k),1)/(sum(u1(:, k),1) + sum(u2(:, k),1));
-               npm(isort(k)) = 1; %ratio * nsp(iY1(k));
-               npm(iY1(k))   = 1; %(1-ratio) * nsp(iY1(k));
-               
-               dWUtot(:,:,isort(k)) = 0; %ratio * mu1(k)/mu0 * dWUtot(:,:,iY1(k));
-               dWUtot(:,:,iY1(k))   = 0; %(1-ratio) * mu2(k)/mu0 * dWUtot(:,:,iY1(k));
-            end
-        end
+           [W, U, npm, dWUtot, dbins, nswitch] = ...
+               replace_clusters(dWUtot,W,U, npm, mu, dbins, dsum, Nbatch);
+        end        
     end
     
-%     ibatch = iperm(rem(i-1,Nbatch)+1);
+    %
+    % select batch and load from RAM or disk
     ibatch = miniorder(i);
     if ibatch>Nbatch_buff
         offset = 2 * ops.Nchan*batchstart(ibatch-Nbatch_buff);
@@ -201,7 +139,8 @@ while (i<=Nbatch * ops.nfullpasses+1)
     UtU = logical(utu);
     
     % run GPU code to get spike times and coefficients
-    [dWU, st, id, x,Cost] = mexMPregMU(Params,dataRAW,W(:,:),data,UtU,mu, lam .* (20./mu).^2);
+    [dWU, st, id, x,Cost] = ...
+        mexMPregMU(Params,dataRAW,W(:,:),data,UtU,mu, lam .* (20./mu).^2);
     
     % compute numbers of spikes
     nsp = histc(id, 0:1:size(W,2));
@@ -211,10 +150,13 @@ while (i<=Nbatch * ops.nfullpasses+1)
     
     % bin the amplitudes of the spikes
     x = min(max(1, round(x)), 100);
-    dbins = .9975 * dbins; % this is a hard-coded forgetting factor, needs to become an option
+    
+    % this is a hard-coded forgetting factor, needs to become an option
+    dbins = .9975 * dbins; 
     for j = 1:length(st)
         dbins(x(j), id(j)+1) = dbins(x(j), id(j)+1) + .0025;
     end
+    
     % update estimate of amplitude distribution
     dsum = .9975 * dsum +  .0025;
 
@@ -228,21 +170,24 @@ while (i<=Nbatch * ops.nfullpasses+1)
     % estimate cost function at this time step
     delta(ibatch) = sum(Cost)/1e6;
     
+    % update status
     if rem(i,100)==1
         nsort = sort(sum(nspikes,2), 'descend');
         fprintf(repmat('\b', 1, numel(msg)));
-        msg = sprintf('Time %2.2f, batch %d/%d, mu %2.2f, err %2.6f, NTOT %d, n100 %d, n200 %d, n300 %d, n400 %d\n', ...
+        msg = sprintf('Time %2.2f, batch %d/%d, mu %2.2f, neg-err %2.6f, NTOT %d, n100 %d, n200 %d, n300 %d, n400 %d\n', ...
             toc, i,Nbatch* ops.nfullpasses,nanmedian(mu(:)), nanmean(delta), sum(nspikes(:)), ...
             nsort(min(size(W,2), 100)), nsort(min(size(W,2), 200)), ...
                 nsort(min(size(W,2), 300)), nsort(min(size(W,2), 400)));
         fprintf(msg);        
     end
+    
+    % increase iteration counter
     i = i+1;
 end
+
+% close the data file if it has been used
 if Nbatch_buff<Nbatch
     fclose(fid);
 end
-
-% final templates computed here
 
 

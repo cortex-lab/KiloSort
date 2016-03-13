@@ -1,17 +1,7 @@
-% Params(3) = 6;
-% Params(4) = 50000;
-% Params(5) = 25; 
-
 lam(:)    = ops.lam(3);
 Params(3) = ops.Th(3);
 Params(4) = 50000;
 Params(5) = 50; 
-
-% ParamsW = Params;
-% ParamsW(2)= Nrank*Nfilt;
-% utu = gpuArray.ones(Nrank*Nfilt, 'single');
-% wtw = mexWtW(ParamsW, W(:,:), utu);
-% wtw = reshape(wtw, Nfilt, Nrank, Nfilt, Nrank, 2*nt0-1);
 
 U0 = gpuArray(U);
 WtW  = gpuArray.zeros(Nfilt,Nfilt, 2*nt0-1, 'single');
@@ -86,8 +76,7 @@ maskPC = repmat(maskPC, 3, 1);
 irun = 0;
 i1nt0 = int32([1:nt0])';
 %
-for ibatch = 1:Nbatch
-    %
+for ibatch = 1:Nbatch    
     if ibatch>Nbatch_buff
         offset = 2 * ops.Nchan*batchstart(ibatch-Nbatch_buff); % - ioffset;
         fseek(fid, offset, 'bof');
@@ -117,6 +106,7 @@ for ibatch = 1:Nbatch
     proj = maskTT(:, id+1) .* proj;
     iPP = reshape(find(abs(proj)>0), nNeigh, []);
     rez.cProj(irun + (1:numel(st)), :) = proj(iPP)';
+    
     % increment number of spikes
     irun = irun + numel(st);
     
@@ -200,11 +190,8 @@ for idd = 1:1:Nfilt
 %     st3pos = cat(1, st3pos, st3(ix(xs>Thx(idd)), :));
 end
 
-% rez.st3pos   = st3pos; 
-rez.ops      = ops;
 
-% WUnorms = sum(sum(dWUtotCPU.^2, 2), 1).^.5;
-% rez.template = gather(dWUtotCPU ./ repmat(WUnorms, nt0, Nchan, 1));
+rez.ops      = ops;
 
 rez.W = W;
 rez.U = U;
@@ -230,18 +217,3 @@ rez.W = cat(1, zeros(nt0 - 40, Nfilt, Nrank), rez.W);
 rez.WrotInv = (rez.Wrot/200)^-1;
 
 %
-% gather_raw_mean_spikes;
-% rez.Wraw = Wraw;
-
-% tClu{idset} = st3pos(:,2);
-% tRes{idset} = st3pos(:,1) + 20; 
-
-% time_run(idset) = toc;
-
-% save(sprintf('//zserver/Lab/Share/Marius/Spikes/Bench/rez%d.mat', idset), 'rez')
-% save('\\zserver\Lab\Share\Marius\Spikes\Bench\results.mat', 'tRes', 'tClu', 'time_run')
-
-%%
-% testCode;
-% estimateErrors;
-
