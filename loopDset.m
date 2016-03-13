@@ -16,7 +16,6 @@ ops.NchanTOT    = 129; % total number of channels
 ops.Nchan       = 120; % number of active channels 
 ops.ntbuff      = 64;  % samples of symmetrical buffer for whitening and spike detection
 ops.scaleproc   = 200; % int16 scaling of whitened data
-ops.fprate      = 0.1; % estimated false positive rate (is it a spike or not?)
 ops.verbose     = 1;
 ops.Nrank       = 3;
 

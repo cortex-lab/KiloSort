@@ -176,31 +176,8 @@ fprintf('Time %3.0fs. ExpVar %2.6f, n10 %d, n20 %d, n30 %d, n40 %d \n', toc, nan
     nsort(min(size(W,2), 30)), nsort(min(size(W,2), 40)));
 
 %
-fprintf('Time %3.0fs. Thresholding spikes at false positive rate...\n', toc) 
-% st3pos = [];
-fprate = ops.fprate;
-Thx = zeros(Nfilt,1);
-for idd = 1:1:Nfilt
-    ix = find(st3(:,2)==idd);
-    xs = st3(ix, 3);
-    
-    Mu = 10*ops.Th(3);
-    Nbins = 1000;
-    
-    bbins = linspace(0, Mu, Nbins);
-    hpos = cumsum(hist(Mu - xs(xs>0), bbins));
-    hneg = cumsum(hist(Mu + xs(xs<0), bbins));
-    
-    ifirst = find(hneg./hpos > fprate, 1);
-    if isempty(ifirst)
-        ifirst = numel(bbins);
-    end
-    Thx(idd) = Mu - bbins(ifirst);
-    
-%     st3pos = cat(1, st3pos, st3(ix(xs>Thx(idd)), :));
-end
+fprintf('Time %3.0fs. Thresholding spikes ...\n', toc) 
 
-% rez.st3pos   = st3pos; 
 rez.ops      = ops;
 
 % WUnorms = sum(sum(dWUtotCPU.^2, 2), 1).^.5;
