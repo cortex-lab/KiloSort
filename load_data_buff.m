@@ -23,10 +23,18 @@ if ~exist('loaded', 'var')
     d = dir(fullfile(root, fname));
     ops.sampsToRead = floor(d.bytes/NchanTOT/2);
     
-    dmem         = memory;
-    memfree      = 8 * 2^30;
-    memallocated = min(ops.ForceMaxRAMforDat, dmem.MemAvailableAllArrays) - memfree;
-    memallocated = max(0, memallocated);
+	if ispc
+		dmem         = memory;
+		memfree      = 8 * 2^30;
+		memallocated = min(ops.ForceMaxRAMforDat, dmem.MemAvailableAllArrays) - memfree;
+		memallocated = max(0, memallocated);
+    else
+        if ops.ForceMaxRAMforDat<Inf
+            memallocated = ops.ForceMaxRAMforDat;
+        else
+            memallocated = 5e9; % user specified Inf but on this OS we can't calculate a max so set to 5GB. 
+        end
+	end
     nint16s      = memallocated/2;
     
     NT          = 128*1024+ ops.ntbuff;
