@@ -136,9 +136,10 @@ while (i<=Nbatch * ops.nfullpasses+1)
     dataRAW = dataRAW / ops.scaleproc;
     
     % project data in low-dim space 
-    for irank = 1:Nrank
-        data 	= dataRAW * U(:,:); 
-    end
+%     for irank = 1:Nrank
+%         data 	= dataRAW * U(:,:); 
+%     end
+    data 	= dataRAW * U(:,:); 
     
     % compute adjacency matrix UtU
     U0 = gpuArray(U);
