@@ -10,36 +10,42 @@ if ~exist('initialized', 'var')
     Nrank   = ops.Nrank;
     Th 		= ops.Th;
     maxFR 	= ops.maxFR;
-   
+    
     Nchan 	= ops.Nchan;
-
+    
     batchstart = 0:NT:NT*(Nbatch-Nbatch_buff);
     
     delta = NaN * ones(Nbatch, 1);
     iperm = randperm(Nbatch);
     
-    initialize_waves0;
-%     Winit = Winit0;
-    
-    ipck = randperm(size(Winit,2), Nfilt);
-    W = [];
-    U = [];
-    for i = 1:Nrank
-        W = cat(3, W, Winit(:, ipck)/Nrank);
-        U = cat(3, U, Uinit(:, ipck));
+    switch ops.initialize
+        case 'fromData'
+            U = Uinit;
+            W = Winit;
+            mu = muinit;
+        otherwise
+            initialize_waves0;
+            Winit = Winit0;
+            ipck = randperm(size(Winit,2), Nfilt);
+            W = [];
+            U = [];
+            for i = 1:Nrank
+                W = cat(3, W, Winit(:, ipck)/Nrank);
+                U = cat(3, U, Uinit(:, ipck));
+            end
+            W = alignW(W);
+            for k = 1:Nfilt
+                wu = squeeze(W(:,k,:)) * squeeze(U(:,k,:))';
+                newnorm = sum(wu(:).^2).^.5;
+                W(:,k,:) = W(:,k,:)/newnorm;
+            end
+            mu = 7 * ones(Nfilt, 1, 'single');
     end
-    W = alignW(W);
-    for k = 1:Nfilt
-            wu = squeeze(W(:,k,:)) * squeeze(U(:,k,:))';
-            newnorm = sum(wu(:).^2).^.5;
-            W(:,k,:) = W(:,k,:)/newnorm;
-    end
     
-    mu = 7 * ones(Nfilt, 1, 'single');
     
     nspikes = zeros(Nfilt, Nbatch);
     lam =  ones(Nfilt, 1, 'single');
- 
+    
     freqUpdate = 50;
     dWUtot= zeros(nt0, Nchan, Nfilt, 'single');
     iUpdate = 1:freqUpdate:Nbatch;
@@ -57,7 +63,8 @@ end
 
 %%
 % pmi = exp(-1./exp(linspace(log(ops.momentum(1)), log(ops.momentum(2)), Nbatch*ops.nannealpasses)));
-pmi = exp(-1./linspace(ops.momentum(1), ops.momentum(2), Nbatch*ops.nannealpasses));
+% pmi = exp(-1./linspace(ops.momentum(1), ops.momentum(2), Nbatch*ops.nannealpasses));
+pmi = exp(-linspace(ops.momentum(1), ops.momentum(2), Nbatch*ops.nannealpasses));
 
 % pmi  = linspace(ops.momentum(1), ops.momentum(2), Nbatch*ops.nannealpasses);
 Thi  = linspace(ops.Th(1),                 ops.Th(2), Nbatch*ops.nannealpasses);
@@ -89,8 +96,9 @@ while (i<=Nbatch * ops.nfullpasses+1)
     
     % update the parameters every freqUpdate iterations
     if i>1 &&  ismember(rem(i,Nbatch), iUpdate) %&& i>Nbatch        
+        %
         % parameter update        
-        [W, U, mu] = update_params(W, U, dWUtot, nspikes, npm) ;        
+        [W, U, mu] = update_params(mu, W, U, dWUtot, nspikes, npm) ;        
         
         % align except on last estimation
         if i<Nbatch * ops.nfullpasses; W = alignW(W); end
@@ -107,11 +115,11 @@ while (i<=Nbatch * ops.nfullpasses+1)
         % break bimodal clusters and remove low variance clusters
         if ops.shuffle_clusters && i>Nbatch && rem(rem(i,Nbatch), 400)==1
            [W, U, npm, dWUtot, dbins, nswitch] = ...
-               replace_clusters(dWUtot,W,U, npm, mu, dbins, dsum, Nbatch);
+               replace_clusters(dWUtot,W,U, npm, mu, dbins, dsum, ...
+               Nbatch, ops.mergeT, ops.splitT);
         end        
     end
-    
-    %
+
     % select batch and load from RAM or disk
     ibatch = miniorder(i);
     if ibatch>Nbatch_buff
@@ -128,7 +136,9 @@ while (i<=Nbatch * ops.nfullpasses+1)
     dataRAW = dataRAW / ops.scaleproc;
     
     % project data in low-dim space 
-    data 	= dataRAW * U(:,:); 
+    for irank = 1:Nrank
+        data 	= dataRAW * U(:,:); 
+    end
     
     % compute adjacency matrix UtU
     U0 = gpuArray(U);

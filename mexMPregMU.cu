@@ -98,7 +98,7 @@ __global__ void	cleanup_spikes(const double *Params, const float *xbest,
   bool flag=0;
   float err0;
   
-  tid 		= threadIdx.x;
+  tid 		= threadIdx.x; 
   bid 		= blockIdx.x;
   
   NT      	= (int) Params[0];

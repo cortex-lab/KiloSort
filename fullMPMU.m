@@ -41,37 +41,38 @@ if Nbatch_buff<Nbatch
 end
 msg = [];
 
-nNeighPC  = ops.nNeighPC;
-nNeigh    = ops.nNeigh;
-load PCspikes
+if ~isempty(ops.nNeighPC)
+    nNeighPC  = ops.nNeighPC;
+    nNeigh    = ops.nNeigh;
+    load PCspikes
+    
+    rez.cProj = zeros(5e6, nNeigh, 'single');
+    rez.cProjPC = zeros(5e6, 3*nNeighPC, 'single');
 
-rez.cProj = zeros(5e6, nNeigh, 'single');
-rez.cProjPC = zeros(5e6, 3*nNeighPC, 'single');
-
-% sort pairwise templates
-cr    = gather(squeeze( WtW(nt0, :,:))); 
-cr(isnan(cr)) = 0; 
-
-% save full similarity score
-rez.simScore = cr;
-
-[~, iNgsort] = sort(cr, 1, 'descend');
-rez.simScore = cr;
-maskTT = zeros(Nfilt, 'single');
-rez.iNeigh = iNgsort(1:nNeigh, :);
-for i = 1:Nfilt
-   maskTT(rez.iNeigh(:,i),i) = 1; 
+    % sort pairwise templates
+    cr    = gather(squeeze( WtW(nt0, :,:)));
+    cr(isnan(cr)) = 0;
+    
+    % save full similarity score
+    rez.simScore = cr;
+    
+    [~, iNgsort] = sort(cr, 1, 'descend');
+    rez.simScore = cr;
+    maskTT = zeros(Nfilt, 'single');
+    rez.iNeigh = iNgsort(1:nNeigh, :);
+    for i = 1:Nfilt
+        maskTT(rez.iNeigh(:,i),i) = 1;
+    end
+    
+    % sort best channels
+    [~, iNch] = sort(abs(U(:,:,1)), 1, 'descend');
+    maskPC = zeros(Nchan, Nfilt, 'single');
+    rez.iNeighPC = iNch(1:nNeighPC, :);
+    for i = 1:Nfilt
+        maskPC(rez.iNeighPC(:,i),i) = 1;
+    end
+    maskPC = repmat(maskPC, 3, 1);
 end
-
-% sort best channels
-[~, iNch] = sort(abs(U(:,:,1)), 1, 'descend');
-maskPC = zeros(Nchan, Nfilt, 'single');
-rez.iNeighPC = iNch(1:nNeighPC, :);
-for i = 1:Nfilt
-   maskPC(rez.iNeighPC(:,i),i) = 1; 
-end
-maskPC = repmat(maskPC, 3, 1);
-%
 
 irun = 0;
 i1nt0 = int32([1:nt0])';
@@ -93,22 +94,24 @@ for ibatch = 1:Nbatch
 %     [st, id, x] = mexMPmuLITE(Params,data,W,WtW, mu, lam * 20./mu);
     [st, id, x, errC, proj] = mexMPmuFEAT(Params,data,W,WtW, mu, lam .* (20./mu).^2);    
 
-    % PCA coefficients
-    inds = repmat(st', nt0, 1) + repmat(i1nt0, 1, numel(st));
-    datSp = reshape(dataRAW(inds, :), [size(inds) Nchan]);
-    coefs = reshape(Wi' * reshape(datSp, nt0, []), size(Wi,2), numel(st), Nchan);
-    coefs = reshape(permute(coefs, [3 1 2]), [], numel(st));
-    coefs = coefs .* maskPC(:, id+1);
-    iCoefs = reshape(find(abs(coefs)>0), 3*nNeighPC, []);
-    rez.cProjPC(irun + (1:numel(st)), :) = gather(coefs(iCoefs)');
+    if ~isempty(ops.nNeighPC)
+        % PCA coefficients
+        inds = repmat(st', nt0, 1) + repmat(i1nt0, 1, numel(st));
+        datSp = reshape(dataRAW(inds, :), [size(inds) Nchan]);
+        coefs = reshape(Wi' * reshape(datSp, nt0, []), size(Wi,2), numel(st), Nchan);
+        coefs = reshape(permute(coefs, [3 1 2]), [], numel(st));
+        coefs = coefs .* maskPC(:, id+1);
+        iCoefs = reshape(find(maskPC(:, id+1)>0), 3*nNeighPC, []);
+        rez.cProjPC(irun + (1:numel(st)), :) = gather(coefs(iCoefs)');
+        
+        % template coefficients
+        proj = maskTT(:, id+1) .* proj;
+        iPP = reshape(find(maskTT(:, id+1)>0), nNeigh, []);
+        rez.cProj(irun + (1:numel(st)), :) = proj(iPP)';
     
-    % template coefficients
-    proj = maskTT(:, id+1) .* proj;
-    iPP = reshape(find(abs(proj)>0), nNeigh, []);
-    rez.cProj(irun + (1:numel(st)), :) = proj(iPP)';
-    
-    % increment number of spikes
-    irun = irun + numel(st);
+        % increment number of spikes
+        irun = irun + numel(st);
+    end
     
     if ibatch==1; ioffset = 0;
     else ioffset = ops.ntbuff;
@@ -120,7 +123,6 @@ for ibatch = 1:Nbatch
         double(id)+1, double(x), ibatch*ones(numel(x),1));
     st3 = cat(1, st3, STT);
     
-    
     if rem(ibatch,100)==1
         nsort = sort(sum(nspikes2,2), 'descend');
         fprintf(repmat('\b', 1, numel(msg)));
@@ -130,66 +132,41 @@ for ibatch = 1:Nbatch
         fprintf(msg);
     end
 end
-%%
-
-rez.cProj(irun+1:end, :)    = [];
-rez.cProjPC(irun+1:end, :)  = [];
-rez.cProjPC                 = reshape(rez.cProjPC, size(rez.cProjPC,1), [], 3);
 
 [~, isort]      = sort(st3(:,1), 'ascend');
 st3             = st3(isort,:);
-rez.cProj       = rez.cProj(isort, :);
-rez.cProjPC     = rez.cProjPC(isort, :,:);
-
-rez.st3         = st3; 
-
-%% re-index the template coefficients
-for ik = 1:Nfilt
-    iSp = rez.st3(:,2)==ik;
-    OneToN = 1:nNeigh;
-    [~, isort] = sort(rez.iNeigh(:,ik), 'ascend');
-    OneToN(isort) = OneToN; 
-    rez.cProj(iSp, :) = rez.cProj(iSp, OneToN);
-	
-	OneToN = 1:nNeighPC;
-    [~, isort] = sort(rez.iNeighPC(:,ik), 'ascend');
-    OneToN(isort) = OneToN; 
-    rez.cProjPC(iSp, :,:) = rez.cProjPC(iSp, OneToN, :);
+rez.st3         = st3;
+if ~isempty(ops.nNeighPC)
+    % re-sort coefficients for projections
+    rez.cProj(irun+1:end, :)    = [];
+    rez.cProjPC(irun+1:end, :)  = [];
+    rez.cProjPC                 = reshape(rez.cProjPC, size(rez.cProjPC,1), [], 3);
+    
+    rez.cProj       = rez.cProj(isort, :);
+    rez.cProjPC     = rez.cProjPC(isort, :,:);
+    
+    
+    % re-index the template coefficients
+    for ik = 1:Nfilt
+        iSp = rez.st3(:,2)==ik;
+        OneToN = 1:nNeigh;
+        [~, isort] = sort(rez.iNeigh(:,ik), 'ascend');
+        OneToN(isort) = OneToN;
+        rez.cProj(iSp, :) = rez.cProj(iSp, OneToN);
+        
+        OneToN = 1:nNeighPC;
+        [~, isort] = sort(rez.iNeighPC(:,ik), 'ascend');
+        OneToN(isort) = OneToN;
+        rez.cProjPC(iSp, :,:) = rez.cProjPC(iSp, OneToN, :);
+    end
+    
+    rez.cProjPC = permute(rez.cProjPC, [1 3 2]);
 end
-
-rez.cProjPC = permute(rez.cProjPC, [1 3 2]);
-
 
 %%
 nsort = sort(sum(nspikes2,2), 'descend');
 fprintf('Time %3.0fs. ExpVar %2.6f, n10 %d, n20 %d, n30 %d, n40 %d \n', toc, nanmean(delta), nsort(10), nsort(20), ...
     nsort(min(size(W,2), 30)), nsort(min(size(W,2), 40)));
-
-%
-fprintf('Time %3.0fs. Thresholding spikes at false positive rate...\n', toc) 
-% st3pos = [];
-fprate = ops.fprate;
-Thx = zeros(Nfilt,1);
-for idd = 1:1:Nfilt
-    ix = find(st3(:,2)==idd);
-    xs = st3(ix, 3);
-    
-    Mu = 10*ops.Th(3);
-    Nbins = 1000;
-    
-    bbins = linspace(0, Mu, Nbins);
-    hpos = cumsum(hist(Mu - xs(xs>0), bbins));
-    hneg = cumsum(hist(Mu + xs(xs<0), bbins));
-    
-    ifirst = find(hneg./hpos > fprate, 1);
-    if isempty(ifirst)
-        ifirst = numel(bbins);
-    end
-    Thx(idd) = Mu - bbins(ifirst);
-    
-%     st3pos = cat(1, st3pos, st3(ix(xs>Thx(idd)), :));
-end
-
 
 rez.ops      = ops;
 

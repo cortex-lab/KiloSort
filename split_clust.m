@@ -6,7 +6,8 @@ nspikes = sum(uu, 1);
 
 uc = zeros(size(uu));
 for i = 1:size(uu,2)
-    uc(:,i) = my_conv(uu(:,i)',  max(.5, min(4, 2000/nspikes(i))))';
+    uc(:,i) = my_conv(uu(:,i)',  max(.25, min(4, 2000/nspikes(i))))'; %.5
+%       uc(:,i) = my_conv2(uu(:,i),  max(.25, min(4, 2000/nspikes(i))), 1);
 end
 %
 uc = uc ./repmat(sum(uc,1),size(uc,1), 1);
@@ -33,7 +34,7 @@ var0 = sum((repmat(nhist(1:100), 1, Nfilt) - repmat(mu0, 100, 1)).^2 .* uc, 1);
 for i = 1:Nfilt
     ix = find(dd(1:end-1, i)<0 & dd(2:end, i)>0);
     
-    ix = ix(ucum(ix, i)>.1 & ucum(ix, i)<.9 & uc(ix,i)<.8 * maxM(i));
+    ix = ix(ucum(ix, i)>.1 & ucum(ix, i)<.95 & uc(ix,i)<.8 * maxM(i)); %.9 not .95
     if numel(ix)>0
         ix = ix(1);
         
@@ -65,7 +66,8 @@ n1 = sum(u1,1)';
 n2 = sum(u2,1)';
 iY = iY(1:inew);
 
-score = (n1+n2).*var0(iY)' - (n1.*var1 + n2.*var2);
+score = 1 - (n1.*var1 + n2.*var2)./((n1+n2).*var0(iY)');
+% score = ((n1+n2).*var0(iY)' - (n1.*var1 + n2.*var2))./var0(iY)';
 [~, isort] = sort(score, 'descend');
 
 iY = iY(isort);
