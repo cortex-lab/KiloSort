@@ -31,9 +31,11 @@ Nchans = ops.Nchan;
 ts = [1:1:61]';
 
 clear stimes
-for iNN = 1:size(rez.W,2)
-    stimes{iNN} = rez.st3pos(rez.st3pos(:,2)==iNN,1);
-end
+% for iNN = 1:size(rez.W,2)
+%     stimes{iNN} = rez.st3pos(rez.st3pos(:,2)==iNN,1);
+% end
+stimes = gtimes;
+
 Wraw = zeros(61, Nchans, numel(stimes));
 
 while 1
@@ -56,9 +58,9 @@ while 1
         buff(:, nsampcurr+1:NTbuff) = repmat(buff(:,nsampcurr), 1, NTbuff-nsampcurr);
     end
     
-    offset = (NT-ops.ntbuff)*(ibatch-1)-64;
+    offset = (NT-ops.ntbuff)*(ibatch-1)-64 - 40;
     
-    buff = buff(1:Nchan,:)';
+    buff = buff(chanMapConn,:)';
     %
     for iNN = 1:numel(stimes)
         st = stimes{iNN} - offset;

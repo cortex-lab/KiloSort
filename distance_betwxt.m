@@ -8,11 +8,20 @@ end
 
 mu = mu(:);
 muall = repmat(mu, 1, Nfilt);
-d2d = muall.^2 + muall'.^2 - 2 * muall.*muall'.*d2d;
+mrat = muall'./muall;
+d2d = 1 - 2 * d2d./(1e-30 + mrat + 1./mrat);
 
-d2d  = d2d + diag(Inf*ones(Nfilt,1));
+d2d  = 1- triu(1 - d2d, 1);
+
+% nbins = nbins(:)';
+% nu = repmat(nbins, Nfilt, 1);
+
+% d2d = d2d ./(1./nu + 1./nu');
+% d2d = d2d ./(nu + nu');
+
 [dMin, iY] = min(d2d, [], 1);
 
-nbins = nbins(:)';
-drez = dMin .* nbins;
+drez = dMin;
+
+% drez = dMin .* nbins;
 

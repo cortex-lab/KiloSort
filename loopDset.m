@@ -1,33 +1,53 @@
 addpath('C:\CODE\GitHub\KiloSort')
 
-ops.Nfilt               = 768 ; % 768 number of filters to use 
-ops.Nfilt0              = 768 ; % 768 number of filters to use 
-ops.nfullpasses         = 6; % 6, number of complete passes through data
+ops.Nfilt               = 512 ; %  number of filters to use (512)
+ops.Nfilt0              = 512 ; % number of filters to use (512)
+ops.Nrank               = 3;    % matrix rank of spike template model
+ops.nfullpasses         = 6;    % number of complete passes through data (6)
 
-ops.whitening 	= 'full'; % type of whitening, only full for now
-ops.learnWU     = 1; % whether to learn templates
-ops.maxFR       = 20000; % maximum number of spikes to extract per batch
-ops.lambda      = 1e3; % not used
-ops.Th0         = -7; % not currently used
+ops.whitening 	= 'full'; % type of whitening (default 'full', for 'noSpikes' set options for spike detection below)
+ops.maxFR       = 20000;  % maximum number of spikes to extract per batch (20000)
 
 ops.fs          = 25000; % sampling rate
+
 ops.fshigh      = 300;
 ops.NchanTOT    = 129; % total number of channels
 ops.Nchan       = 120; % number of active channels 
 ops.ntbuff      = 64;  % samples of symmetrical buffer for whitening and spike detection
 ops.scaleproc   = 200; % int16 scaling of whitened data
 ops.verbose     = 1;
-ops.Nrank       = 3;
 
-ops.Th           = [4 12 10]; %[1 8 6]; % 4 12 10 6, 10, 8
-ops.lam          = [10 30 30]; %[.1 30 30]; %10, 30, 30 %5, .... 0.1;
-ops.nannealpasses = 4; %4
-ops.momentum      = [20 400]; %[100 500];
+% these options can improve/deteriorate results. when multiple values are 
+% provided for an option, the first two are beginning and ending anneal values, 
+% the third is the value used in the final pass. 
+ops.Th               = [6 12 12];    % threshold for detecting spikes on template-filtered data ([6 12 12])
+ops.lam              = [10 30 30];   % large means amplitudes are forced around the mean ([10 30 30])
+ops.nannealpasses    = 4;            % should be less than nfullpasses (4)
+ops.momentum         = 1./[20 1000]; % start with high momentum and anneal (1./[20 1000])
+ops.shuffle_clusters = 1;            % allow merges and splits (1)
+ops.mergeT           = .1;           % upper threshold for merging (.1)
+ops.splitT           = .1;           % lower threshold for splitting (.1)
 
-ops.nNeighPC    = 12; % number of channnels to mask the PCs
-ops.nNeigh       = 16; % number of neighboring templates to retain projections of
+ops.nNeighPC    = 12; % number of channnels to mask the PCs, leave empty to skip (12)
+ops.nNeigh      = 16; % number of neighboring templates to retain projections of (16)
+
+% new options
+ops.initialize = 'premade'; %'fromData';
+
+% options for initializing spikes from data
+ops.spkTh           = -4;      % spike threshold in standard deviations (4)
+ops.loc_range       = [3  1];  % ranges to detect peaks; plus/minus in time and channel ([3 1])
+ops.long_range      = [30  6]; % ranges to detect isolated peaks ([30 6])
+ops.maskMaxChannels = 5;       % how many channels to mask up/down ([5])
+ops.crit            = .65;     % upper criterion for discarding spike repeates (0.65)
+ops.nFiltMax        = 10000;   % maximum "unique" spikes to consider (10000)
+dd                  = load('PCspikes.mat'); % you might want to recompute this from your own data
+ops.wPCA            = dd.Wi;   % PCs 
+
 %%
-ops.ForceMaxRAMforDat   = Inf;
+addpath('D:\DATA\Spikes\EvaluationCode')
+
+ops.ForceMaxRAMforDat   = Inf; %Inf;
 
 fidname{1}  = '20141202_all_es';
 fidname{2}  = '20150924_1_e';
@@ -36,8 +56,7 @@ fidname{4}  = '20150924_1_GT';
 fidname{5}  = '20150601_all_GT';
 fidname{6}  = '20141202_all_GT';
 
-for idset = 4
-    ops.shuffle_clusters = 1;
+for idset = 6
     
     clearvars -except fidname ops idset  tClu tRes time_run
     
@@ -47,16 +66,16 @@ for idset = 4
     ops.chanMap = 'C:\DATA\Spikes\forPRBimecToWhisper.mat';
     
     clear loaded
-    load_data_buff; % loads data into RAM + residual data on SSD
-    %
+    load_data_and_initialize; % loads data into RAM + residual data on SSD
+    
+   %%
     clear initialized
+    
     run_reg_mu2; % iterate the template matching (non-overlapping extraction)
-    %
+    %%
     fullMPMU; % extracts final spike times (overlapping extraction)
     %
-    if idset<=3
-        testCode;
-    end
+    testCode;
 end
 % clear DATA
 % plot_final_waveforms;
