@@ -20,12 +20,11 @@ if ~exist('initialized', 'var')
     
     switch ops.initialize
         case 'fromData'
-            U = Uinit;
-            W = Winit;
-            mu = muinit;
+            U = Uinit(:, 1:Nfilt, :);
+            W = Winit(:, 1:Nfilt, :);
+            mu = muinit(1:Nfilt);
         otherwise
             initialize_waves0;
-            Winit = Winit0;
             ipck = randperm(size(Winit,2), Nfilt);
             W = [];
             U = [];
@@ -136,10 +135,11 @@ while (i<=Nbatch * ops.nfullpasses+1)
     dataRAW = dataRAW / ops.scaleproc;
     
     % project data in low-dim space 
-%     for irank = 1:Nrank
-%         data 	= dataRAW * U(:,:); 
-%     end
-    data 	= dataRAW * U(:,:); 
+    data = gpuArray.zeros(NT, Nfilt, Nrank, 'single');
+    for irank = 1:Nrank
+        data(:,:,irank) 	= dataRAW * U(:,:,irank); 
+    end
+    data = reshape(data, NT, Nfilt*Nrank);
     
     % compute adjacency matrix UtU
     U0 = gpuArray(U);

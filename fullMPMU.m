@@ -89,7 +89,12 @@ for ibatch = 1:Nbatch
     dataRAW = single(dataRAW);
     dataRAW = dataRAW / ops.scaleproc;
     
-    data 	= dataRAW * U(:,:); 
+     % project data in low-dim space 
+    data = gpuArray.zeros(NT, Nfilt, Nrank, 'single');
+    for irank = 1:Nrank
+        data(:,:,irank) 	= dataRAW * U(:,:,irank); 
+    end
+    data = reshape(data, NT, Nfilt*Nrank);
     
 %     [st, id, x] = mexMPmuLITE(Params,data,W,WtW, mu, lam * 20./mu);
     [st, id, x, errC, proj] = mexMPmuFEAT(Params,data,W,WtW, mu, lam .* (20./mu).^2);    
