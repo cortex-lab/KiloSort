@@ -10,12 +10,13 @@ ops.maxFR       = 20000;  % maximum number of spikes to extract per batch (20000
 
 ops.fs          = 25000; % sampling rate
 
-ops.fshigh      = 300;
-ops.NchanTOT    = 129; % total number of channels
-ops.Nchan       = 120; % number of active channels 
-ops.ntbuff      = 64;  % samples of symmetrical buffer for whitening and spike detection
-ops.scaleproc   = 200; % int16 scaling of whitened data
-ops.verbose     = 1;
+
+ops.fshigh      = 300;   % frequency for high pass filtering
+ops.NchanTOT    = 129;   % total number of channels
+ops.Nchan       = 120;   % number of active channels 
+ops.ntbuff      = 64;    % samples of symmetrical buffer for whitening and spike detection
+ops.scaleproc   = 200;   % int16 scaling of whitened data
+ops.verbose     = 1;     
 
 % these options can improve/deteriorate results. when multiple values are 
 % provided for an option, the first two are beginning and ending anneal values, 
