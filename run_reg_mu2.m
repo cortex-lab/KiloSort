@@ -5,7 +5,7 @@ if ~exist('initialized', 'var')
     Nfilt 	= ops.Nfilt; %256+128;
     nt0 	= 61;
     ntbuff  = ops.ntbuff;
-%     NT  	= 128*1024+ ntbuff;
+    NT  	= ops.NT;
 
     Nrank   = ops.Nrank;
     Th 		= ops.Th;

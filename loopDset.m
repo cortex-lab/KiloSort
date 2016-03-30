@@ -16,19 +16,21 @@ ops.Nchan       = 120;   % number of active channels
 ops.ntbuff      = 64;    % samples of symmetrical buffer for whitening and spike detection
 ops.scaleproc   = 200;   % int16 scaling of whitened data
 ops.verbose     = 1;     
+ops.NT          = 32*1024+ ops.ntbuff;% this is the batch size, very important for memory reasons. 
+% should be multiple of 32 (or higher power of 2) + ntbuff
 
 % these options can improve/deteriorate results. when multiple values are 
 % provided for an option, the first two are beginning and ending anneal values, 
 % the third is the value used in the final pass. 
-ops.Th               = [4 10 10];    % threshold for detecting spikes on template-filtered data ([6 12 12])
-ops.lam              = [30 30 30];   % large means amplitudes are forced around the mean ([10 30 30])
+ops.Th               = [4 12 12];    % threshold for detecting spikes on template-filtered data ([6 12 12])
+ops.lam              = [10 30 30];   % large means amplitudes are forced around the mean ([10 30 30])
 ops.nannealpasses    = 4;            % should be less than nfullpasses (4)
-ops.momentum         = 1./[5 400]; % start with high momentum and anneal (1./[20 1000])
+ops.momentum         = 1./[20 400]; % start with high momentum and anneal (1./[20 1000])
 ops.shuffle_clusters = 1;            % allow merges and splits (1)
 ops.mergeT           = .1;          % upper threshold for merging (.1)
 ops.splitT           = .1;           % lower threshold for splitting (.1)
 
-ops.nNeighPC    = []; %12; % number of channnels to mask the PCs, leave empty to skip (12)
+ops.nNeighPC    = 12; %12; % number of channnels to mask the PCs, leave empty to skip (12)
 ops.nNeigh      = 16; % number of neighboring templates to retain projections of (16)
 
 % new options
@@ -65,8 +67,7 @@ for idset = 6
     fnameTW     = 'temp_wh.dat'; % (residual from RAM) of whitened data
     ops.chanMap = 'C:\DATA\Spikes\forPRBimecToWhisper.mat';
     
-    NT          = 32*1024+ ops.ntbuff;
-
+    
     clear loaded
     load_data_and_initialize; % loads data into RAM + residual data on SSD
     

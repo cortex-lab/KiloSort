@@ -19,9 +19,11 @@ if ~exist('loaded', 'var')
         mkdir(batch_path);
     end
     NchanTOT = ops.NchanTOT;
+    NT = ops.NT ;
     
     d = dir(fullfile(root, fname));
     ops.sampsToRead = floor(d.bytes/NchanTOT/2);
+    
     
     dmem         = memory;
     memfree      = 8 * 2^30;
