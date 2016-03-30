@@ -1,7 +1,6 @@
 addpath('C:\CODE\GitHub\KiloSort')
 
-ops.Nfilt               = 512 ; %  number of filters to use (512)
-ops.Nfilt0              = 512 ; % number of filters to use (512)
+ops.Nfilt               = 1024 ; %  number of filters to use (512)
 ops.Nrank               = 3;    % matrix rank of spike template model
 ops.nfullpasses         = 6;    % number of complete passes through data (6)
 
@@ -21,19 +20,19 @@ ops.verbose     = 1;
 % these options can improve/deteriorate results. when multiple values are 
 % provided for an option, the first two are beginning and ending anneal values, 
 % the third is the value used in the final pass. 
-ops.Th               = [6 12 12];    % threshold for detecting spikes on template-filtered data ([6 12 12])
-ops.lam              = [10 30 30];   % large means amplitudes are forced around the mean ([10 30 30])
+ops.Th               = [4 10 10];    % threshold for detecting spikes on template-filtered data ([6 12 12])
+ops.lam              = [30 30 30];   % large means amplitudes are forced around the mean ([10 30 30])
 ops.nannealpasses    = 4;            % should be less than nfullpasses (4)
-ops.momentum         = 1./[20 1000]; % start with high momentum and anneal (1./[20 1000])
+ops.momentum         = 1./[5 400]; % start with high momentum and anneal (1./[20 1000])
 ops.shuffle_clusters = 1;            % allow merges and splits (1)
-ops.mergeT           = .1;           % upper threshold for merging (.1)
+ops.mergeT           = .1;          % upper threshold for merging (.1)
 ops.splitT           = .1;           % lower threshold for splitting (.1)
 
-ops.nNeighPC    = 12; % number of channnels to mask the PCs, leave empty to skip (12)
+ops.nNeighPC    = []; %12; % number of channnels to mask the PCs, leave empty to skip (12)
 ops.nNeigh      = 16; % number of neighboring templates to retain projections of (16)
 
 % new options
-ops.initialize = 'premade'; %'fromData';
+ops.initialize = 'fromData'; %'fromData'; %'fromData';
 
 % options for initializing spikes from data
 ops.spkTh           = -4;      % spike threshold in standard deviations (4)
@@ -66,14 +65,17 @@ for idset = 6
     fnameTW     = 'temp_wh.dat'; % (residual from RAM) of whitened data
     ops.chanMap = 'C:\DATA\Spikes\forPRBimecToWhisper.mat';
     
+    NT          = 32*1024+ ops.ntbuff;
+
     clear loaded
     load_data_and_initialize; % loads data into RAM + residual data on SSD
     
    %%
     clear initialized
     
+%     optimizePeaks;
     run_reg_mu2; % iterate the template matching (non-overlapping extraction)
-    %%
+    %
     fullMPMU; % extracts final spike times (overlapping extraction)
     %
     testCode;

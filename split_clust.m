@@ -6,7 +6,7 @@ nspikes = sum(uu, 1);
 
 uc = zeros(size(uu));
 for i = 1:size(uu,2)
-    uc(:,i) = my_conv(uu(:,i)',  max(.25, min(4, 2000/nspikes(i))))'; %.5
+    uc(:,i) = my_conv(uu(:,i)',  max(.5, min(4, 2000/nspikes(i))))'; %.5
 %       uc(:,i) = my_conv2(uu(:,i),  max(.25, min(4, 2000/nspikes(i))), 1);
 end
 %
@@ -34,7 +34,7 @@ var0 = sum((repmat(nhist(1:100), 1, Nfilt) - repmat(mu0, 100, 1)).^2 .* uc, 1);
 for i = 1:Nfilt
     ix = find(dd(1:end-1, i)<0 & dd(2:end, i)>0);
     
-    ix = ix(ucum(ix, i)>.1 & ucum(ix, i)<.95 & uc(ix,i)<.8 * maxM(i)); %.9 not .95
+    ix = ix(ucum(ix, i)>.1 & ucum(ix, i)<.8 & uc(ix,i)<.8 * maxM(i)); %.9 not .95
     if numel(ix)>0
         ix = ix(1);
         

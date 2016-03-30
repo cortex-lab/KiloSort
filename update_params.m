@@ -1,4 +1,4 @@
-function  [W, U, mu] = update_params(mu, W, U, dWUtot, nspikes, npm)
+function  [W, U, mu, UtU] = update_params(mu, W, U, dWUtot, nspikes)
 
 [Nchan, Nfilt, Nrank] = size(U);
 
@@ -29,7 +29,7 @@ end
 for k = 1:Nfilt
     if ntot(k)>5
         wu = squeeze(W(:,k,:)) * squeeze(U(:,k,:))';
-        mu(k) = sum(sum(wu.*squeeze(dWUtotCPU(:,:,k))))/npm(k);
+        mu(k) = sum(sum(wu.*squeeze(dWUtotCPU(:,:,k))));
     end
 end
 
@@ -41,4 +41,10 @@ for k = 1:Nfilt
     end
 end
 
-
+% compute adjacency matrix UtU
+U0 = gpuArray(U);
+utu = gpuArray.zeros(Nfilt, 'single');
+for irank = 1:Nrank
+    utu = utu + (U0(:,:,irank)' * U0(:,:,irank));
+end
+UtU = logical(utu);

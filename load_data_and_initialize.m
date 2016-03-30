@@ -29,7 +29,6 @@ if ~exist('loaded', 'var')
     memallocated = max(0, memallocated);
     nint16s      = memallocated/2;
     
-    NT          = 128*1024+ ops.ntbuff;
     NTbuff      = NT + 4*ops.ntbuff;
     Nbatch      = ceil(d.bytes/2/NchanTOT /(NT-ops.ntbuff));
     Nbatch_buff = floor(nint16s/ops.Nchan /(NT-ops.ntbuff));
@@ -99,7 +98,10 @@ if ~exist('loaded', 'var')
         end        
     end
     CC = CC / ibatch;
-    nPairs = nPairs/ibatch;
+    switch ops.whitening
+            case 'noSpikes'
+                nPairs = nPairs/ibatch;
+    end
     fclose(fid);
     fprintf('Time %3.0fs. Channel-whitening filters computed. \n', toc);
 

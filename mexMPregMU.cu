@@ -91,7 +91,7 @@ __global__ void  bestFilter(const double *Params, const float *data,
 //////////////////////////////////////////////////////////////////////////////////////////
 __global__ void	cleanup_spikes(const double *Params, const float *xbest,
         const float *err, const int *ftype, const bool *UtU, int *st, int *id, float *x,
-        float *C, int *counter, float *muout){
+        float *C, int *counter, float *nsp){
   int curr_token, indx, maxFR, Nfilt, NTOT, tid, bid, NT, tid0,  j;
   volatile __shared__ float sdata[Nthreads+2*lockout+1];
   volatile __shared__ int id_sh[Nthreads+2*lockout+1];
@@ -134,6 +134,7 @@ __global__ void	cleanup_spikes(const double *Params, const float *xbest,
             x[indx]  = xbest[tid+lockout     + tid0];
             C[indx]  = err0;
  //           atomicAdd(&muout[ftype[tid+lockout   + tid0]], xbest[tid+lockout     + tid0]);
+            atomicAdd(&nsp[ftype[tid+lockout   + tid0]], 1);
           }
       }
     }
@@ -143,8 +144,10 @@ __global__ void	cleanup_spikes(const double *Params, const float *xbest,
 __global__ void average_snips(const double *Params, const int *st, const int *id, 
         const float *x,  const int *counter, const float *dataraw, float *WU){
   int tidx, tidy, bid, i, ind, NT, Nchan;
-  float xsum = 0.0f; 
+  float xsum = 0.0f, pm; 
   Nchan = (int) Params[5];
+  
+  pm = (float) Params[7];
 
   NT = (int) Params[0];
   tidx 		= threadIdx.x;
@@ -155,8 +158,9 @@ __global__ void average_snips(const double *Params, const int *st, const int *id
       if (id[ind]==bid){
 		  tidy 		= threadIdx.y;
 		  while (tidy<Nchan){	
-			xsum = dataraw[st[ind]+tidx + NT * tidy]; // + x[ind]
-			WU[tidx+tidy*nt0 + nt0*Nchan * bid] += xsum;
+			xsum = dataraw[st[ind]+tidx + NT * tidy]; 
+			WU[tidx+tidy*nt0 + nt0*Nchan * bid] = 
+                    pm*WU[tidx+tidy*nt0 + nt0*Nchan * bid] + (1-pm) * xsum;
 			tidy+=blockDim.y;
 		  }
 	  }
@@ -189,7 +193,12 @@ void mexFunction(int nlhs, mxArray *plhs[],
   /* collect input GPU variables*/
   mxGPUArray const  *W, *dataraw,   *data, *UtU, *mu, *lam;
   const float      *d_W, *d_dataraw, *d_data, *d_mu, *d_lam;
+  float *d_dWU;
   const bool *d_UtU;
+  
+  mxGPUArray *dWU;
+  dWU       = mxGPUCopyFromMxArray(prhs[7]);
+  d_dWU     = (float *)(mxGPUGetData(dWU));
   
   dataraw       = mxGPUCreateFromMxArray(prhs[1]);
   d_dataraw     = (float const *)(mxGPUGetDataReadOnly(dataraw));
@@ -225,18 +234,18 @@ void mexFunction(int nlhs, mxArray *plhs[],
   cudaMemset(d_x,       0, maxFR *    sizeof(float));
   cudaMemset(d_C,       0, maxFR *    sizeof(float));
 
-  mxGPUArray *dWU, *muout;
-  float *d_dWU, *d_muout;
+  mxGPUArray *nsp;
+  float  *d_nsp;
 
   const mwSize dimsmu[] = {blocksPerGrid, 1}; 
-  muout	 		= mxGPUCreateGPUArray(2, dimsmu, mxSINGLE_CLASS, mxREAL, MX_GPU_DO_NOT_INITIALIZE);  
-  d_muout	 	= (float *)(mxGPUGetData(muout));
-  cudaMemset(d_muout,       0, blocksPerGrid *    sizeof(float));
+  nsp	 		= mxGPUCreateGPUArray(2, dimsmu, mxSINGLE_CLASS, mxREAL, MX_GPU_DO_NOT_INITIALIZE);  
+  d_nsp	 	= (float *)(mxGPUGetData(nsp));
+  cudaMemset(d_nsp,       0, blocksPerGrid *    sizeof(float));
   
-  const mwSize dimsdWU[] = {nt0,Nchan,blocksPerGrid}; 
-  dWU 		= mxGPUCreateGPUArray(3, dimsdWU, mxSINGLE_CLASS, mxREAL, MX_GPU_DO_NOT_INITIALIZE);  
-  d_dWU     = (float *)(mxGPUGetData(dWU));
-  cudaMemset(d_dWU, 0,  nt0*Nchan*blocksPerGrid * sizeof(float));
+  //const mwSize dimsdWU[] = {nt0,Nchan,blocksPerGrid}; 
+  //dWU 		= mxGPUCreateGPUArray(3, dimsdWU, mxSINGLE_CLASS, mxREAL, MX_GPU_DO_NOT_INITIALIZE);  
+  //d_dWU     = (float *)(mxGPUGetData(dWU));
+  //cudaMemset(d_dWU, 0,  nt0*Nchan*blocksPerGrid * sizeof(float));
 
   int *counter;
   counter = (int*) calloc(1,sizeof(int));
@@ -247,7 +256,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
   bestFilter<<<NT/Nthreads,threadsPerBlock>>>(d_Params, d_dout, d_mu, d_lam, 
           d_xbest, d_err, d_ftype);
   cleanup_spikes<<<NT/Nthreads,threadsPerBlock>>>(d_Params,  d_xbest, d_err, 
-          d_ftype, d_UtU, d_st, d_id, d_x,  d_C, d_counter, d_muout);
+          d_ftype, d_UtU, d_st, d_id, d_x,  d_C, d_counter, d_nsp);
   
   dim3 block(nt0, 1024/nt0);
   average_snips<<<blocksPerGrid,block>>>(  d_Params, d_st, d_id, d_x, d_counter, d_dataraw, d_dWU);
@@ -275,7 +284,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
   cudaMemcpy(x,   d_x, minSize * sizeof(float), cudaMemcpyDeviceToHost);
   cudaMemcpy(C,   d_C, minSize * sizeof(float), cudaMemcpyDeviceToHost);
   
-  plhs[5] 	= mxGPUCreateMxArrayOnGPU(muout);
+  plhs[5] 	= mxGPUCreateMxArrayOnGPU(nsp);
   
   cudaFree(d_ftype);
   cudaFree(d_err);
@@ -296,6 +305,6 @@ void mexFunction(int nlhs, mxArray *plhs[],
   mxGPUDestroyGPUArray(mu);
   mxGPUDestroyGPUArray(W);
   mxGPUDestroyGPUArray(lam);
-  mxGPUDestroyGPUArray(muout);  
+  mxGPUDestroyGPUArray(nsp);  
   
 }

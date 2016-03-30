@@ -4,17 +4,20 @@ Params(4) = 50000;
 Params(5) = 50; 
 
 U0 = gpuArray(U);
-WtW  = gpuArray.zeros(Nfilt,Nfilt, 2*nt0-1, 'single');
+WtW  = zeros(Nfilt,Nfilt, 2*nt0-1, 'single');
 for i = 1:Nrank
     for j = 1:Nrank
         utu0 = U0(:,:,i)' * U0(:,:,j);
-        wtw0 = mexWtW2(Params, W(:,:,i), W(:,:,j), utu0);
-%         wtw0 = squeeze(wtw(:,i,:,j,:));
+        wtw0 =  gather(mexWtW2(Params, W(:,:,i), W(:,:,j), utu0));
         WtW = WtW + wtw0;
+        clear wtw0 utu0
+%         wtw0 = squeeze(wtw(:,i,:,j,:));
+        
     end
 end
 
-%
+WtW = gpuArray(WtW);
+%%
 
 mWtW = max(WtW, [], 3);
 murep = repmat(mu, 1, Nfilt);
@@ -123,18 +126,21 @@ for ibatch = 1:Nbatch
     end
     st = st - ioffset;
     
-    nspikes2(1:size(W,2)+1, ibatch) = histc(id, 0:1:size(W,2));
+%     nspikes2(1:size(W,2)+1, ibatch) = histc(id, 0:1:size(W,2));
     STT = cat(2, 20 + double(st) +(NT-ops.ntbuff)*(ibatch-1), ...
         double(id)+1, double(x), ibatch*ones(numel(x),1));
     st3 = cat(1, st3, STT);
     
     if rem(ibatch,100)==1
-        nsort = sort(sum(nspikes2,2), 'descend');
+%         nsort = sort(sum(nspikes2,2), 'descend');
         fprintf(repmat('\b', 1, numel(msg)));
-        msg = sprintf('Time %2.2f, batch %d/%d, err %2.6f, NTOT %d, n100 %d, n200 %d, n300 %d, n400 %d\n', ...
-            toc, ibatch,Nbatch, nanmean(delta), sum(nspikes2(:)), nsort(min(size(W,2), 100)),nsort(min(size(W,2), 200)), ...
-            nsort(min(size(W,2), 300)), nsort(min(size(W,2), 400)));
+%         msg = sprintf('Time %2.2f, batch %d/%d, err %2.6f, NTOT %d, n100 %d, n200 %d, n300 %d, n400 %d\n', ...
+%             toc, ibatch,Nbatch, nanmean(delta), sum(nspikes2(:)), nsort(min(size(W,2), 100)),nsort(min(size(W,2), 200)), ...
+%             nsort(min(size(W,2), 300)), nsort(min(size(W,2), 400)));
+        msg = sprintf('Time %2.2f, batch %d/%d, err %2.6f, NTOT %d\n', ...
+            toc, ibatch,Nbatch, nanmean(delta), size(st3,1));        
         fprintf(msg);
+        
     end
 end
 
@@ -170,9 +176,9 @@ if ~isempty(ops.nNeighPC)
 end
 
 %%
-nsort = sort(sum(nspikes2,2), 'descend');
-fprintf('Time %3.0fs. ExpVar %2.6f, n10 %d, n20 %d, n30 %d, n40 %d \n', toc, nanmean(delta), nsort(10), nsort(20), ...
-    nsort(min(size(W,2), 30)), nsort(min(size(W,2), 40)));
+% nsort = sort(sum(nspikes2,2), 'descend');
+% fprintf('Time %3.0fs. ExpVar %2.6f, n10 %d, n20 %d, n30 %d, n40 %d \n', toc, nanmean(delta), nsort(10), nsort(20), ...
+%     nsort(min(size(W,2), 30)), nsort(min(size(W,2), 40)));
 
 rez.ops      = ops;
 
