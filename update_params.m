@@ -42,9 +42,11 @@ for k = 1:Nfilt
 end
 
 % compute adjacency matrix UtU
+U(isnan(U)) = 0;
 U0 = gpuArray(U);
 utu = gpuArray.zeros(Nfilt, 'single');
 for irank = 1:Nrank
     utu = utu + (U0(:,:,irank)' * U0(:,:,irank));
 end
+
 UtU = logical(utu);

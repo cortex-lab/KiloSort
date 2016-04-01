@@ -30,7 +30,7 @@ ops.shuffle_clusters = 1;            % allow merges and splits (1)
 ops.mergeT           = .1;          % upper threshold for merging (.1)
 ops.splitT           = .1;           % lower threshold for splitting (.1)
 
-ops.nNeighPC    = 12; %12; % number of channnels to mask the PCs, leave empty to skip (12)
+ops.nNeighPC    = []; %12; % number of channnels to mask the PCs, leave empty to skip (12)
 ops.nNeigh      = 16; % number of neighboring templates to retain projections of (16)
 
 % new options
@@ -43,13 +43,13 @@ ops.long_range      = [30  6]; % ranges to detect isolated peaks ([30 6])
 ops.maskMaxChannels = 5;       % how many channels to mask up/down ([5])
 ops.crit            = .65;     % upper criterion for discarding spike repeates (0.65)
 ops.nFiltMax        = 10000;   % maximum "unique" spikes to consider (10000)
-dd                  = load('PCspikes.mat'); % you might want to recompute this from your own data
-ops.wPCA            = dd.Wi;   % PCs 
+dd                  = load('PCspikes2.mat'); % you might want to recompute this from your own data
+ops.wPCA            = dd.Wi(:,1:7);   % PCs 
 
 %%
 addpath('D:\DATA\Spikes\EvaluationCode')
 
-ops.ForceMaxRAMforDat   = Inf; %Inf;
+ops.ForceMaxRAMforDat   = Inf;
 
 fidname{1}  = '20141202_all_es';
 fidname{2}  = '20150924_1_e';
@@ -60,7 +60,7 @@ fidname{6}  = '20141202_all_GT';
 
 for idset = 6
     
-    clearvars -except fidname ops idset  tClu tRes time_run
+    clearvars -except fidname ops idset  tClu tRes time_run dd
     
     root        = 'C:\DATA\Spikes';
     fname       = sprintf('set%d//%s.dat', idset, fidname{idset});
@@ -69,14 +69,17 @@ for idset = 6
     
     
     clear loaded
-    load_data_and_initialize; % loads data into RAM + residual data on SSD
-    
+%     load_data_and_initialize; % loads data into RAM + residual data on SSD
+    load_data_and_PCproject; 
+    %%
+    optimizePeaks;
+%     keyboard;
    %%
     clear initialized
     
 %     optimizePeaks;
     run_reg_mu2; % iterate the template matching (non-overlapping extraction)
-    %
+    %%
     fullMPMU; % extracts final spike times (overlapping extraction)
     %
     testCode;

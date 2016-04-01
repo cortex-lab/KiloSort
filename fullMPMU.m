@@ -1,4 +1,7 @@
 lam(:)    = ops.lam(3);
+
+Params = double([NT Nfilt ops.Th(3) ops.maxFR 10 Nchan Nrank]);
+
 Params(3) = ops.Th(3);
 Params(4) = 50000;
 Params(5) = 50; 
@@ -100,7 +103,7 @@ for ibatch = 1:Nbatch
     data = reshape(data, NT, Nfilt*Nrank);
     
 %     [st, id, x] = mexMPmuLITE(Params,data,W,WtW, mu, lam * 20./mu);
-    [st, id, x, errC, proj] = mexMPmuFEAT(Params,data,W,WtW, mu, lam .* (20./mu).^2);    
+    [st, id, x, errC, PCproj] = mexMPmuFEAT(Params,data,W,WtW, mu, lam .* (20./mu).^2);    
 
     if ~isempty(ops.nNeighPC)
         % PCA coefficients
@@ -113,9 +116,9 @@ for ibatch = 1:Nbatch
         rez.cProjPC(irun + (1:numel(st)), :) = gather(coefs(iCoefs)');
         
         % template coefficients
-        proj = maskTT(:, id+1) .* proj;
+        PCproj = maskTT(:, id+1) .* PCproj;
         iPP = reshape(find(maskTT(:, id+1)>0), nNeigh, []);
-        rez.cProj(irun + (1:numel(st)), :) = proj(iPP)';
+        rez.cProj(irun + (1:numel(st)), :) = PCproj(iPP)';
     
         % increment number of spikes
         irun = irun + numel(st);

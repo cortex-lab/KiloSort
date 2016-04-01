@@ -34,7 +34,7 @@ if ~exist('loaded', 'var')
     NTbuff      = NT + 4*ops.ntbuff;
     Nbatch      = ceil(d.bytes/2/NchanTOT /(NT-ops.ntbuff));
     Nbatch_buff = floor(nint16s/ops.Nchan /(NT-ops.ntbuff));
-    Nbatch_buff = min(Nbatch_buff, Nbatch-1);
+    Nbatch_buff = min(Nbatch_buff, Nbatch);
     
      %% load data into patches, filter, compute covariance, write back to
     % disk
@@ -126,14 +126,17 @@ if ~exist('loaded', 'var')
     fidW = fopen(fullfile(root, fnameTW), 'w');
     
     
-    %
+    %%
     if strcmp(ops.initialize, 'fromData')
         % initialize set of prototypes
         ncurr = 1;
-        uBase = gpuArray.zeros(Nchan, ops.nFiltMax, ops.Nrank, 'single');
+        uBase = gpuArray.zeros(Nchan, ops.nFiltMax, size(ops.wPCA,2), 'single');
         uBase(:,1,:) = 0;
         nS = zeros(size(uBase,2),1);
+        wPCA = ops.wPCA(:, 1:ops.Nrank);
     end
+    i0 = 0;
+    proj = zeros(1e6,  size(ops.wPCA,2) * Nchan, 'single');
     %
     while 1
         ibatch = ibatch + 1;
@@ -202,7 +205,17 @@ if ~exist('loaded', 'var')
                 uBase(:, ncurr + [1:size(uNew,2)], :) = uNew;
                 nS(ncurr + [1:size(uNew,2)]) = nSadd;
                 
+                uS = permute(uS, [2 1 3]);
+                uS = reshape(uS,numel(row), Nchan * size(ops.wPCA,2));
+                
+                proj(i0 + (1:numel(row)), :) = gather(uS);
+                i0 = i0 + numel(row);
+                if i0>size(proj,1)
+                   proj(1e6 + size(proj,1), 1) = 0; 
+                end
+                
                 ncurr = ncurr + size(uNew,2);
+                
             end
         end
     end
@@ -213,14 +226,27 @@ if ~exist('loaded', 'var')
         
         [~, isort] = sort(nS, 'descend');
         dU = uBase(:,isort,:);
-        
         mu = sum(sum(dU.^2, 3),1).^.5;
-        muinit = single(gather(mu))';
+        muinit = single(gather(mu(:)));
         
-        dU = dU./repmat(mu, [ops.Nchan 1 ops.Nrank]);
+        
+        nt0 = size(ops.wPCA,1);
+        dU = permute(dU, [3 1 2]);
+        
+        Wrec = reshape(wPCA * dU(:,:), nt0, Nchan, []);
+
+        W = zeros(nt0, ncurr, Nrank, 'single');
+        U = zeros(Nchan, ncurr, Nrank, 'single');
+        for j = 1:Nfilt
+            [w sv u] = svd(Wrec(:,:,j));
+            w = w * sv;
+            
+            W(:,j,:) = w(:, 1:Nrank);
+            U(:,j,:) = u(:, 1:Nrank);
+        end
         
         Uinit = single(gather(dU));
-        W = repmat(single(ops.wPCA), [1 1 size(Uinit,2)]);
+        W = repmat(single(wPCA), [1 1 ncurr]);
         Winit = permute(W, [1 3 2]);
     end
     
