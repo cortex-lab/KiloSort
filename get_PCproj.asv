@@ -1,0 +1,17 @@
+function Us = get_PCproj(S1, row, col, wPCA)
+
+[nT, nChan] = size(S1);
+dt = -20:40;
+inds = repmat(row', numel(dt), 1) + repmat(dt', 1, numel(row));
+
+clips = reshape(S1(inds, :), numel(dt), numel(row), nChan);
+
+
+mask = repmat([1:nChan], [numel(row) 1]) - repmat(col', 1, nChan);
+mask = abs(mask)<6;
+mask = repmat(mask, [1 1 numel(dt)]);
+mask = reshape(mask, [3 1 2]);
+
+clips = clips .* mask;
+
+wPCA * reshape(clips, numel9dt)

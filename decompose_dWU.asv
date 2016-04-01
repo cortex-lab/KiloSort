@@ -1,0 +1,27 @@
+function  [W, U, mu, UtU] = decompose_dWU(dWUtot, ntot, Nrank)
+[nt0 Nchan Nfilt] = size(dWUtot);
+
+W = zeros(nt0, Nrank, Nfilt, 'single');
+U = zeros(Nchan, Nrank, Nfilt, 'single');
+mu = zeros(Nfilt, 1, 'single');
+for k = 1:Nfilt
+    if ntot(k)>5
+        [Wall, Sv, Uall] = svd(gather(dWUtot(:,:,k)), 0);
+        
+        mu(k) = sum(Sv(1:Nrank).^2).^.5;
+        Wall = Wall * Sv/mu(k);
+        [~, imax] = max(abs(Wall(:,1)));
+        Wall(:,1) = Wall(:,1) * sign(Wall(imax,1));
+        
+        W(:,:,k) = Wall;
+        U(:,:,k) = Uall;
+    end
+end
+U = permute(U, [1 3 2]);
+W = permute(W, [1 3 2]);
+
+U(isnan(U)) = 0;
+UtU = U(:,:,1)' * U(:,:,1);
+
+UtU 
+UtU = logical(utu);

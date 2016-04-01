@@ -1,0 +1,33 @@
+Th = -3;
+tic
+loc_range = [3  1];
+long_range = [30  6];
+maskMaxChannels = 5;
+
+crit = .75;
+nFiltMax = 10000;
+ncurr = 0;
+uBase = gpuArray.zeros(120, nFiltMax, 3, 'single');
+nS = zeros(size(uBase,2),1);
+
+%%
+
+tic
+
+[row, col, mu] = isolated_peaks(S1, loc_range, long_range, Th);
+
+uS = get_PCproj(S1, row, col, wPCA, maskMaxChannels);
+
+%
+[nSnew, iNonMatch] = merge_spikes_in(uBase(:,1:ncurr,:), nS(1:ncurr), uS, crit);
+nS(1:ncurr) = nS(1:ncurr) + nSnew;
+
+[uNew, nSadd] = reduce_clusters(uS(:,iNonMatch,:), crit);
+uBase(:, ncurr + [1:size(uNew,2)], :) = uNew;
+nS(ncurr + [1:size(uNew,2)]) = nSadd;
+
+ncurr = ncurr + size(uNew,2);
+
+toc
+%%
+
