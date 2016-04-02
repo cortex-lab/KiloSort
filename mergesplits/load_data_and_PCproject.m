@@ -128,7 +128,7 @@ if ~exist('loaded', 'var')
    
     i0 = 0;
     wPCA = ops.wPCA(:, 1:3);
-    uproj = zeros(1e6,  size(wPCA,2) * Nchan, 'single');
+    uproj = zeros(5e6,  size(wPCA,2) * Nchan, 'single');
     %
     for ibatch = 1:Nbatch
         if ibatch<=Nbatch_buff
