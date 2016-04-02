@@ -11,6 +11,10 @@ miniorder = repmat(iperm, 1, ops.nfullpasses);
 
 tic
 if ~exist('spikes_merged')
+    uBase = zeros(1e4, nProj);
+    nS = zeros(1e4, 1);
+    ncurr = 1;
+    
     for ibatch = 1:size(inds,2)
         % merge in with existing templates
         uS = uproj(inds(:,ibatch), :);
@@ -84,7 +88,7 @@ for i = 1:20
     U = normc(U);
     Cost = Cost/size(inds,2);
     
-    disp(Cost)
+%     disp(Cost)
     
     plot(sort(log(1+nToT)))
     drawnow
@@ -102,12 +106,12 @@ Nrank = 3;
 W = zeros(nt0, Nfilt, Nrank, 'single');
 U = zeros(Nchan, Nfilt, Nrank, 'single');
 for j = 1:Nfilt
-   [w sv u] = svd(Wrec(:,:,j));
-   w = w * sv;
-   
-   Sv = diag(sv);
-   W(:,j,:) = w(:, 1:Nrank)/sum(Sv(1:ops.Nrank).^2).^.5;
-   U(:,j,:) = u(:, 1:Nrank);
+    [w sv u] = svd(Wrec(:,:,j));
+    w = w * sv;
+    
+    Sv = diag(sv);
+    W(:,j,:) = w(:, 1:Nrank)/sum(Sv(1:ops.Nrank).^2).^.5;
+    U(:,j,:) = u(:, 1:Nrank);
 end
 
 Uinit = U;
@@ -119,7 +123,7 @@ WUinit = zeros(nt0, Nchan, Nfilt);
 for j = 1:Nfilt
     WUinit(:,:,j) = muinit(j)  * Wrec(:,:,j);
 end
-
+WUinit = single(WUinit);
 %%
 
 

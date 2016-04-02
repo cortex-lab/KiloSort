@@ -22,6 +22,7 @@ if ~exist('initialized', 'var')
     switch ops.initialize
         case 'fromData'
             dWU = WUinit(:,:,1:Nfilt);
+%             dWU = alignWU(dWU);
             [W, U, mu, UtU] = decompose_dWU(dWU, Nrank);
         otherwise
             initialize_waves0;
@@ -33,12 +34,17 @@ if ~exist('initialized', 'var')
                 U = cat(3, U, Uinit(:, ipck));
             end
             W = alignW(W);
+            dWU = WUinit(:,:,1:Nfilt);
             for k = 1:Nfilt
                 wu = squeeze(W(:,k,:)) * squeeze(U(:,k,:))';
                 newnorm = sum(wu(:).^2).^.5;
                 W(:,k,:) = W(:,k,:)/newnorm;
+                
+                dWU(:,:,k) = 10 * wu;
             end
-            mu = 7 * ones(Nfilt, 1, 'single');
+            mu = 10 * ones(Nfilt, 1, 'single');
+            
+            [dWU, W, U, mu, UtU] = decompose_dWU(dWU, Nrank);
     end
     
     
@@ -96,16 +102,17 @@ while (i<=Nbatch * ops.nfullpasses+1)
     % update the parameters every freqUpdate iterations
     if i>1 &&  ismember(rem(i,Nbatch), iUpdate) %&& i>Nbatch        
         dWU = gather(dWU);
-        % break bimodal clusters and remove low variance clusters
-        if  i<Nbatch*ops.nannealpasses && ops.shuffle_clusters && i>Nbatch && rem(rem(i,Nbatch), 4*400)==1     
-%            [dWU, dbins, nswitch, nspikes, iswitch] = ...
-%                replace_clusters(dWU, dbins,  Nbatch, ops.mergeT, ops.splitT, WUinit, nspikes);      
-        end
-      
-        % align except on last estimation
-        dWU = alignWU(dWU);
         
-        % %% parameter update    
+        % break bimodal clusters and remove low variance clusters
+        if  ops.shuffle_clusters &&...
+                i>Nbatch && rem(rem(i,Nbatch), 4*400)==1    % i<Nbatch*ops.nannealpasses
+           [dWU, dbins, nswitch, nspikes, iswitch] = ...
+               replace_clusters(dWU, dbins,  Nbatch, ops.mergeT, ops.splitT, WUinit, nspikes);      
+        end
+        
+        dWU = alignWU(dWU);
+       
+        % parameter update    
         [W, U, mu, UtU] = decompose_dWU(dWU, Nrank);
 
         dWU = gpuArray(dWU);
@@ -168,10 +175,10 @@ while (i<=Nbatch * ops.nfullpasses+1)
     
     % update status
     if rem(i,100)==1
-        nsort = sort(sum(nspikes,2), 'descend');
+        nsort = sort(round(sum(nspikes,2)), 'descend');
         fprintf(repmat('\b', 1, numel(msg)));
         msg = sprintf('Time %2.2f, batch %d/%d, mu %2.2f, neg-err %2.6f, NTOT %d, n100 %d, n200 %d, n300 %d, n400 %d\n', ...
-            toc, i,Nbatch* ops.nfullpasses,nanmedian(mu(:)), nanmean(delta), round(sum(nspikes(:))), ...
+            toc, i,Nbatch* ops.nfullpasses,nanmedian(mu(:)), nanmean(delta), round(sum(nsort)), ...
             nsort(min(size(W,2), 100)), nsort(min(size(W,2), 200)), ...
                 nsort(min(size(W,2), 300)), nsort(min(size(W,2), 400)));
         fprintf(msg);        
@@ -187,3 +194,12 @@ if Nbatch_buff<Nbatch
 end
 
 
+%%
+
+% [dWU, dbins, nswitch, nspikes, iswitch] = ...
+%     replace_clusters(dWU, dbins,  Nbatch, ops.mergeT, ops.splitT, WUinit, nspikes);
+% % align except on last estimation
+% dWU = alignWU(dWU);
+% 
+% % %% parameter update
+% [dWU, W, U, mu, UtU] = decompose_dWU(dWU, Nrank);

@@ -26,14 +26,14 @@ if ~exist('loaded', 'var')
     
     
     dmem         = memory;
-    memfree      = 8 * 2^30;
+    memfree      = 4 * 2^30;
     memallocated = min(ops.ForceMaxRAMforDat, dmem.MemAvailableAllArrays) - memfree;
     memallocated = max(0, memallocated);
     nint16s      = memallocated/2;
     
     NTbuff      = NT + 4*ops.ntbuff;
     Nbatch      = ceil(d.bytes/2/NchanTOT /(NT-ops.ntbuff));
-    Nbatch_buff = floor(nint16s/ops.Nchan /(NT-ops.ntbuff));
+    Nbatch_buff = floor(6/7 * nint16s/ops.Nchan /(NT-ops.ntbuff)); % factor of 6/7 for storing PCs of spikes
     Nbatch_buff = min(Nbatch_buff, Nbatch);
     
      %% load data into patches, filter, compute covariance, write back to
@@ -125,14 +125,12 @@ if ~exist('loaded', 'var')
     fid = fopen(fullfile(root, fname), 'r');
     fidW = fopen(fullfile(root, fnameTW), 'w');
     
-    
    
     i0 = 0;
     wPCA = ops.wPCA(:, 1:3);
     uproj = zeros(1e6,  size(wPCA,2) * Nchan, 'single');
     %
-    while 1
-        ibatch = ibatch + 1;
+    for ibatch = 1:Nbatch
         if ibatch<=Nbatch_buff
             datr = single(gpuArray(DATA(:,:,ibatch)));
         else
@@ -168,14 +166,10 @@ if ~exist('loaded', 'var')
         
         datr    = datr * Wrot;
         
-        if ibatch<=Nbatch_buff
-            DATA(:,:,ibatch) = gather(datr);
-        else
-            datcpu  = gather(int16(datr));
-            fwrite(fidW, datcpu, 'int16');
-        end
+     
         
         dataRAW = gpuArray(datr);
+%         dataRAW = datr;
         dataRAW = single(dataRAW);
         dataRAW = dataRAW / ops.scaleproc;
         
@@ -185,16 +179,30 @@ if ~exist('loaded', 'var')
         % find their PC projections
         uS = get_PCproj(dataRAW, row, col, wPCA, ops.maskMaxChannels);
         
-        
         uS = permute(uS, [2 1 3]);
         uS = reshape(uS,numel(row), Nchan * size(wPCA,2));
         
-        uproj(i0 + (1:numel(row)), :) = gather(uS);
-        i0 = i0 + numel(row);
-        if i0>size(uproj,1)
+        if i0+numel(row)>size(uproj,1)
             uproj(1e6 + size(uproj,1), 1) = 0;
         end
         
+        uproj(i0 + (1:numel(row)), :) = gather(uS);
+        i0 = i0 + numel(row);
+        
+        if rem(ibatch, 100)==1
+            toc
+        end
+        
+        if ibatch<=Nbatch_buff
+            DATA(:,:,ibatch) = gather(datr);
+        else
+            datcpu  = gather(int16(datr));
+            fwrite(fidW, datcpu, 'int16');
+        end
+        
+        if rem(ibatch, 100)==1
+            toc
+        end
     end
     
     Wrot        = gather(Wrot);

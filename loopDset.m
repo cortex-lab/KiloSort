@@ -1,6 +1,7 @@
-addpath('C:\CODE\GitHub\KiloSort')
+addpath(genpath('C:\CODE\GitHub\KiloSort'))
+% addpath('C:\Users\Marius\Documents\GitHub\npy-matlab')
 
-ops.Nfilt               = 1024 ; %  number of filters to use (512)
+ops.Nfilt               = 512 ; %  number of filters to use (512)
 ops.Nrank               = 3;    % matrix rank of spike template model
 ops.nfullpasses         = 6;    % number of complete passes through data (6)
 
@@ -25,13 +26,13 @@ ops.NT          = 32*1024+ ops.ntbuff;% this is the batch size, very important f
 ops.Th               = [4 12 12];    % threshold for detecting spikes on template-filtered data ([6 12 12])
 ops.lam              = [10 30 30];   % large means amplitudes are forced around the mean ([10 30 30])
 ops.nannealpasses    = 4;            % should be less than nfullpasses (4)
-ops.momentum         = 1./[20 400]; % start with high momentum and anneal (1./[20 1000])
-ops.shuffle_clusters = 1;            % allow merges and splits (1)
-ops.mergeT           = .1;          % upper threshold for merging (.1)
+ops.momentum         = 1./[20 400];  % start with high momentum and anneal (1./[20 1000])
+ops.shuffle_clusters = 1;            % allow merges and splits during optimization (1)
+ops.mergeT           = .1;           % upper threshold for merging (.1)
 ops.splitT           = .1;           % lower threshold for splitting (.1)
 
-ops.nNeighPC    = []; %12; % number of channnels to mask the PCs, leave empty to skip (12)
-ops.nNeigh      = 16; % number of neighboring templates to retain projections of (16)
+ops.nNeighPC    = 12; %12; % number of channnels to mask the PCs, leave empty to skip (12)
+ops.nNeigh      = 32; % number of neighboring templates to retain projections of (16)
 
 % new options
 ops.initialize = 'fromData'; %'fromData'; %'fromData';
@@ -46,10 +47,10 @@ ops.nFiltMax        = 10000;   % maximum "unique" spikes to consider (10000)
 dd                  = load('PCspikes2.mat'); % you might want to recompute this from your own data
 ops.wPCA            = dd.Wi(:,1:7);   % PCs 
 
+ops.fracse = 0.1; % binning step along discriminant axis for posthoc merges (in units of sd)
 %%
-addpath('D:\DATA\Spikes\EvaluationCode')
 
-ops.ForceMaxRAMforDat   = Inf;
+ops.ForceMaxRAMforDat   = 28e9; 
 
 fidname{1}  = '20141202_all_es';
 fidname{2}  = '20150924_1_e';
@@ -57,8 +58,9 @@ fidname{3}  = '20150601_all_s';
 fidname{4}  = '20150924_1_GT';
 fidname{5}  = '20150601_all_GT';
 fidname{6}  = '20141202_all_GT';
+fidname{7}  = '20151102_1';
 
-for idset = 6
+for idset = 5
     
     clearvars -except fidname ops idset  tClu tRes time_run dd
     
@@ -72,9 +74,9 @@ for idset = 6
 %     load_data_and_initialize; % loads data into RAM + residual data on SSD
     load_data_and_PCproject; 
     %%
-    optimizePeaks;
+    optimizePeaks;      
 %     keyboard;
-   %%
+   %
     clear initialized
     
 %     optimizePeaks;
@@ -82,7 +84,8 @@ for idset = 6
     %%
     fullMPMU; % extracts final spike times (overlapping extraction)
     %
-    testCode;
+    run_automerge_singlelink;
+%     testCode;
 end
 % clear DATA
 % plot_final_waveforms;

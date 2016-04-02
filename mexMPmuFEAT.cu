@@ -133,19 +133,27 @@ __global__ void	cleanup_spikes(const double *Params, const float *xbest, const f
 __global__ void	extractFEAT(const double *Params, const int *st, const int *id, 
         const float *x, const int *counter, const float *dout, const float *WtW, 
         float *d_feat){
-  int tid, bid,  NT, ind, tcurr, Nfilt;
+  int t, tid, bid,  NT, ind, tcurr, Nfilt;
+  float rMax;
   tid 		= threadIdx.x;
   bid 		= blockIdx.x;
   NT 		= (int) Params[0];
   Nfilt 	= (int) Params[1];
 
-  ind = bid;
-          
-  while(ind<=counter[0]){
+//  ind = bid;
+  
+    for(ind=counter[1]+bid;ind<counter[0];ind+=Nfilt){
+//  while(ind<=counter[0]){
       tcurr = st[ind];
-      d_feat[tid + ind * Nfilt] = dout[tcurr + tid*NT] + 
-               x[ind] * WtW[nt0 + id[ind]*(2*nt0-1) + (2*nt0-1)*Nfilt*tid];
-      ind += Nfilt;
+      rMax = 0.0f;
+      for (t=-3;t<3;t++)
+         rMax = max(rMax, dout[tcurr +t+ tid*NT]);
+        
+      d_feat[tid + ind * Nfilt] = rMax;
+          
+      //d_feat[tid + ind * Nfilt] = dout[tcurr + tid*NT];
+                //+ x[ind] * WtW[nt0 + id[ind]*(2*nt0-1) + (2*nt0-1)*Nfilt*tid];
+      //ind += Nfilt;
   }
  }
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -326,7 +334,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
       cudaMemcpy(d_counter, counter, sizeof(int), cudaMemcpyHostToDevice);      
     }
     
-//    extractFEAT<<<blocksPerGrid, blocksPerGrid>>>(d_Params, d_st, d_id, d_x, d_counter, d_dout,    d_feat);
+    extractFEAT<<<blocksPerGrid, blocksPerGrid>>>(d_Params, d_st, d_id, d_x, d_counter, d_dout,    d_WtW, d_feat);
     
     subSpikes<<<blocksPerGrid, 2*nt0-1>>>(d_Params, d_st, d_id, d_x, d_counter, d_dout,    d_WtW);
 
@@ -336,7 +344,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
       break;
   }
   
-  extractFEAT<<<blocksPerGrid, blocksPerGrid>>>(d_Params, d_st, d_id, d_x, d_counter, d_dout, d_WtW,   d_feat);
+//  extractFEAT<<<blocksPerGrid, blocksPerGrid>>>(d_Params, d_st, d_id, d_x, d_counter, d_dout, d_WtW,   d_feat);
 
   float *x, *C, *feat;
   int *st, *id;
