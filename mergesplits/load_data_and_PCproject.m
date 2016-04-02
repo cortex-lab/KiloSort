@@ -26,7 +26,7 @@ if ~exist('loaded', 'var')
     
     
     dmem         = memory;
-    memfree      = 4 * 2^30;
+    memfree      = 8 * 2^30;
     memallocated = min(ops.ForceMaxRAMforDat, dmem.MemAvailableAllArrays) - memfree;
     memallocated = max(0, memallocated);
     nint16s      = memallocated/2;
