@@ -60,7 +60,7 @@ fidname{5}  = '20150601_all_GT';
 fidname{6}  = '20141202_all_GT';
 fidname{7}  = '20151102_1';
 
-for idset = 5
+for idset = 4
     
     clearvars -except fidname ops idset  tClu tRes time_run dd
     
