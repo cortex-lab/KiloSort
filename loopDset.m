@@ -1,4 +1,6 @@
 addpath(genpath('C:\CODE\GitHub\KiloSort'))
+addpath('D:\DATA\Spikes\EvaluationCode')
+
 % addpath('C:\Users\Marius\Documents\GitHub\npy-matlab')
 
 ops.Nfilt               = 512 ; %  number of filters to use (512)
@@ -31,7 +33,7 @@ ops.shuffle_clusters = 1;            % allow merges and splits during optimizati
 ops.mergeT           = .1;           % upper threshold for merging (.1)
 ops.splitT           = .1;           % lower threshold for splitting (.1)
 
-ops.nNeighPC    = 12; %12; % number of channnels to mask the PCs, leave empty to skip (12)
+ops.nNeighPC    = []; %12; % number of channnels to mask the PCs, leave empty to skip (12)
 ops.nNeigh      = 32; % number of neighboring templates to retain projections of (16)
 
 % new options
@@ -50,7 +52,7 @@ ops.wPCA            = dd.Wi(:,1:7);   % PCs
 ops.fracse = 0.1; % binning step along discriminant axis for posthoc merges (in units of sd)
 %%
 
-ops.ForceMaxRAMforDat   = 28e9; 
+ops.ForceMaxRAMforDat   = 0e9; 
 
 fidname{1}  = '20141202_all_es';
 fidname{2}  = '20150924_1_e';
@@ -85,7 +87,7 @@ for idset = 4
     fullMPMU; % extracts final spike times (overlapping extraction)
     %
     run_automerge_singlelink;
-%     testCode;
+    testCode;
 end
 % clear DATA
 % plot_final_waveforms;

@@ -199,10 +199,7 @@ if ~exist('loaded', 'var')
             datcpu  = gather(int16(datr));
             fwrite(fidW, datcpu, 'int16');
         end
-        
-        if rem(ibatch, 100)==1
-            toc
-        end
+       
     end
     
     Wrot        = gather(Wrot);
