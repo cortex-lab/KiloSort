@@ -146,7 +146,7 @@ __global__ void	extractFEAT(const double *Params, const int *st, const int *id,
 //  while(ind<=counter[0]){
       tcurr = st[ind];
       rMax = 0.0f;
-      for (t=-3;t<3;t++)
+      for (t=-2;t<2;t++)
          rMax = max(rMax, dout[tcurr +t+ tid*NT]);
         
       d_feat[tid + ind * Nfilt] = rMax;

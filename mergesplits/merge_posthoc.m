@@ -20,7 +20,7 @@ for testID = 1:Nfilt
             simS_T = find(tfi(:,simIDs(s))==testID);
             spikesSim = find(clusterIDs==simIDs(s));
             
-            if simIDs(s)>testID && numel(spikesSim)>20 && ~isempty(simS_T)
+            if simIDs(s)>testID && numel(spikesSim)>200 && ~isempty(simS_T)
                 ft1 = [tf(spikesTest,1); tf(spikesSim,simS_T)];
                 ft2 = [tf(spikesTest,s); tf(spikesSim,1)];
                 
