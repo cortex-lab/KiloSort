@@ -53,25 +53,25 @@ fidname{4}  = '20150924_1_GT';
 fidname{5}  = '20150601_all_GT';
 fidname{6}  = '20141202_all_GT';
 
-idset = 6;
-
-clearvars -except fidname ops idset  tClu tRes time_run
-
-root        = 'C:\DATA\Spikes';
-fname       = sprintf('set%d//%s.dat', idset, fidname{idset});
-fnameTW     = 'temp_wh.dat'; % (residual from RAM) of whitened data
-ops.chanMap = 'C:\DATA\Spikes\forPRBimecToWhisper.mat';
-
-
-clear loaded
-load_data_and_initialize; % loads data into RAM + residual data on SSD
-
-clear initialized
-run_reg_mu2; % iterate the template matching (non-overlapping extraction)
-
-fullMPMU; % extracts final spike times (overlapping extraction)
-
-
-% !!! save rez file here?  !!!!
-
+for idset = 6
+    
+    clearvars -except fidname ops idset  tClu tRes time_run
+    
+    root        = 'C:\DATA\Spikes';
+    fname       = sprintf('set%d//%s.dat', idset, fidname{idset});
+    fnameTW     = 'temp_wh.dat'; % (residual from RAM) of whitened data
+    ops.chanMap = 'C:\DATA\Spikes\forPRBimecToWhisper.mat';
+    
+    
+    clear loaded
+    load_data_and_initialize; % loads data into RAM + residual data on SSD
+    
+    clear initialized
+    run_reg_mu2; % iterate the template matching (non-overlapping extraction)
+    
+    fullMPMU; % extracts final spike times (overlapping extraction)
+    
+    
+    % !!! save rez file here?  !!!!
+end
 %%
