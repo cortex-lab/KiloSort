@@ -23,7 +23,6 @@ if ~exist('initialized', 'var')
         case 'fromData'
             dWU = WUinit(:,:,1:Nfilt);
 %             dWU = alignWU(dWU);
-            [W, U, mu, UtU] = decompose_dWU(dWU, Nrank);
         otherwise
             initialize_waves0;
             ipck = randperm(size(Winit,2), Nfilt);
@@ -44,9 +43,8 @@ if ~exist('initialized', 'var')
             end
             mu = 10 * ones(Nfilt, 1, 'single');
             
-            [dWU, W, U, mu, UtU] = decompose_dWU(dWU, Nrank);
     end
-    
+    [W, U, mu, UtU, nu] = decompose_dWU(dWU, Nrank);    
     
     nspikes = zeros(Nfilt, Nbatch);
     lam =  ones(Nfilt, 1, 'single');
@@ -61,6 +59,8 @@ if ~exist('initialized', 'var')
 %     miniorder = repmat([1:Nbatch Nbatch:-1:1], 1, ops.nfullpasses/2);    
 
     i = 1;
+    
+    epu = ops.epu;
     initialized = 1;
     
 end
@@ -97,7 +97,7 @@ while (i<=Nbatch * ops.nfullpasses+1)
     end
     
     % some of the parameters change with iteration number
-    Params = double([NT Nfilt Th maxFR 10 Nchan Nrank pm]);    
+    Params = double([NT Nfilt Th maxFR 10 Nchan Nrank pm epu]);    
     
     % update the parameters every freqUpdate iterations
     if i>1 &&  ismember(rem(i,Nbatch), iUpdate) %&& i>Nbatch        
@@ -113,7 +113,7 @@ while (i<=Nbatch * ops.nfullpasses+1)
         dWU = alignWU(dWU);
        
         % parameter update    
-        [W, U, mu, UtU] = decompose_dWU(dWU, Nrank);
+        [W, U, mu, UtU, nu] = decompose_dWU(dWU, Nrank);
 
         dWU = gpuArray(dWU);
         
@@ -157,7 +157,7 @@ while (i<=Nbatch * ops.nfullpasses+1)
     
     % run GPU code to get spike times and coefficients
     [dWU, st, id, x,Cost, nsp] = ...
-        mexMPregMU(Params,dataRAW,W,data,UtU,mu, lam .* (20./mu).^2, dWU);
+        mexMPregMU(Params,dataRAW,W,data,UtU,mu, lam .* (20./mu).^2, dWU, nu);
     
     % compute numbers of spikes
     nsp                = gather(nsp(:));

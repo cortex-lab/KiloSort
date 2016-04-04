@@ -24,55 +24,33 @@ if ~exist('loaded', 'var')
     d = dir(fullfile(root, fname));
     ops.sampsToRead = floor(d.bytes/NchanTOT/2);
     
-    
-    dmem         = memory;
-    memfree      = 8 * 2^30;
-    memallocated = min(ops.ForceMaxRAMforDat, dmem.MemAvailableAllArrays) - memfree;
-    memallocated = max(0, memallocated);
-    nint16s      = memallocated/2;
-    
     NTbuff      = NT + 4*ops.ntbuff;
     Nbatch      = ceil(d.bytes/2/NchanTOT /(NT-ops.ntbuff));
-    Nbatch_buff = floor(4/5 * nint16s/ops.Nchan /(NT-ops.ntbuff)); % factor of 4/5 for storing PCs of spikes
-    Nbatch_buff = min(Nbatch_buff, Nbatch);
-    
+    m = memmapfile(fullfile(root, fname),'Format',{'int16',[NchanTOT ops.sampsToRead],'x'});
+    DATA = m.DATA.x;
      %% load data into patches, filter, compute covariance, write back to
     % disk
     [b1, a1] = butter(3, ops.fshigh/ops.fs, 'high');
     
     fprintf('Time %3.0fs. Loading raw data... \n', toc);
-    fid = fopen(fullfile(root, fname), 'r');
-    ibatch = 0;
     Nchan = ops.Nchan;
     CC = gpuArray.zeros( Nchan,  Nchan, 'single');
     if strcmp(ops.whitening, 'noSpikes')
         nPairs = gpuArray.zeros( Nchan,  Nchan, 'single');
     end
-    if ~exist('DATA', 'var')
-        DATA = zeros(NT, ops.Nchan, Nbatch_buff, 'int16');
-    end
     
-    while 1
-        ibatch = ibatch + 1;
-            
-        offset = max(0, 2*NchanTOT*((NT - ops.ntbuff) * (ibatch-1) - 2*ops.ntbuff));
+    for ibatch = 1:Nbatch
+        offset = max(0, ((NT - ops.ntbuff) * (ibatch-1) - 2*ops.ntbuff));
         if ibatch==1
             ioffset = 0;
         else
             ioffset = ops.ntbuff;
         end
-        fseek(fid, offset, 'bof');
-        buff = fread(fid, [NchanTOT NTbuff], '*int16');
+        inds = offset + [1:NTbuff];
+        inds(inds>size(DATA,2)) = size(DATA,2);
+        buff = DATA(:, inds);
         
-%         keyboard;
-        
-        if isempty(buff)
-            break;
-        end
-        nsampcurr = size(buff,2);
-        if nsampcurr<NTbuff
-            buff(:, nsampcurr+1:NTbuff) = repmat(buff(:,nsampcurr), 1, NTbuff-nsampcurr);
-        end
+            
         dataRAW = gpuArray(buff);
         dataRAW = dataRAW';
         dataRAW = single(dataRAW);
@@ -95,16 +73,13 @@ if ~exist('loaded', 'var')
             otherwise
                 CC        = CC + (datr' * datr)/NT;
         end
-        if ibatch<=Nbatch_buff
-            DATA(:,:,ibatch) = gather(int16( datr(ioffset + (1:NT),:)));
-        end        
     end
+    %
     CC = CC / ibatch;
     switch ops.whitening
             case 'noSpikes'
                 nPairs = nPairs/ibatch;
     end
-    fclose(fid);
     fprintf('Time %3.0fs. Channel-whitening filters computed. \n', toc);
 
     fprintf('Time %3.0fs. Loading raw data and applying filters... \n', toc);
@@ -120,56 +95,38 @@ if ~exist('loaded', 'var')
     eps 	= 1e-6;
     Wrot 	= E * diag(1./(diag(D) + eps).^.5) * E';
     Wrot    = ops.scaleproc * Wrot;
-    %
-    ibatch = 0;
-    fid = fopen(fullfile(root, fname), 'r');
+    %%
     fidW = fopen(fullfile(root, fnameTW), 'w');
-    
    
     i0 = 0;
     wPCA = ops.wPCA(:, 1:3);
     uproj = zeros(5e6,  size(wPCA,2) * Nchan, 'single');
     %
     for ibatch = 1:Nbatch
-        if ibatch<=Nbatch_buff
-            datr = single(gpuArray(DATA(:,:,ibatch)));
+        offset = max(0, ((NT - ops.ntbuff) * (ibatch-1) - 2*ops.ntbuff));
+        if ibatch==1
+            ioffset = 0;
         else
-            offset = max(0, 2*NchanTOT*((NT - ops.ntbuff) * (ibatch-1) - 2*ops.ntbuff));
-            if ibatch==1
-                ioffset = 0; 
-            else
-                ioffset = ops.ntbuff;
-            end
-            fseek(fid, offset, 'bof');
-            
-            buff = fread(fid, [NchanTOT NTbuff], '*int16');
-            if isempty(buff)
-                break;
-            end
-            nsampcurr = size(buff,2);
-            if nsampcurr<NTbuff
-                buff(:, nsampcurr+1:NTbuff) = repmat(buff(:,nsampcurr), 1, NTbuff-nsampcurr);
-            end
-            
-            dataRAW = gpuArray(buff);
-            dataRAW = dataRAW';
-            dataRAW = single(dataRAW);
-            dataRAW = dataRAW(:, chanMapConn);
-            
-            datr = filter(b1, a1, dataRAW);
-            datr = flipud(datr);
-            datr = filter(b1, a1, datr);
-            datr = flipud(datr);
-            
-            datr = datr(ioffset + (1:NT),:);
+            ioffset = ops.ntbuff;
         end
+        inds = offset + [1:NTbuff];
+        inds(inds>size(DATA,2)) = size(DATA,2);
+        buff = DATA(:, inds);
         
+        dataRAW = gpuArray(buff);
+        dataRAW = dataRAW';
+        dataRAW = single(dataRAW);
+        dataRAW = dataRAW(:, chanMapConn);
+        
+        datr = filter(b1, a1, dataRAW);
+        datr = flipud(datr);
+        datr = filter(b1, a1, datr);
+        datr = flipud(datr);
+        
+        datr = datr(ioffset + (1:NT),:);
         datr    = datr * Wrot;
         
-     
-        
         dataRAW = gpuArray(datr);
-%         dataRAW = datr;
         dataRAW = single(dataRAW);
         dataRAW = dataRAW / ops.scaleproc;
         
@@ -188,22 +145,15 @@ if ~exist('loaded', 'var')
         
         uproj(i0 + (1:numel(row)), :) = gather(uS);
         i0 = i0 + numel(row);
-      
         
-        if ibatch<=Nbatch_buff
-            DATA(:,:,ibatch) = gather(datr);
-        else
-            datcpu  = gather(int16(datr));
-            fwrite(fidW, datcpu, 'int16');
-        end
-       
+        datcpu  = gather(int16(datr));
+        fwrite(fidW, datcpu, 'int16');
     end
     
     Wrot        = gather(Wrot);
     rez.Wrot    = Wrot;
     
     fclose(fidW);
-    fclose(fid);
     fprintf('Time %3.2f. Whitened data written to disk... \n', toc);
     fprintf('Time %3.2f. Preprocessing complete!\n', toc);
     

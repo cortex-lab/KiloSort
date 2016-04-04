@@ -1,6 +1,6 @@
 lam(:)    = ops.lam(3);
 
-Params = double([NT Nfilt ops.Th(3) ops.maxFR 10 Nchan Nrank]);
+Params = double([NT Nfilt ops.Th(3) ops.maxFR 10 Nchan Nrank pm ops.epu]);
 
 Params(3) = ops.Th(3);
 Params(4) = 50000;
@@ -105,7 +105,7 @@ for ibatch = 1:Nbatch
     data = reshape(data, NT, Nfilt*Nrank);
     
 %     [st, id, x] = mexMPmuLITE(Params,data,W,WtW, mu, lam * 20./mu);
-    [st, id, x, errC, PCproj] = mexMPmuFEAT(Params,data,W,WtW, mu, lam .* (20./mu).^2);    
+    [st, id, x, errC, PCproj] = mexMPmuFEAT(Params,data,W,WtW, mu, lam .* (20./mu).^2, nu);    
 
     if ~isempty(ops.nNeighPC)
         % PCA coefficients
@@ -188,6 +188,8 @@ rez.ops      = ops;
 
 rez.W = W;
 rez.U = U;
+rez.mu = mu;
+
 rez.t2p = [];
 for i = 1:Nfilt
     wav0 = W(:,i,1);

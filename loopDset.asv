@@ -53,7 +53,7 @@ ops.fracse  = 0.1; % binning step along discriminant axis for posthoc merges (in
 ops.epu     = Inf;
 %%
 
-ops.ForceMaxRAMforDat   = 18e9; %0e9; 
+ops.ForceMaxRAMforDat   = Inf; %0e9; 
 
 fidname{1}  = '20141202_all_es';
 fidname{2}  = '20150924_1_e';
@@ -63,7 +63,7 @@ fidname{5}  = '20150601_all_GT';
 fidname{6}  = '20141202_all_GT';
 fidname{7}  = '20151102_1';
 
-for idset = 5
+for idset = 6
     
     clearvars -except fidname ops idset  tClu tRes time_run dd
     
@@ -87,8 +87,9 @@ for idset = 5
     %%
     fullMPMU; % extracts final spike times (overlapping extraction)
     %%
-    rez = merge_posthoc2(rez);
-%     testCode;
+    testCode
+    run_automerge_singlelink;
+    testCode;
 end
 % clear DATA
 % plot_final_waveforms;

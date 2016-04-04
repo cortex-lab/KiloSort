@@ -58,22 +58,27 @@ __global__ void	Conv1D(const double *Params, const float *data, const float *W, 
 }
 //////////////////////////////////////////////////////////////////////////////////////////
 __global__ void  bestFilter(const double *Params, const float *data, 
-	const float *mu, const float *lam, float *xbest, float *err, int *ftype){
+	const float *mu, const float *lam, const float *nu, float *xbest, float *err, int *ftype){
   int tid, tid0, i, bid, NT, Nfilt, ibest = 0;
-  float Th,  Cf, Ci, xb, Cbest = 0.0f;
+  float Th,  Cf, Ci, xb, Cbest = 0.0f, epu, cdiff;
 
   tid 		= threadIdx.x;
   bid 		= blockIdx.x;
   NT 		= (int) Params[0];
   Nfilt 	= (int) Params[1];
   Th 		= (float) Params[2];
+  epu       = (float) Params[8];
  
   tid0 = tid + bid * Nthreads;
-  if (tid0<NT){
-    for (i=0; i<Nfilt;i++){
-      Ci = data[tid0 + NT * i] + mu[i] * lam[i];
-      Cf = Ci * Ci / (lam[i] + 1.0f) - lam[i]*mu[i]*mu[i];
-		if (Cf > Cbest){
+  if (tid0<NT & tid0>0){
+      for (i=0; i<Nfilt;i++){
+          Ci = data[tid0 + NT * i] + mu[i] * lam[i];
+          Cf = Ci * Ci / (lam[i] + 1.0f) - lam[i]*mu[i]*mu[i];
+          // add the shift component
+          cdiff = data[tid0+1 + NT * i] - data[tid0-1 + NT * i];
+          Cf = Cf + cdiff * cdiff / (epu + nu[i]);
+
+		if (Cf > Cbest + 1e-6){
 			Cbest 	= Cf;
 			xb      = Ci - lam[i] * mu[i]; // /(lam[i] + 1);
 			ibest 	= i;
@@ -132,9 +137,9 @@ __global__ void	cleanup_spikes(const double *Params, const float *xbest, const f
 //////////////////////////////////////////////////////////////////////////////////////////
 __global__ void	extractFEAT(const double *Params, const int *st, const int *id, 
         const float *x, const int *counter, const float *dout, const float *WtW, 
-        float *d_feat){
+        const float *lam, const float *mu, float *d_feat){
   int t, tid, bid,  NT, ind, tcurr, Nfilt;
-  float rMax;
+  float rMax, Ci, Cf;
   tid 		= threadIdx.x;
   bid 		= blockIdx.x;
   NT 		= (int) Params[0];
@@ -145,10 +150,14 @@ __global__ void	extractFEAT(const double *Params, const int *st, const int *id,
     for(ind=counter[1]+bid;ind<counter[0];ind+=Nfilt){
 //  while(ind<=counter[0]){
       tcurr = st[ind];
-      rMax = 0.0f;
-      for (t=-2;t<2;t++)
+     // rMax = 0.0f;
+      rMax = dout[tcurr + tid*NT];
+      for (t=-3;t<3;t++)
          rMax = max(rMax, dout[tcurr +t+ tid*NT]);
-        
+      
+    //  Ci = dout[tcurr + tid*NT] + mu[tid] * lam[tid];
+    //  Cf = Ci * Ci / (lam[tid] + 1.0f) - mu[tid]*mu[tid] * lam[tid];
+      
       d_feat[tid + ind * Nfilt] = rMax;
           
       //d_feat[tid + ind * Nfilt] = dout[tcurr + tid*NT];
@@ -278,8 +287,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
   cudaMemcpy(d_Params,Params,sizeof(double)*mxGetNumberOfElements(prhs[0]),cudaMemcpyHostToDevice);
 
   /* collect input GPU variables*/
-  mxGPUArray const  *W,   *data,   *WtW, *mu,   *lam;
-  const float     *d_W, *d_data, *d_WtW,  *d_mu, *d_lam;
+  mxGPUArray const  *W,   *data,   *WtW, *mu,   *lam, *nu;
+  const float     *d_W, *d_data, *d_WtW,  *d_mu, *d_lam, *d_nu;
   
   data       = mxGPUCreateFromMxArray(prhs[1]);
   d_data     = (float const *)(mxGPUGetDataReadOnly(data));
@@ -291,7 +300,9 @@ void mexFunction(int nlhs, mxArray *plhs[],
   d_mu          = (float const *)(mxGPUGetDataReadOnly(mu));
   lam       	= mxGPUCreateFromMxArray(prhs[5]);
   d_lam     	= (float const *)(mxGPUGetDataReadOnly(lam));
-
+  nu            = mxGPUCreateFromMxArray(prhs[6]);
+  d_nu          = (float const *)(mxGPUGetDataReadOnly(nu));
+  
   /* allocate new GPU variables*/  
   float *d_err,*d_C, *d_xbest, *d_x, *d_dout, *d_feat;
   int *d_st,  *d_ftype,  *d_id, *d_counter;
@@ -325,7 +336,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     cudaMemset(d_ftype,   0, NT * sizeof(int));
     cudaMemset(d_xbest,   0, NT * sizeof(float));
 
-    bestFilter<<<NT/Nthreads,threadsPerBlock>>>(    d_Params, d_dout, d_mu, d_lam, d_xbest, d_err, d_ftype);
+    bestFilter<<<NT/Nthreads,threadsPerBlock>>>(    d_Params, d_dout, d_mu, d_lam, d_nu, d_xbest, d_err, d_ftype);
     cleanup_spikes<<<NT/Nthreads,threadsPerBlock>>>(d_Params, d_xbest, d_err, d_ftype, d_st, d_id, d_x, d_C, d_counter);
  
     cudaMemcpy(counter, d_counter, sizeof(int), cudaMemcpyDeviceToHost);
@@ -334,7 +345,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
       cudaMemcpy(d_counter, counter, sizeof(int), cudaMemcpyHostToDevice);      
     }
     
-    extractFEAT<<<blocksPerGrid, blocksPerGrid>>>(d_Params, d_st, d_id, d_x, d_counter, d_dout,    d_WtW, d_feat);
+    extractFEAT<<<blocksPerGrid, blocksPerGrid>>>(d_Params, d_st, d_id, d_x, d_counter, d_dout,    d_WtW, d_lam, d_mu,d_feat);
     
     subSpikes<<<blocksPerGrid, 2*nt0-1>>>(d_Params, d_st, d_id, d_x, d_counter, d_dout,    d_WtW);
 

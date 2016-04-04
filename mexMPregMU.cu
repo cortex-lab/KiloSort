@@ -58,33 +58,38 @@ __global__ void	Conv1D(const double *Params, const float *data, const float *W, 
 }
 ///////////////////////////////////////////////////////////////////////////
 __global__ void  bestFilter(const double *Params, const float *data, 
-        const float *mu, const float *lam, float *xbest, float *err, int *ftype){
+        const float *mu, const float *lam, const float *nu, float *xbest, float *err, int *ftype){
 
   int tid, tid0, i, bid, NT, Nfilt, ibest = 0;
-  float Th,  Cf, Ci, xb, Cbest = 0.0f;
+  float Th,  Cf, Ci, xb, Cbest = 0.0f, epu, cdiff;
  
   tid 		= threadIdx.x;
   bid 		= blockIdx.x;
   NT 		= (int) Params[0];
   Nfilt 	= (int) Params[1];
   Th 		= (float) Params[2];
-
+  epu       = (float) Params[8];
+  
   tid0 = tid + bid * Nthreads;
-  if (tid0<NT){
-    for (i=0; i<Nfilt;i++){
-      Ci = data[tid0 + NT * i] + mu[i] * lam[i];
-      Cf = Ci * Ci / (lam[i] + 1.0f) - lam[i]*mu[i]*mu[i];
-		if (Cf > Cbest){
-			Cbest 	= Cf;
-			xb      = Ci  - mu[i] * lam[i]; /// (lam[i] + 1);
-			ibest 	= i;
-		}
-    }
-    if (Cbest > Th*Th){
-      err[tid0] 	= Cbest;
-      xbest[tid0] 	= xb;
-      ftype[tid0] 	= ibest;
-    }
+  if (tid0<NT-1 & tid0>0){
+      for (i=0; i<Nfilt;i++){
+          Ci = data[tid0 + NT * i] + mu[i] * lam[i];
+          Cf = Ci * Ci / (lam[i] + 1.0f) - lam[i]*mu[i]*mu[i];
+          
+          // add the shift component
+          cdiff = data[tid0+1 + NT * i] - data[tid0-1 + NT * i];
+          Cf = Cf + cdiff * cdiff / (epu + nu[i]);
+          if (Cf > Cbest){
+              Cbest 	= Cf;
+              xb      = Ci  - mu[i] * lam[i]; /// (lam[i] + 1);
+              ibest 	= i;
+          }
+      }
+      if (Cbest > Th*Th){
+          err[tid0] 	= Cbest;
+          xbest[tid0] 	= xb;
+          ftype[tid0] 	= ibest;
+      }
   }
 }
 
@@ -191,8 +196,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
   cudaMemcpy(d_Params,Params,sizeof(double)*mxGetNumberOfElements(prhs[0]),cudaMemcpyHostToDevice);
   
   /* collect input GPU variables*/
-  mxGPUArray const  *W, *dataraw,   *data, *UtU, *mu, *lam;
-  const float      *d_W, *d_dataraw, *d_data, *d_mu, *d_lam;
+  mxGPUArray const  *W, *dataraw,   *data, *UtU, *mu, *lam, *nu;
+  const float      *d_W, *d_dataraw, *d_data, *d_mu, *d_lam, *d_nu;
   float *d_dWU;
   const bool *d_UtU;
   
@@ -212,6 +217,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
   d_mu          = (float const *)(mxGPUGetDataReadOnly(mu));
   lam       	= mxGPUCreateFromMxArray(prhs[6]);
   d_lam     	= (float const *)(mxGPUGetDataReadOnly(lam));
+  nu            = mxGPUCreateFromMxArray(prhs[8]);
+  d_nu          = (float const *)(mxGPUGetDataReadOnly(nu));
   /* allocate new GPU variables*/
   float *d_err, *d_x, *d_dout, *d_C,*d_xbest;
   int *d_st, *d_ftype,  *d_id, *d_counter;
@@ -253,7 +260,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
   cudaMemset(d_ftype,   0, NT * sizeof(int));
   
   Conv1D<<<blocksPerGrid,threadsPerBlock>>>(d_Params, d_data, d_W, d_dout);
-  bestFilter<<<NT/Nthreads,threadsPerBlock>>>(d_Params, d_dout, d_mu, d_lam, 
+  bestFilter<<<NT/Nthreads,threadsPerBlock>>>(d_Params, d_dout, d_mu, d_lam, d_nu,
           d_xbest, d_err, d_ftype);
   cleanup_spikes<<<NT/Nthreads,threadsPerBlock>>>(d_Params,  d_xbest, d_err, 
           d_ftype, d_UtU, d_st, d_id, d_x,  d_C, d_counter, d_nsp);

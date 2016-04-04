@@ -1,11 +1,11 @@
-testID = 141;
+testID = 246;
 clusterIDs = rez.st3(:,2);
-tfi = rez.iNeigh;
-tf = rez.cProj;
+% tfi = rez.iNeigh;
+% tf = rez.cProj;
 
 spikesTest = find(clusterIDs==testID);
 
-simIDs = tfi(:,testID);
+simIDs = rez.iNeigh(:,testID);
 %
 figure(2)
 clf
@@ -16,16 +16,16 @@ LAM = ops.lam(3) * (20./mu).^2;
 
 nSP = ceil(sqrt(length(simIDs)));
 for s = 1:length(simIDs)
-    simS_T = find(tfi(:,simIDs(s))==testID);
+    simS_T = find(rez.iNeigh(:,simIDs(s))==testID);
     spikesSim = find(clusterIDs==simIDs(s));
     
      if simIDs(s)~=testID && numel(spikesSim)>20 && ~isempty(simS_T)
         figure(2)
         subplot(4, 8, s);
         
-        plot(tf(spikesTest,1), tf(spikesTest,s), '.')
+        plot(rez.cProj(spikesTest,1), rez.cProj(spikesTest,s), '.')
         hold on;
-        plot(tf(spikesSim,simS_T), tf(spikesSim,1), '.')
+        plot(rez.cProj(spikesSim,simS_T), rez.cProj(spikesSim,1), '.')
         
         title(sprintf('%d vs %d', testID, simIDs(s)))
         axis tight
@@ -33,8 +33,8 @@ for s = 1:length(simIDs)
         figure(1)
         subplot(nSP/2, 2*nSP, s);
          
-        ft1 = [tf(spikesTest,1); tf(spikesSim,simS_T)];
-        ft2 = [tf(spikesTest,s); tf(spikesSim,1)];
+        ft1 = [rez.cProj(spikesTest,1); rez.cProj(spikesSim,simS_T)];
+        ft2 = [rez.cProj(spikesTest,s); rez.cProj(spikesSim,1)];
         
         ft1 = (ft1 + LAM(testID) * mu(testID))    / sqrt(1 + LAM(testID));
         ft2 = (ft2 + LAM(simIDs(s)) * mu(simIDs(s))) / sqrt(1 +  LAM(simIDs(s)));
