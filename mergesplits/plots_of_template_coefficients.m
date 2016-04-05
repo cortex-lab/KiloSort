@@ -1,4 +1,5 @@
-testID = 246;
+testID = 156;
+mu = rez.mu;
 clusterIDs = rez.st3(:,2);
 % tfi = rez.iNeigh;
 % tf = rez.cProj;

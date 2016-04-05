@@ -33,7 +33,7 @@ ops.shuffle_clusters = 1;            % allow merges and splits during optimizati
 ops.mergeT           = .1;           % upper threshold for merging (.1)
 ops.splitT           = .1;           % lower threshold for splitting (.1)
 
-ops.nNeighPC    = []; %12; % number of channnels to mask the PCs, leave empty to skip (12)
+ops.nNeighPC    = 12; %12; % number of channnels to mask the PCs, leave empty to skip (12)
 ops.nNeigh      = 32; % number of neighboring templates to retain projections of (16)
 
 % new options
@@ -63,7 +63,7 @@ fidname{5}  = '20150601_all_GT';
 fidname{6}  = '20141202_all_GT';
 fidname{7}  = '20151102_1';
 
-for idset = 5
+for idset = 6
     
     clearvars -except fidname ops idset  tClu tRes time_run dd
     
