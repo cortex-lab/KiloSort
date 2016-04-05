@@ -162,8 +162,8 @@ if ~isempty(ops.nNeighPC)
     for ik = 1:Nfilt
         iSp = rez.st3(:,2)==ik;
         OneToN = 1:nNeighPC;
-        [~, isort] = sort(rez.iNeighPC(:,ik), 'ascend');
-        OneToN(isort) = OneToN;
+        [~, isortNeigh] = sort(rez.iNeighPC(:,ik), 'ascend');
+        OneToN(isortNeigh) = OneToN;
         rez.cProjPC(iSp, :,:) = rez.cProjPC(iSp, OneToN, :);
     end
     
@@ -177,8 +177,8 @@ if ~isempty(ops.nNeigh)
     for ik = 1:Nfilt
         iSp = rez.st3(:,2)==ik;
         OneToN = 1:nNeigh;
-        [~, isort] = sort(rez.iNeigh(:,ik), 'ascend');
-        OneToN(isort) = OneToN;
+        [~, isortNeigh] = sort(rez.iNeigh(:,ik), 'ascend');
+        OneToN(isortNeigh) = OneToN;
         rez.cProj(iSp, :) = rez.cProj(iSp, OneToN);
     end
 end
