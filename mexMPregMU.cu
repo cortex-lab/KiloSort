@@ -149,7 +149,8 @@ __global__ void average_snips(const double *Params, const int *st, const int *id
   
   pm = (float) Params[7];
 
-  NT = (int) Params[0];
+  NT = (int) Params[0];  
+  
   tidx 		= threadIdx.x;
   tidy 		= threadIdx.y;
   bid 		= blockIdx.x;
