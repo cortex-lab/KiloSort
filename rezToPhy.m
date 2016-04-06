@@ -11,7 +11,10 @@ function [spikeTimes, clusterIDs, amplitudes, templates, templateFeatures, ...
 
 spikeTimes = uint64(rez.st3(:,1));
 % [spikeTimes, ii] = sort(spikeTimes);
-clusterIDs = uint32(rez.st3(:,2));
+spikeTemplates = uint32(rez.st3(:,2));
+if size(rez.st3,2)>4
+    spikeClusters = uint32(rez.st3(:,5));
+end
 amplitudes = rez.st3(:,3);
 
 
@@ -42,7 +45,10 @@ pcFeatureInds = uint32(rez.iNeighPC);
 if ~isempty(savePath)
     
     writeNPY(spikeTimes, fullfile(savePath, 'spike_times.npy'));
-    writeNPY(clusterIDs-1, fullfile(savePath, 'spike_templates.npy')); % -1 for zero indexing
+    writeNPY(uint32(spikeTemplates-1), fullfile(savePath, 'spike_templates.npy')); % -1 for zero indexing
+    if size(rez.st3,2)>4
+        writeNPY(uint32(spikeClusters-1), fullfile(savePath, 'spike_clusters.npy')); % -1 for zero indexing
+    end
     writeNPY(amplitudes, fullfile(savePath, 'amplitudes.npy'));
     writeNPY(templates, fullfile(savePath, 'templates.npy'));
     writeNPY(templatesInds, fullfile(savePath, 'templates_ind.npy'));

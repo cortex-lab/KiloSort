@@ -1,5 +1,6 @@
 function steps = merging_score(fold, fnew, fracse)
 
+peakToTroughScale = 3; % smaller is more conservative (fewer merges)
 
 l1 = min(fnew);
 l2 = max(fold);
@@ -16,4 +17,4 @@ mmax = min(max(hs1), max(hs2));
 
 m1 = ceil(mean(fold)/se25);
 m2 = -ceil(mean(fnew)/se25);
-steps = sum(hs1(1:m1)<mmax/5) + sum(hs2(1:m2)<mmax/5);
+steps = sum(hs1(1:m1)<mmax/peakToTroughScale) + sum(hs2(1:m2)<mmax/peakToTroughScale);
