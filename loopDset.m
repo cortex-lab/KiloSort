@@ -33,7 +33,7 @@ ops.shuffle_clusters = 1;            % allow merges and splits during optimizati
 ops.mergeT           = .1;           % upper threshold for merging (.1)
 ops.splitT           = .1;           % lower threshold for splitting (.1)
 
-ops.nNeighPC    = []; %12; % number of channnels to mask the PCs, leave empty to skip (12)
+ops.nNeighPC    = 12; %12; % number of channnels to mask the PCs, leave empty to skip (12)
 ops.nNeigh      = 32; % number of neighboring templates to retain projections of (16)
 
 % new options
@@ -63,7 +63,7 @@ fidname{5}  = '20150601_all_GT';
 fidname{6}  = '20141202_all_GT';
 fidname{7}  = '20151102_1';
 
-for idset = 5
+for idset = 6
     
     clearvars -except fidname ops idset  tClu tRes time_run dd
     
@@ -76,19 +76,24 @@ for idset = 5
     clear loaded
 %     load_data_and_initialize; % loads data into RAM + residual data on SSD
     load_data_and_PCproject; 
-    %%
+    %
     optimizePeaks;      
 %     keyboard;
-    %%
+    %
     clear initialized
     
 %     optimizePeaks;
     run_reg_mu2; % iterate the template matching (non-overlapping extraction)
-    %%
+    %
     fullMPMU; % extracts final spike times (overlapping extraction)
-    %%
+    %
     rez = merge_posthoc2(rez);
+    
+    save(fullfile('C:\DATA\Spikes\rez', sprintf('rez%d.mat', idset)), 'rez');
 %     testCode;
+
+savePhyPath = fullfile(root, sprintf('set%d', idset));
+rezToPhy(rez, savePhyPath);
 end
 % clear DATA
 % plot_final_waveforms;

@@ -52,7 +52,7 @@ while 1
     
     while ~isempty(pair_list)
         %
-        picked_pairs = rez.nbins(pair_list);
+%         picked_pairs = rez.nbins(pair_list);
         
         [mmax, ipair] = max(rez.nbins(pair_list));
         
