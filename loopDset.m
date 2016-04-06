@@ -76,19 +76,24 @@ for idset = 6
     clear loaded
 %     load_data_and_initialize; % loads data into RAM + residual data on SSD
     load_data_and_PCproject; 
-    %%
+    %
     optimizePeaks;      
 %     keyboard;
-    %%
+    %
     clear initialized
     
 %     optimizePeaks;
     run_reg_mu2; % iterate the template matching (non-overlapping extraction)
-    %%
+    %
     fullMPMU; % extracts final spike times (overlapping extraction)
-    %%
+    %
     rez = merge_posthoc2(rez);
+    
+    save(fullfile('C:\DATA\Spikes\rez', sprintf('rez%d.mat', idset)), 'rez');
 %     testCode;
+
+savePhyPath = fullfile(root, sprintf('set%d', idset));
+rezToPhy(rez, savePhyPath);
 end
 % clear DATA
 % plot_final_waveforms;
