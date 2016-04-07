@@ -40,9 +40,7 @@ if ~exist('initialized', 'var')
                 W(:,k,:) = W(:,k,:)/newnorm;
                 
                 dWU(:,:,k) = 10 * wu;
-            end
-            mu = 10 * ones(Nfilt, 1, 'single');
-            
+            end           
     end
     [W, U, mu, UtU, nu] = decompose_dWU(dWU, Nrank);    
     

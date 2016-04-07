@@ -150,8 +150,8 @@ __global__ void	extractFEAT(const double *Params, const int *st, const int *id,
     for(ind=counter[1]+bid;ind<counter[0];ind+=Nfilt){
 //  while(ind<=counter[0]){
       tcurr = st[ind];
-     // rMax = 0.0f;
-      rMax = dout[tcurr + tid*NT];
+      rMax = 0.0f;
+      //rMax = dout[tcurr + tid*NT];
       for (t=-3;t<3;t++)
          rMax = max(rMax, dout[tcurr +t+ tid*NT]);
       
@@ -330,25 +330,37 @@ void mexFunction(int nlhs, mxArray *plhs[],
   int *counter;
   counter = (int*) calloc(1,sizeof(int));
  
+  // filter the data with the temporal templates
   Conv1D<<<blocksPerGrid,threadsPerBlock>>>(d_Params, d_data, d_W, d_dout); 
   for(int k=0;k<(int) Params[4];k++){
     cudaMemset(d_err,     0, NT * sizeof(float));
     cudaMemset(d_ftype,   0, NT * sizeof(int));
     cudaMemset(d_xbest,   0, NT * sizeof(float));
 
-    bestFilter<<<NT/Nthreads,threadsPerBlock>>>(    d_Params, d_dout, d_mu, d_lam, d_nu, d_xbest, d_err, d_ftype);
-    cleanup_spikes<<<NT/Nthreads,threadsPerBlock>>>(d_Params, d_xbest, d_err, d_ftype, d_st, d_id, d_x, d_C, d_counter);
+    // compute the best filter
+    bestFilter<<<NT/Nthreads,threadsPerBlock>>>(    d_Params, 
+            d_dout, d_mu, d_lam, d_nu, d_xbest, d_err, d_ftype);
+    
+    // ignore peaks that are smaller than another nearby peak
+    cleanup_spikes<<<NT/Nthreads,threadsPerBlock>>>(d_Params, 
+            d_xbest, d_err, d_ftype, d_st, d_id, d_x, d_C, d_counter);
  
+    // add new spikes to 2nd counter
     cudaMemcpy(counter, d_counter, sizeof(int), cudaMemcpyDeviceToHost);
     if (counter[0]>maxFR){
       counter[0] = maxFR;
       cudaMemcpy(d_counter, counter, sizeof(int), cudaMemcpyHostToDevice);      
     }
     
-    extractFEAT<<<blocksPerGrid, blocksPerGrid>>>(d_Params, d_st, d_id, d_x, d_counter, d_dout,    d_WtW, d_lam, d_mu,d_feat);
+    // extract template features before subtraction
+    extractFEAT<<<blocksPerGrid, blocksPerGrid>>>(d_Params, d_st, d_id, 
+            d_x, d_counter, d_dout, d_WtW, d_lam, d_mu,d_feat);
     
-    subSpikes<<<blocksPerGrid, 2*nt0-1>>>(d_Params, d_st, d_id, d_x, d_counter, d_dout,    d_WtW);
+    // subtract the detected spikes
+    subSpikes<<<blocksPerGrid, 2*nt0-1>>>(d_Params, d_st, d_id, 
+            d_x, d_counter, d_dout, d_WtW);
 
+    // update 1st counter from 2nd counter
     cudaMemcpy(d_counter+1, d_counter, sizeof(int), cudaMemcpyDeviceToDevice);
 
     if(counter[0]==maxFR)

@@ -33,7 +33,7 @@ end
 inewclust = 0;
 clear iMegaC
 picked = zeros(Nfilt, 1);
-tic
+% tic
 while 1    
     [maxseed, iseed] = max(rez.nbins(1:Nfilt) .* (1-picked), [], 1);
 %     [maxseed, iseed] = max(mu(1:Nfilt) .* (1-picked), [], 1);
@@ -89,7 +89,7 @@ while 1
             mo = merging_score(f1old - f2old, f1new-f2new, ops.fracse);
             
             
-            if mo<1
+            if mo<5
                 strun = cat(1, strun, new_spikes);
                 run_list(end+1) = ipair;
                 picked(ipair)   = 1;
@@ -108,7 +108,7 @@ while 1
 %     [sum(picked) run_list]
 end
 
-toc
+% toc
 %
 
 iMega = zeros(Nfilt, 1);

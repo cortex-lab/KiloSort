@@ -1,6 +1,6 @@
 function steps = merging_score(fold, fnew, fracse)
 
-troughToPeakRatio = 5;
+troughToPeakRatio = 3;
 
 l1 = min(fnew);
 l2 = max(fold);

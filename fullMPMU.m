@@ -55,8 +55,6 @@ if ~isempty(ops.nNeigh)
     vld = single(nsp>100);
     cr    = mWtW .* (vld * vld');
     cr(isnan(cr)) = 0;
-    %     rez.simScore = cr;
-    
     [~, iNgsort] = sort(cr, 1, 'descend');
     
     % save full similarity score
