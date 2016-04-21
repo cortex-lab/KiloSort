@@ -166,6 +166,8 @@ if ~exist('loaded', 'var')
         
         datr    = datr * Wrot;
         
+     
+        
         dataRAW = gpuArray(datr);
 %         dataRAW = datr;
         dataRAW = single(dataRAW);
@@ -185,7 +187,8 @@ if ~exist('loaded', 'var')
         end
         
         uproj(i0 + (1:numel(row)), :) = gather(uS);
-        i0 = i0 + numel(row);      
+        i0 = i0 + numel(row);
+      
         
         if ibatch<=Nbatch_buff
             DATA(:,:,ibatch) = gather(datr);

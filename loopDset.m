@@ -71,24 +71,25 @@ for idset = 6
     
     
     clear loaded
-%     load_data_and_initialize; % loads data into RAM + residual data on SSD
+    % loads data into RAM + residual data on SSD and picks out spikes by a
+    % threshold for initialization
     load_data_and_PCproject; 
-    %
+    
+    % do scaled kmeans to initialize the algorith,
     optimizePeaks;      
-%     keyboard;
-    %
 
     clear initialized
     run_reg_mu2; % iterate the template matching (non-overlapping extraction)
     
     fullMPMU; % extracts final spike times (overlapping extraction)
 
-    %
+    % posthoc merge templates
 %     rez = merge_posthoc2(rez);
     
-    save(fullfile('C:\DATA\Spikes\rez', sprintf('rez%d.mat', idset)), 'rez');
-    %     testCode;
-    %   
-    rezToPhy(rez, fullfile(root, sprintf('set%d', idset)));
+    % save here?
+%     save(fullfile('C:\DATA\Spikes\rez', sprintf('rez%d.mat', idset)), 'rez');
+      
+    % write to Phy?
+%     rezToPhy(rez, fullfile(root, sprintf('set%d', idset)));
 end
 %%
