@@ -33,7 +33,8 @@ if ~exist('initialized', 'var')
                 U = cat(3, U, Uinit(:, ipck));
             end
             W = alignW(W);
-            dWU = WUinit(:,:,1:Nfilt);
+            
+            dWU = zeros(nt0, Nchan, Nfilt, 'single');
             for k = 1:Nfilt
                 wu = squeeze(W(:,k,:)) * squeeze(U(:,k,:))';
                 newnorm = sum(wu(:).^2).^.5;
@@ -41,6 +42,7 @@ if ~exist('initialized', 'var')
                 
                 dWU(:,:,k) = 10 * wu;
             end           
+            WUinit = dWU;
     end
     [W, U, mu, UtU, nu] = decompose_dWU(dWU, Nrank);    
     

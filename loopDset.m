@@ -35,7 +35,7 @@ ops.nNeighPC    = 12; %12; % number of channnels to mask the PCs, leave empty to
 ops.nNeigh      = 32; % number of neighboring templates to retain projections of (16)
 
 % new options
-ops.initialize = 'fromData'; %'fromData'; %'fromData';
+ops.initialize = 'no'; %'fromData'; %'fromData';
 
 % options for initializing spikes from data
 ops.spkTh           = -4;      % spike threshold in standard deviations (4)
@@ -76,7 +76,9 @@ for idset = 6
     load_data_and_PCproject; 
     
     % do scaled kmeans to initialize the algorith,
-    optimizePeaks;      
+    if strcmp(ops.initialize, 'fromData')
+        optimizePeaks;      
+    end
 
     clear initialized
     run_reg_mu2; % iterate the template matching (non-overlapping extraction)

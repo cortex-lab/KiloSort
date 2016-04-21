@@ -125,10 +125,11 @@ if ~exist('loaded', 'var')
     fid = fopen(fullfile(root, fname), 'r');
     fidW = fopen(fullfile(root, fnameTW), 'w');
     
-   
-    i0 = 0;
-    wPCA = ops.wPCA(:, 1:3);
-    uproj = zeros(5e6,  size(wPCA,2) * Nchan, 'single');
+    if strcmp(ops.initialize, 'fromData')
+        i0 = 0;
+        wPCA = ops.wPCA(:, 1:3);
+        uproj = zeros(5e6,  size(wPCA,2) * Nchan, 'single');
+    end
     %
     for ibatch = 1:Nbatch
         if ibatch<=Nbatch_buff
@@ -173,22 +174,23 @@ if ~exist('loaded', 'var')
         dataRAW = single(dataRAW);
         dataRAW = dataRAW / ops.scaleproc;
         
-        % find isolated spikes
-        [row, col, mu] = isolated_peaks(dataRAW, ops.loc_range, ops.long_range, ops.spkTh);
-        
-        % find their PC projections
-        uS = get_PCproj(dataRAW, row, col, wPCA, ops.maskMaxChannels);
-        
-        uS = permute(uS, [2 1 3]);
-        uS = reshape(uS,numel(row), Nchan * size(wPCA,2));
-        
-        if i0+numel(row)>size(uproj,1)
-            uproj(1e6 + size(uproj,1), 1) = 0;
+        if strcmp(ops.initialize, 'fromData')
+            % find isolated spikes
+            [row, col, mu] = isolated_peaks(dataRAW, ops.loc_range, ops.long_range, ops.spkTh);
+            
+            % find their PC projections
+            uS = get_PCproj(dataRAW, row, col, wPCA, ops.maskMaxChannels);
+            
+            uS = permute(uS, [2 1 3]);
+            uS = reshape(uS,numel(row), Nchan * size(wPCA,2));
+            
+            if i0+numel(row)>size(uproj,1)
+                uproj(1e6 + size(uproj,1), 1) = 0;
+            end
+            
+            uproj(i0 + (1:numel(row)), :) = gather(uS);
+            i0 = i0 + numel(row);
         end
-        
-        uproj(i0 + (1:numel(row)), :) = gather(uS);
-        i0 = i0 + numel(row);
-      
         
         if ibatch<=Nbatch_buff
             DATA(:,:,ibatch) = gather(datr);
