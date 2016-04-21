@@ -49,7 +49,7 @@ mu = sum(U.^2,1)'.^.5;
 U = normc(U);
 %
 
-for i = 1:20
+for i = 1:10
     
     idT = zeros(size(inds));
     dWU = zeros(Nfilt, nProj, 'single');
