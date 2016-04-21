@@ -89,11 +89,10 @@ for idset = 6
     %
     rez = merge_posthoc2(rez);
     
-%     save(fullfile('C:\DATA\Spikes\rez', sprintf('rez%d.mat', idset)), 'rez');
+    save(fullfile('C:\DATA\Spikes\rez', sprintf('rez%d.mat', idset)), 'rez');
     %     testCode;
-    
-%     savePhyPath = fullfile(root, sprintf('set%d', idset));
-%     rezToPhy(rez, savePhyPath);
+    %   
+    rezToPhy(rez, fullfile(root, sprintf('set%d', idset)));
 end
 % clear DATA
 % plot_final_waveforms;

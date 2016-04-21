@@ -9,7 +9,6 @@ iperm = randperm(size(inds,2));
 miniorder = repmat(iperm, 1, ops.nfullpasses);
 %     miniorder = repmat([1:Nbatch Nbatch:-1:1], 1, ops.nfullpasses/2);
 
-tic
 if ~exist('spikes_merged')
     uBase = zeros(1e4, nProj);
     nS = zeros(1e4, 1);
@@ -34,7 +33,6 @@ if ~exist('spikes_merged')
             break;
         end
     end
-    toc
     %
     nS = nS(1:ncurr);
     uBase = uBase(1:ncurr, :);
@@ -90,8 +88,8 @@ for i = 1:20
     
 %     disp(Cost)
     
-    plot(sort(log(1+nToT)))
-    drawnow
+%     plot(sort(log(1+nToT)))
+%     drawnow
 end
 %%
 wPCA = ops.wPCA(:,1:3);
