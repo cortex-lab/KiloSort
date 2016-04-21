@@ -35,7 +35,7 @@ for i = 1:Nfilt
     ix = find(dd(1:end-1, i)<0 & dd(2:end, i)>0);
     
     ix = ix(ucum(ix, i)>.1 & ucum(ix, i)<.8 & uc(ix,i)<.8 * maxM(i)); %.9 not .95
-    if numel(ix)>0
+    if nspikes(i) > 500 && numel(ix)>0
         ix = ix(1);
         
         inew = inew + 1;
