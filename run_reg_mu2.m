@@ -124,6 +124,8 @@ while (i<=Nbatch * ops.nfullpasses+1)
                 j = Nfilt -9;
             end
             plot(log(1+NSP(j + [0:1:9])), mu(j+ [0:1:9]), 'o'); 
+            xlabel('log of number of spikes')
+            ylabel('amplitude of template')
             hold all
         end
         axis tight;
