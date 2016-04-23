@@ -134,10 +134,10 @@ if ~exist('loaded', 'var')
     fprintf('Time %3.0fs. Loading raw data and applying filters... \n', toc);
 
 %     keyboard;
-
+%%
     ibatch = 0;
     fid = fopen(fullfile(root, fname), 'r');
-    fidW = fopen(fullfile(fnameTW), 'w');
+    fidW = fopen(fullfile(root, fnameTW), 'w');
     
     if strcmp(ops.initialize, 'fromData')
         i0 = 0;
