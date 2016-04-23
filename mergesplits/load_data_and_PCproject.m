@@ -5,8 +5,12 @@ if ~exist('loaded', 'var')
             load(ops.chanMap);
             try
                 chanMapConn = chanMap(connected>1e-6);
+                xc = xcoords(connected>1e-6);
+                yc = xcoords(connected>1e-6);
             catch
                 chanMapConn = 1+chanNums(connected>1e-6);
+                xc = zeros(numel(chanMapConn), 1);
+                yc = [1:1:numel(chanMapConn)]';
             end
         else
             chanMapConn = ops.chanMap;
@@ -36,8 +40,7 @@ if ~exist('loaded', 'var')
     Nbatch_buff = floor(4/5 * nint16s/ops.Nchan /(NT-ops.ntbuff)); % factor of 4/5 for storing PCs of spikes
     Nbatch_buff = min(Nbatch_buff, Nbatch);
     
-     %% load data into patches, filter, compute covariance, write back to
-    % disk
+     %% load data into patches, filter, compute covariance
     [b1, a1] = butter(3, ops.fshigh/ops.fs, 'high');
     
     fprintf('Time %3.0fs. Loading raw data... \n', toc);
@@ -53,7 +56,7 @@ if ~exist('loaded', 'var')
     end
     
     while 1
-        ibatch = ibatch + 1;
+        ibatch = ibatch + ops.nSkipCov;
             
         offset = max(0, 2*NchanTOT*((NT - ops.ntbuff) * (ibatch-1) - 2*ops.ntbuff));
         if ibatch==1
@@ -95,9 +98,6 @@ if ~exist('loaded', 'var')
             otherwise
                 CC        = CC + (datr' * datr)/NT;
         end
-        if ibatch<=Nbatch_buff
-            DATA(:,:,ibatch) = gather(int16( datr(ioffset + (1:NT),:)));
-        end        
     end
     CC = CC / ibatch;
     switch ops.whitening
@@ -116,14 +116,21 @@ if ~exist('loaded', 'var')
             CC = CC ./nPairs;
     end
     
-    [E, D] 	= svd(CC);
-    eps 	= 1e-6;
-    Wrot 	= E * diag(1./(diag(D) + eps).^.5) * E';
+    if ops.whiteningRange<Inf
+        ops.whiteningRange = min(ops.whiteningRange, Nchan);
+        Wrot = whiteningLocal(CC, yc, xc, ops.whiteningRange);
+    else
+        [E, D] 	= svd(CC);
+        D = diag(D);
+        eps 	= 1e-6;
+        Wrot 	= E * diag(1./(D + eps).^.5) * E';
+    end
     Wrot    = ops.scaleproc * Wrot;
-    %
+    
     ibatch = 0;
+    
     fid = fopen(fullfile(root, fname), 'r');
-    fidW = fopen(fullfile(root, fnameTW), 'w');
+    fidW = fopen(fullfile(fnameTW), 'w');
     
     if strcmp(ops.initialize, 'fromData')
         i0 = 0;
@@ -149,7 +156,7 @@ if ~exist('loaded', 'var')
             end
             nsampcurr = size(buff,2);
             if nsampcurr<NTbuff
-                buff(:, nsampcurr+1:NTbuff) = repmat(buff(:,nsampcurr), 1, NTbuff-nsampcurr);
+                 buff(:, nsampcurr+1:NTbuff) = repmat(buff(:,nsampcurr), 1, NTbuff-nsampcurr);
             end
             
             dataRAW = gpuArray(buff);
@@ -166,8 +173,6 @@ if ~exist('loaded', 'var')
         end
         
         datr    = datr * Wrot;
-        
-     
         
         dataRAW = gpuArray(datr);
 %         dataRAW = datr;
