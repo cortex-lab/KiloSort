@@ -50,6 +50,7 @@ ops.wPCA            = dd.Wi(:,1:7);   % PCs
 ops.fracse  = 0.1; % binning step along discriminant axis for posthoc merges (in units of sd)
 ops.epu     = Inf;
 
+ops.showfigures    = 1;
 ops.nSkipCov       = 10; % compute whitening matrix from every N-th batch
 ops.whiteningRange = 32; % how many channels to whiten together (Inf for whole probe whitening, should be fine if Nchan<=32)
 %%

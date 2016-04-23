@@ -119,18 +119,19 @@ while (i<=Nbatch * ops.nfullpasses+1)
         
         clf
         NSP = sum(nspikes,2);
-        for j = 1:10:Nfilt
-            if j+9>Nfilt;
-                j = Nfilt -9;
+        if ops.showfigures
+            for j = 1:10:Nfilt
+                if j+9>Nfilt;
+                    j = Nfilt -9;
+                end
+                plot(log(1+NSP(j + [0:1:9])), mu(j+ [0:1:9]), 'o');
+                xlabel('log of number of spikes')
+                ylabel('amplitude of template')
+                hold all
             end
-            plot(log(1+NSP(j + [0:1:9])), mu(j+ [0:1:9]), 'o'); 
-            xlabel('log of number of spikes')
-            ylabel('amplitude of template')
-            hold all
+            axis tight;
+            title(sprintf('%d  ', nswitch)); drawnow;
         end
-        axis tight;
-        title(sprintf('%d  ', nswitch)); drawnow;
-        
         % break if last iteration reached
         if i>Nbatch * ops.nfullpasses; break; end
         
