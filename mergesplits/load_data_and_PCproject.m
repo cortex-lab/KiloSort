@@ -28,11 +28,14 @@ if ~exist('loaded', 'var')
     d = dir(fullfile(root, fname));
     ops.sampsToRead = floor(d.bytes/NchanTOT/2);
     
-    
-    dmem         = memory;
-    memfree      = 8 * 2^30;
-    memallocated = min(ops.ForceMaxRAMforDat, dmem.MemAvailableAllArrays) - memfree;
-    memallocated = max(0, memallocated);
+    if ispc
+        dmem         = memory;
+        memfree      = 8 * 2^30;
+        memallocated = min(ops.ForceMaxRAMforDat, dmem.MemAvailableAllArrays) - memfree;
+        memallocated = max(0, memallocated);
+    else
+        memallocated = ops.ForceMaxRAMforDat;
+    end
     nint16s      = memallocated/2;
     
     NTbuff      = NT + 4*ops.ntbuff;
