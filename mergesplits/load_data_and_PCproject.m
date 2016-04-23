@@ -101,6 +101,10 @@ if ~exist('loaded', 'var')
             otherwise
                 CC        = CC + (datr' * datr)/NT;
         end
+        
+        if ibatch<=Nbatch_buff
+            DATA(:,:,ibatch) = gather(int16( datr(ioffset + (1:NT),:)));
+        end
     end
     CC = CC / ibatch;
     switch ops.whitening
@@ -108,10 +112,7 @@ if ~exist('loaded', 'var')
                 nPairs = nPairs/ibatch;
     end
     fclose(fid);
-    fprintf('Time %3.0fs. Channel-whitening filters computed. \n', toc);
-
-    fprintf('Time %3.0fs. Loading raw data and applying filters... \n', toc);
-    
+    fprintf('Time %3.0fs. Channel-whitening filters computed. \n', toc);    
     switch ops.whitening
         case 'diag'
             CC = diag(diag(CC));
@@ -121,7 +122,7 @@ if ~exist('loaded', 'var')
     
     if ops.whiteningRange<Inf
         ops.whiteningRange = min(ops.whiteningRange, Nchan);
-        Wrot = whiteningLocal(CC, yc, xc, ops.whiteningRange);
+        Wrot = whiteningLocal(gather(CC), yc, xc, ops.whiteningRange);
     else
         [E, D] 	= svd(CC);
         D = diag(D);
@@ -130,8 +131,11 @@ if ~exist('loaded', 'var')
     end
     Wrot    = ops.scaleproc * Wrot;
     
+    fprintf('Time %3.0fs. Loading raw data and applying filters... \n', toc);
+
+%     keyboard;
+
     ibatch = 0;
-    
     fid = fopen(fullfile(root, fname), 'r');
     fidW = fopen(fullfile(fnameTW), 'w');
     
