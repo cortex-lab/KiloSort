@@ -6,7 +6,7 @@ if ~exist('loaded', 'var')
             try
                 chanMapConn = chanMap(connected>1e-6);
                 xc = xcoords(connected>1e-6);
-                yc = xcoords(connected>1e-6);
+                yc = ycoords(connected>1e-6);
             catch
                 chanMapConn = 1+chanNums(connected>1e-6);
                 xc = zeros(numel(chanMapConn), 1);
