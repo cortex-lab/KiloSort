@@ -25,7 +25,7 @@ if ~exist('loaded', 'var')
     NchanTOT = ops.NchanTOT;
     NT = ops.NT ;
     
-    d = dir(fullfile(root, fname));
+    d = dir(fname);
     ops.sampsToRead = floor(d.bytes/NchanTOT/2);
     
     if ispc
@@ -47,7 +47,7 @@ if ~exist('loaded', 'var')
     [b1, a1] = butter(3, ops.fshigh/ops.fs, 'high');
     
     fprintf('Time %3.0fs. Loading raw data... \n', toc);
-    fid = fopen(fullfile(root, fname), 'r');
+    fid = fopen(fname, 'r');
     ibatch = 0;
     Nchan = ops.Nchan;
     CC = gpuArray.zeros( Nchan,  Nchan, 'single');
@@ -106,7 +106,7 @@ if ~exist('loaded', 'var')
             DATA(:,:,ibatch) = gather(int16( datr(ioffset + (1:NT),:)));
         end
     end
-    CC = CC / ibatch;
+    CC = CC / ceil((Nbatch-1)/ops.nSkipCov);
     switch ops.whitening
             case 'noSpikes'
                 nPairs = nPairs/ibatch;
@@ -124,6 +124,7 @@ if ~exist('loaded', 'var')
         ops.whiteningRange = min(ops.whiteningRange, Nchan);
         Wrot = whiteningLocal(gather(CC), yc, xc, ops.whiteningRange);
     else
+        %
         [E, D] 	= svd(CC);
         D = diag(D);
         eps 	= 1e-6;
@@ -132,11 +133,9 @@ if ~exist('loaded', 'var')
     Wrot    = ops.scaleproc * Wrot;
     
     fprintf('Time %3.0fs. Loading raw data and applying filters... \n', toc);
-
-%     keyboard;
-%%
+    %
     ibatch = 0;
-    fid = fopen(fullfile(root, fname), 'r');
+    fid = fopen(fname, 'r');
     fidW = fopen(fullfile(root, fnameTW), 'w');
     
     if strcmp(ops.initialize, 'fromData')

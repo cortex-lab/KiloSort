@@ -82,7 +82,7 @@ end
 
 irun = 0;
 i1nt0 = int32([1:nt0])';
-%
+%%
 for ibatch = 1:Nbatch    
     if ibatch>Nbatch_buff
         offset = 2 * ops.Nchan*batchstart(ibatch-Nbatch_buff); % - ioffset;
@@ -104,11 +104,18 @@ for ibatch = 1:Nbatch
     
 %     [st, id, x] = mexMPmuLITE(Params,data,W,WtW, mu, lam * 20./mu);
     [st, id, x, errC, PCproj] = mexMPmuFEAT(Params,data,W,WtW, mu, lam .* (20./mu).^2, nu);    
-
+%     keyboard;
     if ~isempty(ops.nNeighPC)
         % PCA coefficients
-        inds = repmat(st', nt0, 1) + repmat(i1nt0, 1, numel(st));
-        datSp = reshape(dataRAW(inds, :), [size(inds) Nchan]);
+        inds  = repmat(st', nt0, 1) + repmat(i1nt0, 1, numel(st));
+%         datSp = dataRAW(inds(:), :);
+        try
+            datSp = dataRAW(inds(:), :);
+        catch
+            datSp = dataRAW(inds(:), :);
+        end
+                   
+        datSp = reshape(datSp, [size(inds) Nchan]);
         coefs = reshape(Wi' * reshape(datSp, nt0, []), size(Wi,2), numel(st), Nchan);
         coefs = reshape(permute(coefs, [3 1 2]), [], numel(st));
         coefs = coefs .* maskPC(:, id+1);

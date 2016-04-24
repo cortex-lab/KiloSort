@@ -69,8 +69,10 @@ fidname{8}  = 'Loewi20160420_frontal_g0_t0.imec_AP_CAR';
 for idset = 8
     clearvars -except fidname ops idset  tClu tRes time_run dd
     
+    root        = 'D:\DATA\Spikes';
+    fname       = fullfile(root, sprintf('set%d//%s.bin', idset, fidname{idset}));
+    
     root        = 'C:\DATA\Spikes';
-    fname       = sprintf('set%d//%s.bin', idset, fidname{idset});
     fnameTW     = fullfile('temp_wh.dat'); % (residual from RAM) of whitened data
 %     ops.chanMap = 'C:\DATA\Spikes\forPRBimecToWhisper.mat';
     ops.chanMap = 'C:\DATA\Spikes\set8\forPRBimecP3opt3.mat';
