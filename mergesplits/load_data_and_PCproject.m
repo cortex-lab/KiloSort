@@ -45,7 +45,7 @@ if ~exist('loaded', 'var')
     
      %% load data into patches, filter, compute covariance
     [b1, a1] = butter(3, ops.fshigh/ops.fs, 'high');
-    
+        
     fprintf('Time %3.0fs. Loading raw data... \n', toc);
     fid = fopen(fname, 'r');
     ibatch = 0;
@@ -58,6 +58,7 @@ if ~exist('loaded', 'var')
         DATA = zeros(NT, ops.Nchan, Nbatch_buff, 'int16');
     end
     
+    isproc = zeros(Nbatch, 1);
     while 1
         ibatch = ibatch + ops.nSkipCov;
             
@@ -104,6 +105,7 @@ if ~exist('loaded', 'var')
         
         if ibatch<=Nbatch_buff
             DATA(:,:,ibatch) = gather(int16( datr(ioffset + (1:NT),:)));
+            isproc(ibatch) = 1;
         end
     end
     CC = CC / ceil((Nbatch-1)/ops.nSkipCov);
@@ -145,7 +147,7 @@ if ~exist('loaded', 'var')
     end
     %
     for ibatch = 1:Nbatch
-        if ibatch<=Nbatch_buff
+        if isproc(ibatch) %ibatch<=Nbatch_buff
             datr = single(gpuArray(DATA(:,:,ibatch)));
         else
             offset = max(0, 2*NchanTOT*((NT - ops.ntbuff) * (ibatch-1) - 2*ops.ntbuff));
