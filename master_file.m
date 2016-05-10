@@ -1,4 +1,5 @@
-addpath(genpath('C:\CODE\GitHub\KiloSort'))
+install_path = 'C:\CODE\GitHub\KiloSort'; % change to your local installation path
+addpath(genpath(install_path))
 addpath('D:\DATA\Spikes\EvaluationCode')
 
 % addpath('C:\Users\Marius\Documents\GitHub\npy-matlab')
