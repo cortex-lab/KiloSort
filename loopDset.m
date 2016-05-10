@@ -3,15 +3,15 @@ addpath('D:\DATA\Spikes\EvaluationCode')
 
 % addpath('C:\Users\Marius\Documents\GitHub\npy-matlab')
 
-ops.Nfilt               = 1536 ; %  number of filters to use (512, should be a multiple of 32)
+ops.Nfilt               = 512 ; %  number of filters to use (512, should be a multiple of 32)
 ops.Nrank               = 3;    % matrix rank of spike template model (3)
 ops.nfullpasses         = 6;    % number of complete passes through data during optimization (6)
 ops.whitening           = 'full'; % type of whitening (default 'full', for 'noSpikes' set options for spike detection below)
 ops.maxFR               = 20000;  % maximum number of spikes to extract per batch (20000)
 ops.fs                  = 25000; % sampling rate
 ops.fshigh              = 300;   % frequency for high pass filtering
-ops.NchanTOT            = 384;   % total number of channels
-ops.Nchan               = 374;   % number of active channels 
+ops.NchanTOT            = 129; %384;   % total number of channels
+ops.Nchan               = 120; %374;   % number of active channels 
 ops.ntbuff              = 64;    % samples of symmetrical buffer for whitening and spike detection
 ops.scaleproc           = 200;   % int16 scaling of whitened data
 ops.verbose             = 1;     
@@ -55,7 +55,7 @@ ops.nSkipCov       = 10; % compute whitening matrix from every N-th batch
 ops.whiteningRange = 32; % how many channels to whiten together (Inf for whole probe whitening, should be fine if Nchan<=32)
 %%
 
-ops.ForceMaxRAMforDat   = 0e9; %0e9; 
+ops.ForceMaxRAMforDat   = 20e9; %0e9; 
 
 fidname{1}  = '20141202_all_es';
 fidname{2}  = '20150924_1_e';
@@ -66,16 +66,16 @@ fidname{6}  = '20141202_all_GT';
 fidname{7}  = '20151102_1';
 fidname{8}  = 'Loewi20160420_frontal_g0_t0.imec_AP_CAR';
 
-for idset = 8
+for idset = 6
     clearvars -except fidname ops idset  tClu tRes time_run dd
     
-    root        = 'D:\DATA\Spikes';
-    fname       = fullfile(root, sprintf('set%d//%s.bin', idset, fidname{idset}));
+    root        = 'C:\DATA\Spikes';
+    fname       = fullfile(root, sprintf('set%d//%s.dat', idset, fidname{idset}));
     
     root        = 'C:\DATA\Spikes';
     fnameTW     = fullfile('temp_wh.dat'); % (residual from RAM) of whitened data
-%     ops.chanMap = 'C:\DATA\Spikes\forPRBimecToWhisper.mat';
-    ops.chanMap = 'C:\DATA\Spikes\set8\forPRBimecP3opt3.mat';
+    ops.chanMap = 'C:\DATA\Spikes\forPRBimecToWhisper.mat';
+%     ops.chanMap = 'C:\DATA\Spikes\set8\forPRBimecP3opt3.mat';
     
     clear loaded
     % loads data into RAM + residual data on SSD and picks out spikes by a
