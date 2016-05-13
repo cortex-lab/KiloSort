@@ -1,5 +1,6 @@
 if ~exist('initialized', 'var')
     addpath('C:\CODE\MariusBox\Primitives\')
+    rng('default');
     rng(1);
     
     Nfilt 	= ops.Nfilt; %256+128;
