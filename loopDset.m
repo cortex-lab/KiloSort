@@ -2,28 +2,28 @@ addpath(genpath('C:\CODE\GitHub\KiloSort'))
 addpath('D:\DATA\Spikes\EvaluationCode')
 
 % addpath('C:\Users\Marius\Documents\GitHub\npy-matlab')
+clear ops 
 
-ops.Nfilt               = 512 ; %  number of filters to use (512, should be a multiple of 32)
+ops.Nfilt               = 1024 ; %  number of filters to use (512, should be a multiple of 32)
 ops.Nrank               = 3;    % matrix rank of spike template model (3)
 ops.nfullpasses         = 6;    % number of complete passes through data during optimization (6)
-ops.whitening           = 'full'; % type of whitening (default 'full', for 'noSpikes' set options for spike detection below)
 ops.maxFR               = 20000;  % maximum number of spikes to extract per batch (20000)
 ops.fs                  = 25000; % sampling rate
 ops.fshigh              = 300;   % frequency for high pass filtering
-ops.NchanTOT            = 129; %384;   % total number of channels
+ops.NchanTOT            = 120; %384;   % total number of channels
 ops.Nchan               = 120; %374;   % number of active channels 
 ops.ntbuff              = 64;    % samples of symmetrical buffer for whitening and spike detection
 ops.scaleproc           = 200;   % int16 scaling of whitened data
 ops.verbose             = 1;     
 ops.nNeighPC            = 12; %12; % number of channnels to mask the PCs, leave empty to skip (12)
 ops.nNeigh              = 16; % number of neighboring templates to retain projections of (16)
-ops.NT                  = 32*1024+ ops.ntbuff;% this is the batch size, very important for memory reasons. 
+ops.NT                  = 64*1024+ ops.ntbuff;% this is the batch size, very important for memory reasons. 
 % should be multiple of 32 (or higher power of 2) + ntbuff
 
 % these options can improve/deteriorate results. when multiple values are 
 % provided for an option, the first two are beginning and ending anneal values, 
 % the third is the value used in the final pass. 
-ops.Th               = [4 12 12];    % threshold for detecting spikes on template-filtered data ([6 12 12])
+ops.Th               = [4 12 12] ; %[4 12 12];    % threshold for detecting spikes on template-filtered data ([6 12 12])
 ops.lam              = [5 5 5];   % large means amplitudes are forced around the mean ([10 30 30])
 ops.nannealpasses    = 4;            % should be less than nfullpasses (4)
 ops.momentum         = 1./[20 400];  % start with high momentum and anneal (1./[20 1000])
@@ -31,13 +31,17 @@ ops.shuffle_clusters = 1;            % allow merges and splits during optimizati
 ops.mergeT           = .1;           % upper threshold for merging (.1)
 ops.splitT           = .1;           % lower threshold for splitting (.1)
 
-ops.nNeighPC    = 12; %12; % number of channnels to mask the PCs, leave empty to skip (12)
-ops.nNeigh      = 32; % number of neighboring templates to retain projections of (16)
+ops.nNeighPC    = []; %12; % number of channnels to mask the PCs, leave empty to skip (12)
+ops.nNeigh      = []; %32; % number of neighboring templates to retain projections of (16)
 
 % new options
 ops.initialize = 'no'; %'fromData'; %'fromData';
 
 % options for initializing spikes from data
+ops.whitening.type     = 'diag'; % type of whitening (default 'full', for 'noSpikes' set options for spike detection below)
+ops.whitening.ntlags    = 121;
+ops.whitening.range    = 32; % how many channels to whiten together (Inf for whole probe whitening, should be fine if Nchan<=32)
+
 ops.spkTh           = -6;      % spike threshold in standard deviations (4)
 ops.loc_range       = [3  1];  % ranges to detect peaks; plus/minus in time and channel ([3 1])
 ops.long_range      = [30  6]; % ranges to detect isolated peaks ([30 6])
@@ -52,7 +56,6 @@ ops.epu     = Inf;
 
 ops.showfigures    = 1;
 ops.nSkipCov       = 10; % compute whitening matrix from every N-th batch
-ops.whiteningRange = 32; % how many channels to whiten together (Inf for whole probe whitening, should be fine if Nchan<=32)
 %%
 
 ops.ForceMaxRAMforDat   = 20e9; %0e9; 
@@ -65,35 +68,43 @@ fidname{5}  = '20150601_all_GT';
 fidname{6}  = '20141202_all_GT';
 fidname{7}  = '20151102_1';
 fidname{8}  = 'Loewi20160420_frontal_g0_t0.imec_AP_CAR';
+fidname{11}  = '20150601_all_GT245';
+fidname{12}  = '20150924_all_GT245';
 
-for idset = 6
+for idset = 11
     clearvars -except fidname ops idset  tClu tRes time_run dd
     
-    root        = 'C:\DATA\Spikes';
+    root        = 'F:\DATA\Spikes';
     fname       = fullfile(root, sprintf('set%d//%s.dat', idset, fidname{idset}));
     
-    root        = 'C:\DATA\Spikes';
+    root        = 'F:\DATA\Spikes';
     fnameTW     = fullfile('temp_wh.dat'); % (residual from RAM) of whitened data
-    ops.chanMap = 'C:\DATA\Spikes\forPRBimecToWhisper.mat';
+    
+    ops.chanMap = 1:ops.Nchan;
+%         ops.chanMap = 'C:\DATA\Spikes\forPRBimecToWhisper.mat';
 %     ops.chanMap = 'C:\DATA\Spikes\set8\forPRBimecP3opt3.mat';
     
     clear loaded
     % loads data into RAM + residual data on SSD and picks out spikes by a
     % threshold for initialization
     load_data_and_PCproject; 
-    
+    %
     % do scaled kmeans to initialize the algorith,
     if strcmp(ops.initialize, 'fromData')
         optimizePeaks;      
     end
-
+    %%
     clear initialized
     run_reg_mu2; % iterate the template matching (non-overlapping extraction)
-    
+    %
     fullMPMU; % extracts final spike times (overlapping extraction)
 
+%     testCode32;
+    testCodeNew
     % posthoc merge templates
 %     rez = merge_posthoc2(rez);
+    
+%     testCode
     
     % save here?
 %     save(fullfile('C:\DATA\Spikes\rez', sprintf('rez%d.mat', idset)), 'rez');

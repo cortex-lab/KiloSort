@@ -127,10 +127,10 @@ for ibatch = 1:Nbatch
         PCproj = maskTT(:, id+1) .* PCproj;
         iPP = reshape(find(maskTT(:, id+1)>0), nNeigh, []);
         rez.cProj(irun + (1:numel(st)), :) = PCproj(iPP)';
-    
+        
         % increment number of spikes
-        irun = irun + numel(st);
     end
+    irun = irun + numel(st);
     
     if ibatch==1; ioffset = 0;
     else ioffset = ops.ntbuff;

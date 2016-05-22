@@ -1,4 +1,5 @@
 % addpath('C:\CODE\GitHub\KiloSort\preDetect')
+uproj(i0+1:end, :) = [];
 
 nProj = size(uproj,2);
 nSpikesPerBatch = 4000;
@@ -8,6 +9,7 @@ inds = reshape(inds, nSpikesPerBatch, []);
 iperm = randperm(size(inds,2));
 miniorder = repmat(iperm, 1, ops.nfullpasses);
 %     miniorder = repmat([1:Nbatch Nbatch:-1:1], 1, ops.nfullpasses/2);
+
 
 if ~exist('spikes_merged')
     uBase = zeros(1e4, nProj);
@@ -107,7 +109,7 @@ for j = 1:Nfilt
     [w sv u] = svd(Wrec(:,:,j));
     w = w * sv;
     
-    Sv = diag(sv);
+    Sv = max(1e-30, diag(sv));
     W(:,j,:) = w(:, 1:Nrank)/sum(Sv(1:ops.Nrank).^2).^.5;
     U(:,j,:) = u(:, 1:Nrank);
 end

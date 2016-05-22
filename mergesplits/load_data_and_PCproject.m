@@ -14,9 +14,13 @@ if ~exist('loaded', 'var')
             end
         else
             chanMapConn = ops.chanMap;
+            xc = zeros(1, numel(chanMapConn));
+            yc = ops.chanMap;
         end
     else
         chanMapConn = 1:ops.Nchan;
+        xc = zeros(1,numel(chanMapConn));
+        yc = 1:ops.Nchan;
     end
     batch_path = fullfile(root, 'batches');
     if ~exist(batch_path, 'dir')
@@ -50,10 +54,14 @@ if ~exist('loaded', 'var')
     fid = fopen(fname, 'r');
     ibatch = 0;
     Nchan = ops.Nchan;
-    CC = gpuArray.zeros( Nchan,  Nchan, 'single');
-    if strcmp(ops.whitening, 'noSpikes')
-        nPairs = gpuArray.zeros( Nchan,  Nchan, 'single');
+    switch ops.whitening.type
+        case 'noSpikes'
+            CC = gpuArray.zeros( Nchan,  Nchan,  'single');
+            nPairs = gpuArray.zeros( Nchan,  Nchan,  'single');
+        otherwise
+            CC = gpuArray.zeros( Nchan,  Nchan, 'single');
     end
+
     if ~exist('DATA', 'var')
         DATA = zeros(NT, ops.Nchan, Nbatch_buff, 'int16');
     end
@@ -90,41 +98,42 @@ if ~exist('loaded', 'var')
         datr = filter(b1, a1, datr);
         datr = flipud(datr);
                 
-        switch ops.whitening
+        switch ops.whitening.type
             case 'noSpikes'
                 smin      = my_min(datr, ops.loc_range, [1 2]);
                 sd = std(datr, [], 1);
                 peaks     = single(datr<smin+1e-3 & bsxfun(@lt, datr, ops.spkTh * sd));
                 blankout  = 1+my_min(-peaks, ops.long_range, [1 2]);
                 smin      = datr .* blankout;
+                
                 CC        = CC + (smin' * smin)/NT;
-                nPairs    = nPairs + (blankout'*blankout)/NT;
+                nPairs     = nPairs + (blankout'*blankout)/NT;
             otherwise
                 CC        = CC + (datr' * datr)/NT;
         end
-        
+              
         if ibatch<=Nbatch_buff
             DATA(:,:,ibatch) = gather(int16( datr(ioffset + (1:NT),:)));
             isproc(ibatch) = 1;
         end
     end
     CC = CC / ceil((Nbatch-1)/ops.nSkipCov);
-    switch ops.whitening
-            case 'noSpikes'
-                nPairs = nPairs/ibatch;
+    switch ops.whitening.type
+        case 'noSpikes'
+            nPairs = nPairs / ceil((Nbatch-1)/ops.nSkipCov);
     end
     fclose(fid);
-    fprintf('Time %3.0fs. Channel-whitening filters computed. \n', toc);    
-    switch ops.whitening
+    fprintf('Time %3.0fs. Channel-whitening filters computed. \n', toc);
+    switch ops.whitening.type
         case 'diag'
             CC = diag(diag(CC));
         case 'noSpikes'
             CC = CC ./nPairs;
     end
-    
-    if ops.whiteningRange<Inf
-        ops.whiteningRange = min(ops.whiteningRange, Nchan);
-        Wrot = whiteningLocal(gather(CC), yc, xc, ops.whiteningRange);
+        
+    if ops.whitening.range<Inf
+        ops.whitening.range = min(ops.whitening.range, Nchan);
+        Wrot = whiteningLocal(gather(CC), yc, xc, ops.whitening.range);
     else
         %
         [E, D] 	= svd(CC);
@@ -143,7 +152,7 @@ if ~exist('loaded', 'var')
     if strcmp(ops.initialize, 'fromData')
         i0 = 0;
         wPCA = ops.wPCA(:, 1:3);
-        uproj = zeros(5e6,  size(wPCA,2) * Nchan, 'single');
+        uproj = zeros(1e6,  size(wPCA,2) * Nchan, 'single');
     end
     %
     for ibatch = 1:Nbatch
@@ -179,7 +188,7 @@ if ~exist('loaded', 'var')
             
             datr = datr(ioffset + (1:NT),:);
         end
-        
+%         keyboard;
         datr    = datr * Wrot;
         
         dataRAW = gpuArray(datr);
@@ -190,6 +199,7 @@ if ~exist('loaded', 'var')
         if strcmp(ops.initialize, 'fromData')
             % find isolated spikes
             [row, col, mu] = isolated_peaks(dataRAW, ops.loc_range, ops.long_range, ops.spkTh);
+%             keyboard;
             
             % find their PC projections
             uS = get_PCproj(dataRAW, row, col, wPCA, ops.maskMaxChannels);
@@ -203,6 +213,7 @@ if ~exist('loaded', 'var')
             
             uproj(i0 + (1:numel(row)), :) = gather(uS);
             i0 = i0 + numel(row);
+            
         end
         
         if ibatch<=Nbatch_buff

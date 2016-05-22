@@ -49,9 +49,8 @@ if ~exist('initialized', 'var')
     nspikes = zeros(Nfilt, Nbatch);
     lam =  ones(Nfilt, 1, 'single');
     
-    freqUpdate = 4 * 50;
+    freqUpdate =  ceil(250 / (ops.NT/ops.fs));
     iUpdate = 1:freqUpdate:Nbatch;
-
     
     dbins = zeros(100, Nfilt);
     dsum = 0;
@@ -67,11 +66,10 @@ end
 
 
 %%
-% pmi = exp(-1./exp(linspace(log(ops.momentum(1)), log(ops.momentum(2)), Nbatch*ops.nannealpasses)));
 pmi = exp(-1./linspace(1/ops.momentum(1), 1/ops.momentum(2), Nbatch*ops.nannealpasses));
-% pmi = exp(-linspace(ops.momentum(1), ops.momentum(2), Nbatch*ops.nannealpasses));
 
-% pmi  = linspace(ops.momentum(1), ops.momentum(2), Nbatch*ops.nannealpasses);
+% pmi  = linspace(exp(-ops.momentum(1)), exp(-ops.momentum(2)), Nbatch*ops.nannealpasses);
+
 Thi  = linspace(ops.Th(1),                 ops.Th(2), Nbatch*ops.nannealpasses);
 if ops.lam(1)==0
     lami = linspace(ops.lam(1), ops.lam(2), Nbatch*ops.nannealpasses); 
@@ -85,6 +83,7 @@ end
 
 st3 = [];
 
+nUpdate = 0;
 nswitch = [0];
 msg = [];
 fprintf('Time %3.0fs. Optimizing templates ...\n', toc)
@@ -102,10 +101,12 @@ while (i<=Nbatch * ops.nfullpasses+1)
     % update the parameters every freqUpdate iterations
     if i>1 &&  ismember(rem(i,Nbatch), iUpdate) %&& i>Nbatch        
         dWU = gather(dWU);
-        
+        nUpdate = nUpdate + 1;
         % break bimodal clusters and remove low variance clusters
         if  ops.shuffle_clusters &&...
-                i>Nbatch && rem(rem(i,Nbatch), 4*400)==1    % i<Nbatch*ops.nannealpasses
+                i>Nbatch && nUpdate>=5 && i<Nbatch*ops.nannealpasses
+            % every 5 updates do a split/merge
+            nUpdate = 0;
            [dWU, dbins, nswitch, nspikes, iswitch] = ...
                replace_clusters(dWU, dbins,  Nbatch, ops.mergeT, ops.splitT, WUinit, nspikes);      
         end

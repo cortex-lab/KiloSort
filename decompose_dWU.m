@@ -29,9 +29,9 @@ for k = 1:Nfilt
     
     Wall = Wall * Sv; 
     
-    Sv = diag(Sv);
-    mu(k) = sum(Sv(1:Nrank).^2).^.5;
-    Wall = Wall/mu(k);
+%     Sv = diag(Sv);
+%     mu(k) = sum(Sv(1:Nrank).^2).^.5;
+%     Wall = Wall/mu(k);
    
     W(:,:,k) = Wall(:,1:Nrank);
     U(:,:,k) = Uall(:,1:Nrank);
@@ -41,7 +41,20 @@ U = permute(U, [1 3 2]);
 W = permute(W, [1 3 2]);
 
 U(isnan(U)) = 0;
+%%
+% mmax = max(sum(abs(U),3),[],1);
+% U(abs(U)<.05*repmat(mmax, Nchan,1,Nrank)) = 0;
+% U = U./repmat(sum(U.^2,1).^.5, Nchan, 1, 1);
 
+for k = 1:Nfilt
+    wu = squeeze(W(:,k,:)) * squeeze(U(:,k,:))';
+    mu(k) = sum(wu(:).^2).^.5;
+    W(:,k,:) = W(:,k,:)/mu(k);    
+end
+
+
+
+%%
 UtU = abs(U(:,:,1)' * U(:,:,1)) > .1;
 
 

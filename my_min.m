@@ -16,24 +16,25 @@ end
 
 for i = 1:length(idims)
     sig = sigall(i);
-    
-    idim = idims(i);
-    Nd = ndims(S1);
-    
-    S1 = permute(S1, [idim 1:idim-1 idim+1:Nd]);
-    
-    dsnew = size(S1);
-
-    S1 = reshape(S1, size(S1,1), []);
-    dsnew2 = size(S1);
-    
-    S1 = cat(1, Inf*ones([sig, dsnew2(2)]),S1, Inf*ones([sig, dsnew2(2)]));
-    Smax = S1(1:dsnew2(1), :);
-    for j = 1:2*sig
-        Smax = min(Smax, S1(j + (1:dsnew2(1)), :));
+    if sig>0
+        idim = idims(i);
+        Nd = ndims(S1);
+        
+        S1 = permute(S1, [idim 1:idim-1 idim+1:Nd]);
+        
+        dsnew = size(S1);
+        
+        S1 = reshape(S1, size(S1,1), []);
+        dsnew2 = size(S1);
+        
+        S1 = cat(1, Inf*ones([sig, dsnew2(2)]),S1, Inf*ones([sig, dsnew2(2)]));
+        Smax = S1(1:dsnew2(1), :);
+        for j = 1:2*sig
+            Smax = min(Smax, S1(j + (1:dsnew2(1)), :));
+        end
+        
+        S1 = reshape(Smax, dsnew);
+        
+        S1 = permute(S1, [2:idim 1 idim+1:Nd]);
     end
-    
-    S1 = reshape(Smax, dsnew);
-       
-    S1 = permute(S1, [2:idim 1 idim+1:Nd]);
 end

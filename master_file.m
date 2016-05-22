@@ -24,8 +24,8 @@ ops.NT                  = 32*1024+ ops.ntbuff;% this is the batch size, very imp
 % these options can improve/deteriorate results. when multiple values are 
 % provided for an option, the first two are beginning and ending anneal values, 
 % the third is the value used in the final pass. 
-ops.Th               = [4 12 12];    % threshold for detecting spikes on template-filtered data ([6 12 12])
-ops.lam              = [5 5 5];   % large means amplitudes are forced around the mean ([10 30 30])
+ops.Th               = 2*[4 12 12];    % threshold for detecting spikes on template-filtered data ([6 12 12])
+ops.lam              = 2*[5 5 5];   % large means amplitudes are forced around the mean ([10 30 30])
 ops.nannealpasses    = 4;            % should be less than nfullpasses (4)
 ops.momentum         = 1./[20 400];  % start with high momentum and anneal (1./[20 1000])
 ops.shuffle_clusters = 1;            % allow merges and splits during optimization (1)
@@ -66,7 +66,7 @@ fidname{6}  = '20141202_all_GT';
 fidname{7}  = '20151102_1';
 fidname{8}  = 'Loewi20160420_frontal_g0_t0.imec_AP_CAR';
 
-for idset = 6
+for idset = 5
     clearvars -except fidname ops idset  tClu tRes time_run dd
     
     root        = 'C:\DATA\Spikes';
@@ -96,9 +96,9 @@ for idset = 6
 %     rez = merge_posthoc2(rez);
     
     % save here?
-    save(fullfile('C:\DATA\Spikes\rez', sprintf('rez%d.mat', idset)), 'rez');
+%     save(fullfile('C:\DATA\Spikes\rez', sprintf('rez%d.mat', idset)), 'rez');
       
     % write to Phy?
-    rezToPhy(rez, fullfile(root, sprintf('set%d', idset)));
+%     rezToPhy(rez, fullfile(root, sprintf('set%d', idset)));
 end
 %%

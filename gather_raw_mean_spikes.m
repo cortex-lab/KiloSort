@@ -1,43 +1,55 @@
 tic
-if ~isempty(ops.chanMap)
-    load(ops.chanMap);
-    chanMapConn = chanMap(connected>1e-6);
-else
-    chanMapConn = 1:ops.Nchan;
-end
-batch_path = fullfile(root, 'batches');
-if ~exist(batch_path, 'dir')
-    mkdir(batch_path);
-end
-NchanTOT = ops.NchanTOT;
-
-d = dir(fullfile(root, fname));
-ops.sampsToRead = floor(d.bytes/NchanTOT/2);
-
-
-NT          = 128*1024+ ops.ntbuff;
-NTbuff      = NT + 4*ops.ntbuff;
-Nbatch      = ceil(d.bytes/2/NchanTOT /(NT-ops.ntbuff));
+% if ~isempty(ops.chanMap)
+%     load(ops.chanMap);
+%     chanMapConn = chanMap(connected>1e-6);
+% else
+%     chanMapConn = 1:ops.Nchan;
+% % end
+% NchanTOT = ops.NchanTOT;
+% 
+% d = dir(fullfile(root, fname));
+% ops.sampsToRead = floor(d.bytes/NchanTOT/2);
+% 
+% 
+% NT          = 128*1024+ ops.ntbuff;
+% NTbuff      = NT + 4*ops.ntbuff;
+% Nbatch      = ceil(d.bytes/2/NchanTOT /(NT-ops.ntbuff));
 
 % load data into patches, filter, compute covariance, write back to
 % disk
 
-fprintf('Time %3.0fs. Loading raw data... \n', toc);
-fid = fopen(fullfile(root, fname), 'r');
-ibatch = 0;
-Nchan = ops.Nchan;
+root        = 'F:\DATA\Spikes\GT32';
+fname       = fullfile(root, sprintf('%s.dat', fidname));
+NchanTOT = 32;
+Nchan    = 32;
 
-Nchans = ops.Nchan;
+% fname = 'F:\DATA\Spikes\set11\20150601_all_GT91.dat';
+% fname = 'F:\DATA\Spikes\set13\20141202_all_GT91.dat';
+% fname = 'F:\DATA\Spikes\set11\20150601_all_GT192.dat';
+% NchanTOT = 120;
+% Nchan = 120;
+
+chanMapConn = 1:Nchan;
+fprintf('Time %3.0fs. Loading raw data... \n', toc);
+fid = fopen(fname, 'r');
+ibatch = 0;
+
 ts = [1:1:61]';
 
 clear stimes
+gtClu = Clu;
+gtRes = Res ;
+[iClu] = unique(gtClu);
+for iNN = 1:numel(iClu)
+    stimes{iNN} = double(gtRes(gtClu==iClu(iNN)));
+end
+
 % for iNN = 1:size(rez.W,2)
-%     stimes{iNN} = rez.st3pos(rez.st3pos(:,2)==iNN,1);
+%     stimes{iNN} = rez.st3(rez.st3(:,2)==iNN,1);
 % end
-stimes = gtimes;
 
-Wraw = zeros(61, Nchans, numel(stimes));
-
+Wraw = zeros(61, Nchan, numel(stimes));
+%
 while 1
     ibatch = ibatch + 1;
     
@@ -58,7 +70,7 @@ while 1
         buff(:, nsampcurr+1:NTbuff) = repmat(buff(:,nsampcurr), 1, NTbuff-nsampcurr);
     end
     
-    offset = (NT-ops.ntbuff)*(ibatch-1)-64 - 40;
+    offset = (NT-ops.ntbuff)*(ibatch-1)-64 -64+20;
     
     buff = buff(chanMapConn,:)';
     %
@@ -71,7 +83,7 @@ while 1
             inds = repmat(st', 61, 1) + repmat(ts, 1, numel(st));
             
             Wraw(:,:,iNN) = Wraw(:,:,iNN) + ...
-                squeeze(sum(reshape(buff(inds, :), 61, numel(st), Nchans),2));
+                squeeze(sum(reshape(buff(inds, :), 61, numel(st), Nchan),2));
         end
     end
     
