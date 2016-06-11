@@ -14,6 +14,8 @@ if ~exist('loaded', 'var')
             end
         else
             chanMapConn = ops.chanMap;
+            xc = zeros(numel(chanMapConn), 1);
+            yc = [1:1:numel(chanMapConn)]';
         end
     else
         chanMapConn = 1:ops.Nchan;
@@ -30,7 +32,7 @@ if ~exist('loaded', 'var')
     
     if ispc
         dmem         = memory;
-        memfree      = 8 * 2^30;
+        memfree      = dmem.MemAvailableAllArrays/8;
         memallocated = min(ops.ForceMaxRAMforDat, dmem.MemAvailableAllArrays) - memfree;
         memallocated = max(0, memallocated);
     else
@@ -50,9 +52,17 @@ if ~exist('loaded', 'var')
     fid = fopen(fname, 'r');
     ibatch = 0;
     Nchan = ops.Nchan;
-    CC = gpuArray.zeros( Nchan,  Nchan, 'single');
+    if ops.GPU
+        CC = gpuArray.zeros( Nchan,  Nchan, 'single');
+    else
+         CC = zeros( Nchan,  Nchan, 'single');
+    end
     if strcmp(ops.whitening, 'noSpikes')
-        nPairs = gpuArray.zeros( Nchan,  Nchan, 'single');
+        if ops.GPU
+            nPairs = gpuArray.zeros( Nchan,  Nchan, 'single');
+        else
+            nPairs = zeros( Nchan,  Nchan, 'single');
+        end
     end
     if ~exist('DATA', 'var')
         DATA = zeros(NT, ops.Nchan, Nbatch_buff, 'int16');
@@ -80,7 +90,11 @@ if ~exist('loaded', 'var')
         if nsampcurr<NTbuff
             buff(:, nsampcurr+1:NTbuff) = repmat(buff(:,nsampcurr), 1, NTbuff-nsampcurr);
         end
-        dataRAW = gpuArray(buff);
+        if ops.GPU
+            dataRAW = gpuArray(buff);
+        else
+            dataRAW = buff;
+        end
         dataRAW = dataRAW';
         dataRAW = single(dataRAW);
         dataRAW = dataRAW(:, chanMapConn);
@@ -104,7 +118,7 @@ if ~exist('loaded', 'var')
         end
         
         if ibatch<=Nbatch_buff
-            DATA(:,:,ibatch) = gather(int16( datr(ioffset + (1:NT),:)));
+            DATA(:,:,ibatch) = gather_try(int16( datr(ioffset + (1:NT),:)));
             isproc(ibatch) = 1;
         end
     end
@@ -143,12 +157,16 @@ if ~exist('loaded', 'var')
     if strcmp(ops.initialize, 'fromData')
         i0 = 0;
         wPCA = ops.wPCA(:, 1:3);
-        uproj = zeros(5e6,  size(wPCA,2) * Nchan, 'single');
+        uproj = zeros(1e6,  size(wPCA,2) * Nchan, 'single');
     end
     %
     for ibatch = 1:Nbatch
         if isproc(ibatch) %ibatch<=Nbatch_buff
-            datr = single(gpuArray(DATA(:,:,ibatch)));
+            if ops.GPU
+                datr = single(gpuArray(DATA(:,:,ibatch)));
+            else
+                datr = single(DATA(:,:,ibatch));
+            end
         else
             offset = max(0, 2*NchanTOT*((NT - ops.ntbuff) * (ibatch-1) - 2*ops.ntbuff));
             if ibatch==1
@@ -167,7 +185,11 @@ if ~exist('loaded', 'var')
                  buff(:, nsampcurr+1:NTbuff) = repmat(buff(:,nsampcurr), 1, NTbuff-nsampcurr);
             end
             
-            dataRAW = gpuArray(buff);
+            if ops.GPU
+                dataRAW = gpuArray(buff);
+            else
+                 dataRAW = buff;
+            end
             dataRAW = dataRAW';
             dataRAW = single(dataRAW);
             dataRAW = dataRAW(:, chanMapConn);
@@ -182,7 +204,11 @@ if ~exist('loaded', 'var')
         
         datr    = datr * Wrot;
         
-        dataRAW = gpuArray(datr);
+        if ops.GPU
+            dataRAW = gpuArray(datr);
+        else
+            dataRAW = datr;
+        end
 %         dataRAW = datr;
         dataRAW = single(dataRAW);
         dataRAW = dataRAW / ops.scaleproc;
@@ -201,20 +227,20 @@ if ~exist('loaded', 'var')
                 uproj(1e6 + size(uproj,1), 1) = 0;
             end
             
-            uproj(i0 + (1:numel(row)), :) = gather(uS);
+            uproj(i0 + (1:numel(row)), :) = gather_try(uS);
             i0 = i0 + numel(row);
         end
         
         if ibatch<=Nbatch_buff
-            DATA(:,:,ibatch) = gather(datr);
+            DATA(:,:,ibatch) = gather_try(datr);
         else
-            datcpu  = gather(int16(datr));
+            datcpu  = gather_try(int16(datr));
             fwrite(fidW, datcpu, 'int16');
         end
        
     end
     
-    Wrot        = gather(Wrot);
+    Wrot        = gather_try(Wrot);
     rez.Wrot    = Wrot;
     
     fclose(fidW);

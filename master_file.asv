@@ -17,7 +17,7 @@ ops.scaleproc           = 200;   % int16 scaling of whitened data
 ops.verbose             = 1;     
 ops.nNeighPC            = 12; %12; % number of channnels to mask the PCs, leave empty to skip (12)
 ops.nNeigh              = 16; % number of neighboring templates to retain projections of (16)
-ops.NT                  = 32*1024+ ops.ntbuff;% this is the batch size, very important for memory reasons. 
+ops.NT                  = 128*1024+ ops.ntbuff;% this is the batch size, very important for memory reasons. 
 % should be multiple of 32 (or higher power of 2) + ntbuff
 
 % these options can improve/deteriorate results. when multiple values are 

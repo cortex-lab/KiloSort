@@ -1,4 +1,5 @@
 if ~exist('initialized', 'var')
+    addpath('C:\CODE\MariusBox\Primitives\')
     rng('default');
     rng(1);
     
@@ -44,11 +45,7 @@ if ~exist('initialized', 'var')
             end           
             WUinit = dWU;
     end
-    [W, U, mu, UtU, nu] = decompose_dWU(dWU, Nrank);
-    W0 = W;
-    W0(NT, 1) = 0;
-    fW = fft(W0, [], 1);
-    fW = conj(fW);
+    [W, U, mu, UtU, nu] = decompose_dWU(dWU, Nrank);    
     
     nspikes = zeros(Nfilt, Nbatch);
     lam =  ones(Nfilt, 1, 'single');
@@ -174,20 +171,22 @@ while (i<=Nbatch * ops.nfullpasses+1)
     data = dataRAW * U(:,:);
     
     if ops.GPU
-        % run GPU code to get spike times and coefficients
-        [dWU, st, id, x,Cost, nsp] = ...
-            mexMPregMU(Params,dataRAW,W,data,UtU,mu, lam .* (20./mu).^2, dWU, nu);
+    % run GPU code to get spike times and coefficients
+    [dWU, st, id, x,Cost, nsp] = ...
+        mexMPregMU(Params,dataRAW,W,data,UtU,mu, lam .* (20./mu).^2, dWU, nu);
     else
-        [dWU, st, id, x,Cost, nsp] = ...
-            mexMPregMUcpu(Params,dataRAW,fW,data,UtU,mu, lam .* (20./mu).^2, dWU, nu, ops);
+        fdata = fft(data, [], 1);
+        x = real(ifft(fdata .* fW(:,:), [], 1));
     end
+    
+    keyboard;
     
     % compute numbers of spikes
     nsp                = gather_try(nsp(:));
     nspikes(:, ibatch) = nsp;
     
     % bin the amplitudes of the spikes
-    xround = min(max(1, round((x))), 100);
+    xround = min(max(1, round(int32(x))), 100);
     
     % this is a hard-coded forgetting factor, needs to become an option
     dbins = .9975 * dbins;
