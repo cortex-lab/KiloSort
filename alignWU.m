@@ -19,11 +19,13 @@ for i = 1:Nfilt
     [~, imin] = min(wu);
     dmax(i) = - (imin- 20);
     
-    if dmax(i)>0
-        WU((dmax(i) + 1):nt0, :,i) = WU(1:nt0-dmax(i),:, i);
-    else
-        WU(1:nt0+dmax(i),:, i) = WU((1-dmax(i)):nt0,:, i);
+    wu = zeros(nt0, Nchan);
+    if dmax(i)>0        
+        wu((dmax(i) + 1):nt0, :) = WU(1:nt0-dmax(i),:, i);        
+    else        
+        wu(1:nt0+dmax(i), :) = WU((1-dmax(i)):nt0,:, i);        
     end
+    WU(:, :,i) = wu;
 end
 
 

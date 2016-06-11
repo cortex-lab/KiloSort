@@ -89,7 +89,7 @@ while 1
             mo = merging_score(f1old - f2old, f1new-f2new, ops.fracse);
             
             
-            if mo<10
+            if mo<5
                 strun = cat(1, strun, new_spikes);
                 run_list(end+1) = ipair;
                 picked(ipair)   = 1;

@@ -118,9 +118,9 @@ while (i<=Nbatch * ops.nfullpasses+1)
 
         dWU = gpuArray(dWU);
         
-        clf
         NSP = sum(nspikes,2);
         if ops.showfigures
+            clf
             for j = 1:10:Nfilt
                 if j+9>Nfilt;
                     j = Nfilt -9;

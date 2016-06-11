@@ -44,7 +44,11 @@ if ~exist('loaded', 'var')
     
     NTbuff      = NT + 4*ops.ntbuff;
     Nbatch      = ceil(d.bytes/2/NchanTOT /(NT-ops.ntbuff));
-    Nbatch_buff = floor(4/5 * nint16s/ops.Nchan /(NT-ops.ntbuff)); % factor of 4/5 for storing PCs of spikes
+    if ~isempty(ops.nNeighPC)
+        Nbatch_buff = floor(4/5 * nint16s/ops.Nchan /(NT-ops.ntbuff)); % factor of 4/5 for storing PCs of spikes
+    else
+        Nbatch_buff = floor(nint16s/ops.Nchan /(NT-ops.ntbuff)); % factor of 4/5 for storing PCs of spikes
+    end
     Nbatch_buff = min(Nbatch_buff, Nbatch);
     
      %% load data into patches, filter, compute covariance

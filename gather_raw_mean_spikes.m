@@ -18,16 +18,16 @@ tic
 % load data into patches, filter, compute covariance, write back to
 % disk
 
-root        = 'F:\DATA\Spikes\GT32';
-fname       = fullfile(root, sprintf('%s.dat', fidname));
-NchanTOT = 32;
-Nchan    = 32;
+% root        = 'F:\DATA\Spikes\GT32';
+% fname       = fullfile(root, sprintf('%s.dat', fidname));
+% NchanTOT = 32;
+% Nchan    = 32;
 
 % fname = 'F:\DATA\Spikes\set11\20150601_all_GT91.dat';
-% fname = 'F:\DATA\Spikes\set13\20141202_all_GT91.dat';
+fname = 'F:\DATA\Spikes\set13\20141202_all_GT245.dat';
 % fname = 'F:\DATA\Spikes\set11\20150601_all_GT192.dat';
-% NchanTOT = 120;
-% Nchan = 120;
+NchanTOT = 120;
+Nchan = 120;
 
 chanMapConn = 1:Nchan;
 fprintf('Time %3.0fs. Loading raw data... \n', toc);
@@ -37,8 +37,8 @@ ibatch = 0;
 ts = [1:1:61]';
 
 clear stimes
-gtClu = Clu;
-gtRes = Res ;
+% gtClu = Clu;
+% gtRes = Res ;
 [iClu] = unique(gtClu);
 for iNN = 1:numel(iClu)
     stimes{iNN} = double(gtRes(gtClu==iClu(iNN)));

@@ -4,20 +4,18 @@ addpath('D:\DATA\Spikes\EvaluationCode')
 % addpath('C:\Users\Marius\Documents\GitHub\npy-matlab')
 clear ops 
 
-ops.Nfilt               = 1024 ; %  number of filters to use (512, should be a multiple of 32)
+ops.Nfilt               = 512 + 256 ; %  number of filters to use (512, should be a multiple of 32)
 ops.Nrank               = 3;    % matrix rank of spike template model (3)
 ops.nfullpasses         = 6;    % number of complete passes through data during optimization (6)
 ops.maxFR               = 20000;  % maximum number of spikes to extract per batch (20000)
 ops.fs                  = 25000; % sampling rate
 ops.fshigh              = 300;   % frequency for high pass filtering
-ops.NchanTOT            = 120; %384;   % total number of channels
+ops.NchanTOT            = 129; %384;   % total number of channels
 ops.Nchan               = 120; %374;   % number of active channels 
 ops.ntbuff              = 64;    % samples of symmetrical buffer for whitening and spike detection
 ops.scaleproc           = 200;   % int16 scaling of whitened data
 ops.verbose             = 1;     
-ops.nNeighPC            = 12; %12; % number of channnels to mask the PCs, leave empty to skip (12)
-ops.nNeigh              = 16; % number of neighboring templates to retain projections of (16)
-ops.NT                  = 64*1024+ ops.ntbuff;% this is the batch size, very important for memory reasons. 
+ops.NT                  = 128*1024+ ops.ntbuff;% this is the batch size, very important for memory reasons. 
 % should be multiple of 32 (or higher power of 2) + ntbuff
 
 % these options can improve/deteriorate results. when multiple values are 
@@ -32,13 +30,13 @@ ops.mergeT           = .1;           % upper threshold for merging (.1)
 ops.splitT           = .1;           % lower threshold for splitting (.1)
 
 ops.nNeighPC    = []; %12; % number of channnels to mask the PCs, leave empty to skip (12)
-ops.nNeigh      = []; %32; % number of neighboring templates to retain projections of (16)
+ops.nNeigh      = 32; %32; % number of neighboring templates to retain projections of (16)
 
 % new options
-ops.initialize = 'no'; %'fromData'; %'fromData';
+ops.initialize = 'fromData'; %'fromData'; %'fromData';
 
 % options for initializing spikes from data
-ops.whitening.type     = 'diag'; % type of whitening (default 'full', for 'noSpikes' set options for spike detection below)
+ops.whitening.type     = 'noSpikes'; % type of whitening (default 'full', for 'noSpikes' set options for spike detection below)
 ops.whitening.ntlags    = 121;
 ops.whitening.range    = 32; % how many channels to whiten together (Inf for whole probe whitening, should be fine if Nchan<=32)
 
@@ -68,10 +66,12 @@ fidname{5}  = '20150601_all_GT';
 fidname{6}  = '20141202_all_GT';
 fidname{7}  = '20151102_1';
 fidname{8}  = 'Loewi20160420_frontal_g0_t0.imec_AP_CAR';
+fidname{9}  = 'Loewi20160420_frontal_g0_t0.imec_AP_CAR_GT245';
 fidname{11}  = '20150601_all_GT245';
 fidname{12}  = '20150924_all_GT245';
+fidname{13}  = '20141202_all_GT245';
 
-for idset = 11
+for idset = 6
     clearvars -except fidname ops idset  tClu tRes time_run dd
     
     root        = 'F:\DATA\Spikes';
@@ -80,8 +80,8 @@ for idset = 11
     root        = 'F:\DATA\Spikes';
     fnameTW     = fullfile('temp_wh.dat'); % (residual from RAM) of whitened data
     
-    ops.chanMap = 1:ops.Nchan;
-%         ops.chanMap = 'C:\DATA\Spikes\forPRBimecToWhisper.mat';
+%     ops.chanMap = 1:ops.Nchan;
+    ops.chanMap = 'C:\DATA\Spikes\forPRBimecToWhisper.mat';
 %     ops.chanMap = 'C:\DATA\Spikes\set8\forPRBimecP3opt3.mat';
     
     clear loaded
@@ -93,22 +93,21 @@ for idset = 11
     if strcmp(ops.initialize, 'fromData')
         optimizePeaks;      
     end
-    %%
+    %
     clear initialized
     run_reg_mu2; % iterate the template matching (non-overlapping extraction)
     %
     fullMPMU; % extracts final spike times (overlapping extraction)
-
-%     testCode32;
-    testCodeNew
+    %
+    testCode
     % posthoc merge templates
-%     rez = merge_posthoc2(rez);
-    
-%     testCode
-    
+    rez = merge_posthoc2(rez);
+    %
+    testCodeNew
+    %
     % save here?
 %     save(fullfile('C:\DATA\Spikes\rez', sprintf('rez%d.mat', idset)), 'rez');
-      
+     % 
     % write to Phy?
 %     rezToPhy(rez, fullfile(root, sprintf('set%d', idset)));
 end
