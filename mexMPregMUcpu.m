@@ -22,14 +22,14 @@ st(st>NT-61) = [];
 
 id      = id(st);
 
-inds = bsxfun(@plus, st', [1:61]'-1);
+inds = bsxfun(@plus, st', [1:61]');
 dspk = reshape(dataRAW(inds, :), 61, numel(st), ops.Nchan);
 dspk = permute(dspk, [1 3 2]);
 
 x = zeros(size(id));
 Cost = zeros(size(id));
 nsp = zeros(nFilt,1);
-for j = 1:size(dspk,2)
+for j = 1:size(dspk,3)
     dWU(:,:,id(j)) = pm * dWU(:,:,id(j)) + (1-pm) * dspk(:,:,j);
     x(j) = proj(st(j), id(j));
     Cost(j) = maX(st(j));

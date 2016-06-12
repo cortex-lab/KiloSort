@@ -182,6 +182,8 @@ while (i<=Nbatch * ops.nfullpasses+1)
             mexMPregMUcpu(Params,dataRAW,fW,data,UtU,mu, lam .* (20./mu).^2, dWU, nu, ops);
     end
     
+    keyboard;
+    
     % compute numbers of spikes
     nsp                = gather_try(nsp(:));
     nspikes(:, ibatch) = nsp;
