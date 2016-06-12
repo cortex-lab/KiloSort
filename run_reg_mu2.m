@@ -187,7 +187,7 @@ while (i<=Nbatch * ops.nfullpasses+1)
     nspikes(:, ibatch) = nsp;
     
     % bin the amplitudes of the spikes
-    xround = min(max(1, round((x))), 100);
+    xround = min(max(1, int32(x)), 100);
     
     % this is a hard-coded forgetting factor, needs to become an option
     dbins = .9975 * dbins;

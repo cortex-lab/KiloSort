@@ -53,14 +53,14 @@ ops.whiteningRange = 32; % how many channels to whiten together (Inf for whole p
 
 ops.ForceMaxRAMforDat   = 20e9; %0e9;  % maximum RAM the algorithm will try to use
 %%
-ops.GPU = 0;
+ops.GPU = 1;
 
 fidname{1}  = '20150601_all_GT91_4_900';
 
 for idset = 1
     clearvars -except fidname ops idset  tClu tRes time_run dd
     
-    root        = 'C:\bin\Datasets\KiloNIPS';
+    root        = 'C:\DATA\Spikes';
     fname       = fullfile(root, sprintf('%s.dat', fidname{idset}));
     
     root        = 'C:\DATA\Spikes';
@@ -80,9 +80,11 @@ for idset = 1
 %%
     clear initialized
     run_reg_mu2; % iterate the template matching (non-overlapping extraction)
-  %%  
+  %%
+  keyboard;
+    
     fullMPMU; % extracts final spike times (overlapping extraction)
-
+    
     % posthoc merge templates
 %     rez = merge_posthoc2(rez);
     

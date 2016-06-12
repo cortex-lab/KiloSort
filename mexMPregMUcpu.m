@@ -15,6 +15,7 @@ Ci = bsxfun(@minus, Ci, (lam .*mu.^2)');
 %
 [mX, id] = max(Ci,[], 2);
 maX     = -my_min(-mX, 21, 1);
+id  = int32(id);
 
 st      = find(maX < mX + 1e-6);
 st(st>NT-61) = [];
