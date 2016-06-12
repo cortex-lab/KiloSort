@@ -53,7 +53,7 @@ if ~exist('initialized', 'var')
     nspikes = zeros(Nfilt, Nbatch);
     lam =  ones(Nfilt, 1, 'single');
     
-    freqUpdate = 4 * 50;
+    freqUpdate = 2 * 50;
     iUpdate = 1:freqUpdate:Nbatch;
 
     
@@ -128,9 +128,10 @@ while (i<=Nbatch * ops.nfullpasses+1)
             fW = conj(fW);
         end
         
-        clf
         NSP = sum(nspikes,2);
         if ops.showfigures
+            clf
+            subplot(2,2,1)
             for j = 1:10:Nfilt
                 if j+9>Nfilt;
                     j = Nfilt -9;
@@ -142,6 +143,12 @@ while (i<=Nbatch * ops.nfullpasses+1)
             end
             axis tight;
             title(sprintf('%d  ', nswitch)); drawnow;
+            subplot(2,2,2)
+            plot(W(:,:,1))
+            subplot(2,2,3)
+            imagesc(U(:,:,1))
+            
+            drawnow
         end
         % break if last iteration reached
         if i>Nbatch * ops.nfullpasses; break; end
@@ -165,12 +172,12 @@ while (i<=Nbatch * ops.nfullpasses+1)
     if ops.GPU
         dataRAW = gpuArray(dat);
     else
-         dataRAW = dat;
+        dataRAW = dat;
     end
     dataRAW = single(dataRAW);
     dataRAW = dataRAW / ops.scaleproc;
     
-    % project data in low-dim space 
+    % project data in low-dim space
     data = dataRAW * U(:,:);
     
     if ops.GPU
@@ -182,7 +189,6 @@ while (i<=Nbatch * ops.nfullpasses+1)
             mexMPregMUcpu(Params,dataRAW,fW,data,UtU,mu, lam .* (20./mu).^2, dWU, nu, ops);
     end
     
-    keyboard;
     
     % compute numbers of spikes
     nsp                = gather_try(nsp(:));
@@ -199,7 +205,7 @@ while (i<=Nbatch * ops.nfullpasses+1)
     delta(ibatch) = sum(Cost)/1e6;
     
     % update status
-    if rem(i,100)==1
+    if rem(i,20)==1
         nsort = sort(round(sum(nspikes,2)), 'descend');
         fprintf(repmat('\b', 1, numel(msg)));
         msg = sprintf('Time %2.2f, batch %d/%d, mu %2.2f, neg-err %2.6f, NTOT %d, n100 %d, n200 %d, n300 %d, n400 %d\n', ...

@@ -122,31 +122,31 @@ __global__ void	cleanup_spikes(const double *Params, const float *xbest,
     __syncthreads();
     
     err0 = sdata[tid+lockout];
-	curr_token = id_sh[tid+lockout];
+    curr_token = id_sh[tid+lockout];
     if(err0>1e-10){
-      flag = 0;
-      for(j=-lockout;j<=lockout;j++)
-	if(sdata[tid+lockout+j]>err0)
-		if (UtU[curr_token*Nfilt + id_sh[tid+lockout+j]]){
-			flag = 1;
-			break;
-			}     
-      if(flag==0){
-          indx = atomicAdd(&counter[0], 1);
-          if (indx<maxFR){
-            st[indx] = tid+lockout         + tid0;
-            id[indx] = ftype[tid+lockout   + tid0];
-            x[indx]  = xbest[tid+lockout     + tid0];
-            C[indx]  = err0;
- //           atomicAdd(&muout[ftype[tid+lockout   + tid0]], xbest[tid+lockout     + tid0]);
-            atomicAdd(&nsp[ftype[tid+lockout   + tid0]], 1);
-          }
-      }
+        flag = 0;
+        for(j=-lockout;j<=lockout;j++)
+            if(sdata[tid+lockout+j]>err0)
+                if (UtU[curr_token*Nfilt + id_sh[tid+lockout+j]]){
+                    flag = 1;
+                    break;
+                }
+        if(flag==0){
+            indx = atomicAdd(&counter[0], 1);
+            if (indx<maxFR){
+                st[indx] = tid+lockout         + tid0;
+                id[indx] = ftype[tid+lockout   + tid0];
+                x[indx]  = xbest[tid+lockout     + tid0];
+                C[indx]  = err0;
+                //           atomicAdd(&muout[ftype[tid+lockout   + tid0]], xbest[tid+lockout     + tid0]);
+                atomicAdd(&nsp[ftype[tid+lockout   + tid0]], 1);
+            }
+        }
     }
   }
 }
 //////////////////////////////////////////////////////////////////////////////////////////
-__global__ void average_snips(const double *Params, const int *st, const int *id, 
+__global__ void average_snips(const double *Params, const int *st, const int *id,
         const float *x,  const int *counter, const float *dataraw, float *WU){
   int tidx, tidy, bid, i, ind, NT, Nchan;
   float xsum = 0.0f, pm; 
