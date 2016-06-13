@@ -9,6 +9,14 @@ function [spikeTimes, clusterIDs, amplitudes, templates, templateFeatures, ...
 % spikeTimes will be in samples, not seconds
 
 
+fs = dir(fullfile(savePath, '*.npy'));
+for i = 1:length(fs)
+   delete(fullfile(savePath, fs(i).name)); 
+end
+if exist(fullfile(savePath, '.phy'), 'dir')
+    rmdir(fullfile(savePath, '.phy'), 's');
+end
+
 spikeTimes = uint64(rez.st3(:,1));
 % [spikeTimes, ii] = sort(spikeTimes);
 spikeTemplates = uint32(rez.st3(:,2));
@@ -17,10 +25,17 @@ if size(rez.st3,2)>4
 end
 amplitudes = rez.st3(:,3);
 
-
-load(rez.ops.chanMap);
-% chanMap0 = chanMap(connected>1e-6);
 Nchan = rez.ops.Nchan;
+try
+    load(rez.ops.chanMap);
+catch
+   chanMap0ind  = [0:Nchan-1]';
+   connected    = ones(Nchan, 1);
+   xcoords      = ones(Nchan, 1);
+   ycoords      = (1:Nchan)';
+end
+% chanMap0 = chanMap(connected>1e-6);
+
 nt0 = size(rez.W,1);
 U = rez.U;
 W = rez.W;
@@ -54,7 +69,7 @@ if ~isempty(savePath)
     writeNPY(templatesInds, fullfile(savePath, 'templates_ind.npy'));
     
 %     Fs = rez.ops.fs;
-    conn = logical(connected);
+    conn        = logical(connected);
     chanMap0ind = int32(chanMap0ind);
     
     writeNPY(chanMap0ind(conn), fullfile(savePath, 'channel_map.npy'));

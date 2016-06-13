@@ -116,6 +116,9 @@ while (i<=Nbatch * ops.nfullpasses+1)
         
         dWU = alignWU(dWU);
        
+        % restrict spikes to their peak group
+%         dWU = decompose_dWU(dWU, kcoords);
+        
         % parameter update    
         [W, U, mu, UtU, nu] = decompose_dWU(dWU, Nrank);
 
@@ -145,8 +148,11 @@ while (i<=Nbatch * ops.nfullpasses+1)
             title(sprintf('%d  ', nswitch)); drawnow;
             subplot(2,2,2)
             plot(W(:,:,1))
+            title('timecourses of top PC')
+            
             subplot(2,2,3)
             imagesc(U(:,:,1))
+            title('spatial mask of top PC')
             
             drawnow
         end
@@ -202,7 +208,7 @@ while (i<=Nbatch * ops.nfullpasses+1)
     dbins(xround + id * size(dbins,1)) = dbins(xround + id * size(dbins,1)) + 1;
     
     % estimate cost function at this time step
-    delta(ibatch) = sum(Cost)/1e6;
+    delta(ibatch) = sum(Cost)/1e3;
     
     % update status
     if rem(i,20)==1
