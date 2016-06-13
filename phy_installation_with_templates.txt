@@ -1,0 +1,32 @@
+open git shell and run the following commands where you want Phy installed
+
+git clone https://github.com/kwikteam/phy
+cd phy
+conda env create -n phy
+cd ..
+git clone https://github.com/kwikteam/phy-contrib
+cd phy
+activate phy
+python setup.py develop 
+cd ../phycontrib
+python setup.py develop
+
+Then run 
+
+phy template-gui params.py (--debug, if you get an error)
+
+where params.py is a text file containing this:
+
+dat_path = '20160330_ap_CAR.dat' % filename
+n_channels_dat = 32 % number of channels 
+dtype = 'int16'
+offset = 0
+sample_rate = 30000.
+hp_filtered = False
+
+
+If you get an error, you might not have some packages. You install these with "pip install package_name". Some of these  are 
+
+pip install click
+pip install tgdm (I think...)
+
