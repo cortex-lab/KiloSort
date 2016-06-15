@@ -1,6 +1,10 @@
+function rez = fullMPMU(ops, rez, DATA)
+
 lam(:)    = ops.lam(3);
 
-Params = double([NT Nfilt ops.Th(3) ops.maxFR 10 Nchan Nrank pm ops.epu]);
+[W, U, mu, UtU, nu] = decompose_dWU(rez.dWU, ops.Nrank);
+
+Params = double([ops.NT ops.Nfilt ops.Th(3) ops.maxFR 10 ops.Nchan ops.Nrank pm ops.epu]);
 
 Params(3) = ops.Th(3);
 Params(4) = 50000;
@@ -51,7 +55,7 @@ if ops.verbose
 end
 
 if Nbatch_buff<Nbatch
-    fid = fopen(fullfile(root, fnameTW), 'r');
+    fid = fopen(fullfile(root, ops.fproc), 'r');
 end
 msg = [];
 

@@ -3,6 +3,9 @@ function rez = fitTemplates(ops, rez, DATA)
 rng('default');
 rng(1);
 
+Nbatch      = rez.temp.Nbatch;
+Nbatch_buff = rez.temp.Nbatch_buff;
+
 Nfilt 	= ops.Nfilt; %256+128;
 nt0 	= 61;
 ntbuff  = ops.ntbuff;
@@ -86,8 +89,6 @@ end
 if Nbatch_buff<Nbatch
     fid = fopen(ops.fproc, 'r');
 end
-
-st3 = [];
 
 nswitch = [0];
 msg = [];
@@ -188,10 +189,10 @@ while (i<=Nbatch * ops.nfullpasses+1)
     
     if ops.GPU
         % run GPU code to get spike times and coefficients
-        [dWU, st, id, x,Cost, nsp] = ...
+        [dWU, ~, id, x,Cost, nsp] = ...
             mexMPregMU(Params,dataRAW,W,data,UtU,mu, lam .* (20./mu).^2, dWU, nu);
     else
-        [dWU, st, id, x,Cost, nsp] = ...
+        [dWU, ~, id, x,Cost, nsp] = ...
             mexMPregMUcpu(Params,dataRAW,fW,data,UtU,mu, lam .* (20./mu).^2, dWU, nu, ops);
     end
     
@@ -211,7 +212,7 @@ while (i<=Nbatch * ops.nfullpasses+1)
     delta(ibatch) = sum(Cost)/1e3;
     
     % update status
-    if rem(i,20)==1
+    if ops.verbose  && rem(i,20)==1
         nsort = sort(round(sum(nspikes,2)), 'descend');
         fprintf(repmat('\b', 1, numel(msg)));
         msg = sprintf('Time %2.2f, batch %d/%d, mu %2.2f, neg-err %2.6f, NTOT %d, n100 %d, n200 %d, n300 %d, n400 %d\n', ...
@@ -230,5 +231,6 @@ if Nbatch_buff<Nbatch
     fclose(fid);
 end
 
+rez.dWU               = gather_try(dWU);
 
-%%
+% %%

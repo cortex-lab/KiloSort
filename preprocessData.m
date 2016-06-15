@@ -1,4 +1,4 @@
-function [DATA, rez, uproj] = preprocessData(ops)
+function [rez, DATA, uproj] = preprocessData(ops)
 
 uproj = [];
 
@@ -152,7 +152,7 @@ Wrot    = ops.scaleproc * Wrot;
 
 fprintf('Time %3.0fs. Loading raw data and applying filters... \n', toc);
 
-fid     = fopen(ops.fbinary, 'r');
+fid         = fopen(ops.fbinary, 'r');
 fidW    = fopen(ops.fproc, 'w');
 
 if strcmp(ops.initialize, 'fromData')
@@ -252,6 +252,6 @@ if ops.verbose
 end
 
 
-
-
+rez.temp.Nbatch = Nbatch;
+rez.temp.Nbatch_buff = Nbatch_buff;
 

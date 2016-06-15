@@ -10,7 +10,7 @@ mu = zeros(Nfilt, 1, 'single');
 dWU(isnan(dWU)) = 0;
 for k = 1:Nfilt
     
-    [Wall, Sv, Uall] = svd(gather(dWU(:,:,k)), 0);
+    [Wall, Sv, Uall] = svd(gather_try(dWU(:,:,k)), 0);
     [~, imax] = max(abs(Wall(:,1)));
     Uall(:,1) = -Uall(:,1) * sign(Wall(imax,1));
     Wall(:,1) = -Wall(:,1) * sign(Wall(imax,1));

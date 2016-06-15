@@ -1,19 +1,20 @@
 addpath(genpath('C:\bin\GitHub\KiloSort'))
 addpath(genpath('C:\bin\GitHub\npy-matlab'))
 
-% addpath('C:\Users\Marius\Documents\GitHub\npy-matlab')
 ops.verbose             = 1;
 ops.showfigures         = 1;
 
-ops.root                = 'C:\DATA\Spikes\Piroska'; %'C:\DATA\Spikes\20150601_chan32_4_900s';
-ops.fidname             = 'piroska_example'; % '20150601_all_GT91_4_900';
-ops.datatype            = 'openEphys'; % 'raw', 'openEphys'
-ops.fs                  = 25000; % sampling rate
-ops.NchanTOT            = 32; %384;   % total number of channels
-ops.Nchan               = 32; %374;   % number of active channels 
-ops.Nfilt               = 64 ; %  number of filters to use (512, should be a multiple of 32)     
-ops.nNeighPC            = 12; %visualization only: number of channnels to mask the PCs, leave empty to skip (12)
-ops.nNeigh              = 16; %visualization only: number of neighboring templates to retain projections of (16)
+ops.datatype            = 'openEphys';  % binary ('dat', 'bin') or 'openEphys'
+ops.fbinary             = 'C:\DATA\Spikes\Piroska\piroska_example.dat'; % will be created for 'openEphys'
+ops.fproc               = 'C:\DATA\Spikes\Piroska\temp_wh.dat'; % residual from RAM of preprocessed data
+ops.root                = 'C:\DATA\Spikes\Piroska'; % 'openEphys' only: where raw files are
+
+ops.fs                  = 25000;        % sampling rate
+ops.NchanTOT            = 32;           % total number of channels
+ops.Nchan               = 32;           % number of active channels 
+ops.Nfilt               = 64;           % number of filters to use (512, should be a multiple of 32)     
+ops.nNeighPC            = 12; % visualization only (Phy): number of channnels to mask the PCs, leave empty to skip (12)
+ops.nNeigh              = 16; % visualization only (Phy): number of neighboring templates to retain projections of (16)
 
 % options for channel whitening
 ops.whitening           = 'full'; % type of whitening (default 'full', for 'noSpikes' set options for spike detection below)
@@ -21,9 +22,8 @@ ops.nSkipCov            = 1; % compute whitening matrix from every N-th batch
 ops.whiteningRange      = 32; % how many channels to whiten together (Inf for whole probe whitening, should be fine if Nchan<=32)
 
 % define the channel map as a filename (string) or simply an array
-ops.chanMap = 'C:\DATA\Spikes\Piroska\chanMap.mat';
-% ops.chanMap = 1:ops.Nchan; %'C:\DATA\Spikes\20150601_chan32_4_900s\chanMap.mat'; %1:ops.Nchan; %'C:\DATA\Spikes\forPRBimecToWhisper.mat';
-%     ops.chanMap = 'C:\DATA\Spikes\set8\forPRBimecP3opt3.mat';
+ops.chanMap             = 'C:\DATA\Spikes\Piroska\chanMap.mat'; % make this file using createChannelMapFile.m
+% ops.chanMap = 1:ops.Nchan; % treated as linear probe if a chanMap file
 
 % other options for controlling the model and optimization
 ops.Nrank               = 3;    % matrix rank of spike template model (3)
@@ -32,13 +32,13 @@ ops.maxFR               = 20000;  % maximum number of spikes to extract per batc
 ops.fshigh              = 300;   % frequency for high pass filtering
 ops.ntbuff              = 64;    % samples of symmetrical buffer for whitening and spike detection
 ops.scaleproc           = 200;   % int16 scaling of whitened data
-ops.NT                  = 32*1024+ ops.ntbuff;% this is the batch size, very important for memory reasons. 
-% should be multiple of 32 (or higher power of 2) + ntbuff
+ops.NT                  = 32*1024+ ops.ntbuff;% this is the batch size (try decreasing if out of memory) 
+% for GPU should be multiple of 32 + ntbuff
 
 % these options can improve/deteriorate results. 
 % when multiple values are provided for an option, the first two are beginning and ending anneal values, 
 % the third is the value used in the final pass. 
-ops.Th               = [4 12 12];    % threshold for detecting spikes on template-filtered data ([6 12 12])
+ops.Th               = [4 10 10];    % threshold for detecting spikes on template-filtered data ([6 12 12])
 ops.lam              = [5 20 20];   % large means amplitudes are forced around the mean ([10 30 30])
 ops.nannealpasses    = 4;            % should be less than nfullpasses (4)
 ops.momentum         = 1./[20 400];  % start with high momentum and anneal (1./[20 1000])
@@ -69,27 +69,24 @@ ops.GPU                 = 0;
 
 %%
 
-clearvars -except fidname ops idset  tClu tRes time_run dd
+clearvars -except ops idset  tClu tRes time_run dd
 
 if strcmp(ops.datatype , 'openEphys')
    ops = convertOpenEphysToRawBInary(ops); 
+   
 end
 %%
-fname       = fullfile(ops.root, sprintf('%s.dat', ops.fidname)); % full path to file
-fnameTW     = fullfile(ops.root, 'temp_wh.dat'); % (residual from RAM) of whitened data
+[rez, DATA, uproj] = preprocessData(ops);
 
-% high-pass, whiten and load data into RAM (+ residual data on disk)
-load_data_and_PCproject;
-
-% do scaled kmeans to initialize the algorith,
 if strcmp(ops.initialize, 'fromData')
-    optimizePeaks;
+    % do scaled kmeans to initialize the algorithm (not sure if functional yet for CPU)
+    optimizePeaks(uproj);
 end
+%%
+[rez] = fitTemplates(ops, rez, DATA); 
 
-% iterate the template matching algorithm
-run_reg_mu2; 
-
-%% extracts final spike times (overlapping extraction)
+%%
+% extracts final spike times (overlapping extraction)
 fullMPMU; 
 
 % posthoc merge templates (under construction)
@@ -102,5 +99,5 @@ save(fullfile(ops.root,  'rez.mat'), 'rez');
 rezToPhy(rez, ops.root);
 
 % remove temporary file
-delete(fnameTW);
+delete(ops.fproc);
 %%

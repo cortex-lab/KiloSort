@@ -1,11 +1,11 @@
 function ops = convertOpenEphysToRawBInary(ops)
 
-fname       = fullfile(ops.root, sprintf('%s.dat', ops.fidname)); 
+fname       = fullfile(ops.root, sprintf('%s.dat', ops.fbinary)); 
 fidout      = fopen(fname, 'w');
 %
 clear fs
 for j = 1:ops.Nchan
-   fs{j} = dir(fullfile(ops.root, sprintf('*CH%d.continuous', j) ));
+   fs{j} = dir(fullfile(ops.root, sprintf('*CH%d_*.continuous', j) ));
 end
 nblocks = cellfun(@(x) numel(x), fs);
 if numel(unique(nblocks))>1
