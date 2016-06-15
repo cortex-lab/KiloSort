@@ -16,13 +16,13 @@ if ~exist('loaded', 'var')
             chanMapConn = ops.chanMap;
             xc = zeros(numel(chanMapConn), 1);
             yc = [1:1:numel(chanMapConn)]';
+            kcoords = ones(ops.Nchan, 1);
         end
     else
         chanMapConn = 1:ops.Nchan;
-    end
-    batch_path = fullfile(root, 'batches');
-    if ~exist(batch_path, 'dir')
-        mkdir(batch_path);
+        kcoords = ones(ops.Nchan, 1);
+        xc = zeros(numel(chanMapConn), 1);
+        yc = [1:1:numel(chanMapConn)]';
     end
     NchanTOT = ops.NchanTOT;
     NT = ops.NT ;
@@ -152,7 +152,7 @@ if ~exist('loaded', 'var')
     %
     ibatch = 0;
     fid = fopen(fname, 'r');
-    fidW = fopen(fullfile(root, fnameTW), 'w');
+    fidW = fopen(fnameTW, 'w');
     
     if strcmp(ops.initialize, 'fromData')
         i0 = 0;

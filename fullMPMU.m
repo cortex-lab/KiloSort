@@ -6,24 +6,34 @@ Params(3) = ops.Th(3);
 Params(4) = 50000;
 Params(5) = 50; 
 
-U0 = gpuArray(U);
-WtW  = zeros(Nfilt,Nfilt, 2*nt0-1, 'single');
+if ops.GPU
+    U0 = gpuArray(U);
+else
+    U0 = U;
+end
+%
+WtW  = zeros(Nfilt,Nfilt,2*nt0-1, 'single');
 for i = 1:Nrank
     for j = 1:Nrank
         utu0 = U0(:,:,i)' * U0(:,:,j);
-        wtw0 =  gather(mexWtW2(Params, W(:,:,i), W(:,:,j), utu0));
-        WtW = WtW + wtw0;
+        if ops.GPU
+            wtw0 =  gather(mexWtW2(Params, W(:,:,i), W(:,:,j), utu0));
+        else
+            wtw0 =  getWtW2(Params, W(:,:,i), W(:,:,j), utu0);
+        end
+        WtW = WtW + permute(wtw0, [2 3 1]);
         clear wtw0 utu0
 %         wtw0 = squeeze(wtw(:,i,:,j,:));
         
     end
 end
 
-WtW = gpuArray(WtW);
-%
-
 mWtW = max(WtW, [], 3);
-mWtW = gather(mWtW);
+if ops.GPU
+    WtW = gpuArray(WtW);
+end
+%%
+
 
 % mWtW = mWtW - diag(diag(mWtW));
 
@@ -71,9 +81,9 @@ if ~isempty(ops.nNeighPC)
     rez.cProjPC = zeros(5e6, 3*nNeighPC, 'single');
     
     % sort best channels
-    [~, iNch] = sort(abs(U(:,:,1)), 1, 'descend');
-    maskPC = zeros(Nchan, Nfilt, 'single');
-    rez.iNeighPC = iNch(1:nNeighPC, :);
+    [~, iNch]       = sort(abs(U(:,:,1)), 1, 'descend');
+    maskPC          = zeros(Nchan, Nfilt, 'single');
+    rez.iNeighPC    = iNch(1:nNeighPC, :);
     for i = 1:Nfilt
         maskPC(rez.iNeighPC(:,i),i) = 1;
     end
@@ -91,64 +101,75 @@ for ibatch = 1:Nbatch
     else
        dat = DATA(:,:,ibatch); 
     end
-    dataRAW = gpuArray(dat);
+    if ops.GPU
+        dataRAW = gpuArray(dat);
+    else
+        dataRAW = dat;
+    end
     dataRAW = single(dataRAW);
     dataRAW = dataRAW / ops.scaleproc;
     
-     % project data in low-dim space 
-    data = gpuArray.zeros(NT, Nfilt, Nrank, 'single');
-    for irank = 1:Nrank
-        data(:,:,irank) 	= dataRAW * U(:,:,irank); 
+    % project data in low-dim space
+    if ops.GPU
+        data    = gpuArray.zeros(NT, Nfilt, Nrank, 'single');
+    else
+        data   = zeros(NT, Nfilt, Nrank, 'single');
     end
-    data = reshape(data, NT, Nfilt*Nrank);
+    for irank = 1:Nrank
+        data(:,:,irank) = dataRAW * U(:,:,irank);
+    end
+    data                = reshape(data, NT, Nfilt*Nrank);
+
+    if ops.GPU
+        [st, id, x, errC, PCproj] ...
+                        = mexMPmuFEAT(Params,data,W,WtW, mu, lam .* (20./mu).^2, nu);
+    else
+         [st, id, x, errC, PCproj]= cpuMPmuFEAT(Params,data,fW,WtW, mu, lam .* (20./mu).^2, nu, ops);
+    end
     
-%     [st, id, x] = mexMPmuLITE(Params,data,W,WtW, mu, lam * 20./mu);
-    [st, id, x, errC, PCproj] = mexMPmuFEAT(Params,data,W,WtW, mu, lam .* (20./mu).^2, nu);    
-%     keyboard;
     if ~isempty(ops.nNeighPC)
         % PCA coefficients
-        inds  = repmat(st', nt0, 1) + repmat(i1nt0, 1, numel(st));
-%         datSp = dataRAW(inds(:), :);
-        try
-            datSp = dataRAW(inds(:), :);
+        inds            = repmat(st', nt0, 1) + repmat(i1nt0, 1, numel(st));
+        try  datSp      = dataRAW(inds(:), :);
         catch
-            datSp = dataRAW(inds(:), :);
+            datSp       = dataRAW(inds(:), :);
         end
-                   
-        datSp = reshape(datSp, [size(inds) Nchan]);
-        coefs = reshape(Wi' * reshape(datSp, nt0, []), size(Wi,2), numel(st), Nchan);
-        coefs = reshape(permute(coefs, [3 1 2]), [], numel(st));
-        coefs = coefs .* maskPC(:, id+1);
-        iCoefs = reshape(find(maskPC(:, id+1)>0), 3*nNeighPC, []);
+        datSp           = reshape(datSp, [size(inds) Nchan]);
+        coefs           = reshape(Wi' * reshape(datSp, nt0, []), size(Wi,2), numel(st), Nchan);
+        coefs           = reshape(permute(coefs, [3 1 2]), [], numel(st));
+        coefs           = coefs .* maskPC(:, id+1);
+        iCoefs          = reshape(find(maskPC(:, id+1)>0), 3*nNeighPC, []);
         rez.cProjPC(irun + (1:numel(st)), :) = gather(coefs(iCoefs)');
     end
     if ~isempty(ops.nNeigh)
         % template coefficients
-        PCproj = maskTT(:, id+1) .* PCproj;
-        iPP = reshape(find(maskTT(:, id+1)>0), nNeigh, []);
+        % transform coefficients
+        PCproj          = bsxfun(@rdivide, ...
+            bsxfun(@plus, PCproj, lam.*mu), sqrt(1+lam));
+        
+        PCproj          = maskTT(:, id+1) .* PCproj;
+        iPP             = reshape(find(maskTT(:, id+1)>0), nNeigh, []);
         rez.cProj(irun + (1:numel(st)), :) = PCproj(iPP)';
-    
-        % increment number of spikes
-        irun = irun + numel(st);
     end
+    % increment number of spikes
+    irun            = irun + numel(st);
     
-    if ibatch==1; ioffset = 0;
-    else ioffset = ops.ntbuff;
+    if ibatch==1; 
+        ioffset         = 0;
+    else
+        ioffset         = ops.ntbuff;
     end
-    st = st - ioffset;
+    st                  = st - ioffset;
     
 %     nspikes2(1:size(W,2)+1, ibatch) = histc(id, 0:1:size(W,2));
     STT = cat(2, 20 + double(st) +(NT-ops.ntbuff)*(ibatch-1), ...
         double(id)+1, double(x), ibatch*ones(numel(x),1));
-    st3 = cat(1, st3, STT);
+    st3             = cat(1, st3, STT);
     
     if rem(ibatch,100)==1
 %         nsort = sort(sum(nspikes2,2), 'descend');
         fprintf(repmat('\b', 1, numel(msg)));
-%         msg = sprintf('Time %2.2f, batch %d/%d, err %2.6f, NTOT %d, n100 %d, n200 %d, n300 %d, n400 %d\n', ...
-%             toc, ibatch,Nbatch, nanmean(delta), sum(nspikes2(:)), nsort(min(size(W,2), 100)),nsort(min(size(W,2), 200)), ...
-%             nsort(min(size(W,2), 300)), nsort(min(size(W,2), 400)));
-        msg = sprintf('Time %2.2f, batch %d/%d, err %2.6f, NTOT %d\n', ...
+        msg             = sprintf('Time %2.2f, batch %d/%d, err %2.6f, NTOT %d\n', ...
             toc, ibatch,Nbatch, nanmean(delta), size(st3,1));        
         fprintf(msg);
         
@@ -165,14 +186,14 @@ if ~isempty(ops.nNeighPC)
     rez.cProjPC                 = reshape(rez.cProjPC, size(rez.cProjPC,1), [], 3);
     rez.cProjPC                 = rez.cProjPC(isort, :,:);
     for ik = 1:Nfilt
-        iSp = rez.st3(:,2)==ik;
-        OneToN = 1:nNeighPC;
-        [~, isortNeigh] = sort(rez.iNeighPC(:,ik), 'ascend');
-        OneToN(isortNeigh) = OneToN;
-        rez.cProjPC(iSp, :,:) = rez.cProjPC(iSp, OneToN, :);
+        iSp                     = rez.st3(:,2)==ik;
+        OneToN                  = 1:nNeighPC;
+        [~, isortNeigh]         = sort(rez.iNeighPC(:,ik), 'ascend');
+        OneToN(isortNeigh)      = OneToN;
+        rez.cProjPC(iSp, :,:)   = rez.cProjPC(iSp, OneToN, :);
     end
     
-    rez.cProjPC = permute(rez.cProjPC, [1 3 2]);
+    rez.cProjPC                 = permute(rez.cProjPC, [1 3 2]);
 end
 if ~isempty(ops.nNeigh)
     rez.cProj(irun+1:end, :)    = [];
@@ -180,40 +201,47 @@ if ~isempty(ops.nNeigh)
 
     % re-index the template coefficients
     for ik = 1:Nfilt
-        iSp = rez.st3(:,2)==ik;
-        OneToN = 1:nNeigh;
-        [~, isortNeigh] = sort(rez.iNeigh(:,ik), 'ascend');
-        OneToN(isortNeigh) = OneToN;
-        rez.cProj(iSp, :) = rez.cProj(iSp, OneToN);
+        iSp                     = rez.st3(:,2)==ik;
+        OneToN                  = 1:nNeigh;
+        [~, isortNeigh]         = sort(rez.iNeigh(:,ik), 'ascend');
+        OneToN(isortNeigh)      = OneToN;
+        rez.cProj(iSp, :)       = rez.cProj(iSp, OneToN);
     end
 end
 
-%
-rez.ops      = ops;
 
-rez.W = W;
-rez.U = U;
-rez.mu = mu;
+%%
+rez.ops             = ops;
+rez.W               = W;
+rez.U               = U;
+rez.mu              = mu;
 
 rez.t2p = [];
 for i = 1:Nfilt
-    wav0 = W(:,i,1);
-    wav0 = my_conv(wav0', .5)';
-   [~, itrough] = min(wav0);
-    [~, t2p] = max(wav0(itrough:end));
-    rez.t2p(i,1) = t2p;
-    rez.t2p(i,2) = itrough;   
+    wav0            = W(:,i,1);
+    wav0            = my_conv(wav0', .5)';
+   [~, itrough]     = min(wav0);
+    [~, t2p]        = max(wav0(itrough:end));
+    rez.t2p(i,1)    = t2p;
+    rez.t2p(i,2)    = itrough;   
 end
 
-rez.nbins = histc(rez.st3(:,2), .5:1:Nfilt+1);
+rez.nbins           = histc(rez.st3(:,2), .5:1:Nfilt+1);
 
-[~, rez.ypos] = max(rez.U(:,:,1), [], 1);
+[~, rez.ypos]       = max(rez.U(:,:,1), [], 1);
 if Nbatch_buff<Nbatch
     fclose(fid);
 end
 
 % center the templates
-rez.W = cat(1, zeros(nt0 - 40, Nfilt, Nrank), rez.W);
-rez.WrotInv = (rez.Wrot/200)^-1;
-
+rez.W               = cat(1, zeros(nt0 - 40, Nfilt, Nrank), rez.W);
+rez.WrotInv         = (rez.Wrot/200)^-1;
+%%
+Urot = U;
+for k = 1:size(U,3)
+   Urot(:,:,k)  = rez.WrotInv' * Urot(:,:,k);
+end
+for n = 1:size(U,2)
+    rez.Wraw(:,:,n) = sq(U(:,n,:)) * sq(rez.W(:,n,:))';
+end
 %
