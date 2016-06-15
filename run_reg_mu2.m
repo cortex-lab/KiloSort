@@ -130,6 +130,7 @@ while (i<=Nbatch * ops.nfullpasses+1)
         
         NSP = sum(nspikes,2);
         if ops.showfigures
+            
             clf
             subplot(2,2,1)
             for j = 1:10:Nfilt

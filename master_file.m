@@ -3,7 +3,7 @@ addpath(genpath(install_path))
 
 % addpath('C:\Users\Marius\Documents\GitHub\npy-matlab')
 
-ops.Nfilt               = 32 ; %  number of filters to use (512, should be a multiple of 32)
+ops.Nfilt               = 128 ; %  number of filters to use (512, should be a multiple of 32)
 ops.Nrank               = 3;    % matrix rank of spike template model (3)
 ops.nfullpasses         = 6;    % number of complete passes through data during optimization (6)
 ops.whitening           = 'full'; % type of whitening (default 'full', for 'noSpikes' set options for spike detection below)
@@ -24,7 +24,7 @@ ops.NT                  = 32*1024+ ops.ntbuff;% this is the batch size, very imp
 % provided for an option, the first two are beginning and ending anneal values, 
 % the third is the value used in the final pass. 
 ops.Th               = [4 12 12];    % threshold for detecting spikes on template-filtered data ([6 12 12])
-ops.lam              = [5 5 5];   % large means amplitudes are forced around the mean ([10 30 30])
+ops.lam              = [5 20 20];   % large means amplitudes are forced around the mean ([10 30 30])
 ops.nannealpasses    = 4;            % should be less than nfullpasses (4)
 ops.momentum         = 1./[20 400];  % start with high momentum and anneal (1./[20 1000])
 ops.shuffle_clusters = 1;            % allow merges and splits during optimization (1)
@@ -53,7 +53,7 @@ ops.whiteningRange = 32; % how many channels to whiten together (Inf for whole p
 
 ops.ForceMaxRAMforDat   = 20e9; %0e9;  % maximum RAM the algorithm will try to use
 %%
-ops.GPU = 0;
+ops.GPU = 1;
 
 fidname{1}  = '20150601_all_GT91_4_900';
 
@@ -77,10 +77,10 @@ for idset = 1
     if strcmp(ops.initialize, 'fromData')
         optimizePeaks;      
     end
-%%
+
     clear initialized
     run_reg_mu2; % iterate the template matching (non-overlapping extraction)
-  %%
+  
     
     fullMPMU; % extracts final spike times (overlapping extraction)
     

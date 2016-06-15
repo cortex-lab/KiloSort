@@ -24,7 +24,7 @@ for testID = 1:Nfilt
                 ft1 = [tf(spikesTest,1); tf(spikesSim,simS_T)];
                 ft2 = [tf(spikesTest,s); tf(spikesSim,1)];
                 
-                ft1 = (ft1 + LAM(testID) * mu(testID))    / sqrt(1 + LAM(testID));
+                ft1 = (ft1 + LAM(testID) * mu(testID))       / sqrt(1 + LAM(testID));
                 ft2 = (ft2 + LAM(simIDs(s)) * mu(simIDs(s))) / sqrt(1 +  LAM(simIDs(s)));
                 
                 df = ft1 - ft2;
