@@ -4,7 +4,7 @@ addpath(genpath('C:\bin\GitHub\npy-matlab'))
 ops.verbose             = 1;
 ops.showfigures         = 1;
 
-ops.datatype            = 'openEphys';  % binary ('dat', 'bin') or 'openEphys'
+ops.datatype            = 'dat';  % binary ('dat', 'bin') or 'openEphys'
 ops.fbinary             = 'C:\DATA\Spikes\Piroska\piroska_example.dat'; % will be created for 'openEphys'
 ops.fproc               = 'C:\DATA\Spikes\Piroska\temp_wh.dat'; % residual from RAM of preprocessed data
 ops.root                = 'C:\DATA\Spikes\Piroska'; % 'openEphys' only: where raw files are

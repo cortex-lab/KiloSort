@@ -17,7 +17,7 @@ nsplit = sum(score>splitT);
 
 mu = sum(sum(dWUtot.^2,1),2).^.5;
 mu = mu(:);
-freeInd = find(nSpikes<50 | mu'<10 | isnan(mu'));
+freeInd = find(nSpikes<200 | mu'<10 | isnan(mu'));
 
 for k = 1:nmerged
     % merge the two clusters

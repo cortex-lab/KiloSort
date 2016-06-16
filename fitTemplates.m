@@ -59,7 +59,7 @@ fW = conj(fW);
 nspikes = zeros(Nfilt, Nbatch);
 lam =  ones(Nfilt, 1, 'single');
 
-freqUpdate = 2 * 50;
+freqUpdate = 100 * 4;
 iUpdate = 1:freqUpdate:Nbatch;
 
 
@@ -146,14 +146,14 @@ while (i<=Nbatch * ops.nfullpasses+1)
                 hold all
             end
             axis tight;
-            title(sprintf('%d  ', nswitch)); drawnow;
-            subplot(2,2,2)
-            plot(W(:,:,1))
-            title('timecourses of top PC')
-            
-            subplot(2,2,3)
-            imagesc(U(:,:,1))
-            title('spatial mask of top PC')
+            title(sprintf('%d  ', nswitch));
+%             subplot(2,2,2)
+%             plot(W(:,:,1))
+%             title('timecourses of top PC')
+%             
+%             subplot(2,2,3)
+%             imagesc(U(:,:,1))
+%             title('spatial mask of top PC')
             
             drawnow
         end

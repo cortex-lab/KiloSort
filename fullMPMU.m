@@ -1,9 +1,10 @@
-function rez = fullMPMU(ops, rez, DATA)
+% function rez = fullMPMU(ops, rez, DATA)
 
 lam(:)    = ops.lam(3);
 
 [W, U, mu, UtU, nu] = decompose_dWU(rez.dWU, ops.Nrank);
 
+pm = exp(-ops.momentum(2));
 Params = double([ops.NT ops.Nfilt ops.Th(3) ops.maxFR 10 ops.Nchan ops.Nrank pm ops.epu]);
 
 Params(3) = ops.Th(3);
@@ -15,8 +16,11 @@ if ops.GPU
 else
     U0 = U;
 end
-%
-WtW  = zeros(Nfilt,Nfilt,2*nt0-1, 'single');
+%%
+nt0     = 61;
+Nrank   = ops.Nrank;
+Nfilt   = ops.Nfilt;
+WtW     = zeros(Nfilt,Nfilt,2*nt0-1, 'single');
 for i = 1:Nrank
     for j = 1:Nrank
         utu0 = U0(:,:,i)' * U0(:,:,j);
@@ -24,8 +28,9 @@ for i = 1:Nrank
             wtw0 =  gather(mexWtW2(Params, W(:,:,i), W(:,:,j), utu0));
         else
             wtw0 =  getWtW2(Params, W(:,:,i), W(:,:,j), utu0);
+            wtw0 = permute(wtw0, [2 3 1]);
         end
-        WtW = WtW + permute(wtw0, [2 3 1]);
+        WtW = WtW + wtw0;
         clear wtw0 utu0
 %         wtw0 = squeeze(wtw(:,i,:,j,:));
         
@@ -33,15 +38,17 @@ for i = 1:Nrank
 end
 
 mWtW = max(WtW, [], 3);
+WtW = permute(WtW, [3 1 2]);
+
 if ops.GPU
     WtW = gpuArray(WtW);
 end
 %%
-
+Nbatch_buff = rez.temp.Nbatch_buff;
+Nbatch      = rez.temp.Nbatch;
 
 % mWtW = mWtW - diag(diag(mWtW));
 
-WtW = permute(WtW, [3 1 2]);
 % rez.WtW = gather(WtW);
 %
 clear wtw0 utu0 U0
@@ -55,7 +62,7 @@ if ops.verbose
 end
 
 if Nbatch_buff<Nbatch
-    fid = fopen(fullfile(root, ops.fproc), 'r');
+    fid = fopen(ops.fproc, 'r');
 end
 msg = [];
 
@@ -97,6 +104,9 @@ end
 irun = 0;
 i1nt0 = int32([1:nt0])';
 %%
+NT = ops.NT;
+batchstart = 0:NT:NT*(Nbatch-Nbatch_buff);
+
 for ibatch = 1:Nbatch    
     if ibatch>Nbatch_buff
         offset = 2 * ops.Nchan*batchstart(ibatch-Nbatch_buff); % - ioffset;
@@ -173,8 +183,8 @@ for ibatch = 1:Nbatch
     if rem(ibatch,100)==1
 %         nsort = sort(sum(nspikes2,2), 'descend');
         fprintf(repmat('\b', 1, numel(msg)));
-        msg             = sprintf('Time %2.2f, batch %d/%d, err %2.6f, NTOT %d\n', ...
-            toc, ibatch,Nbatch, nanmean(delta), size(st3,1));        
+        msg             = sprintf('Time %2.2f, batch %d/%d,  NTOT %d\n', ...
+            toc, ibatch,Nbatch, size(st3,1));        
         fprintf(msg);
         
     end
