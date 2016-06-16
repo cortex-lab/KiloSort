@@ -1,4 +1,4 @@
-function rez = fitTemplates(ops, rez, DATA)
+function rez = fitTemplates(ops, rez, DATA, WUinit)
 
 rng('default');
 rng(1);

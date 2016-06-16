@@ -92,6 +92,8 @@ for i = 1:10
 %     drawnow
 end
 %%
+Nchan = ops.Nchan;
+Nfilt = ops.Nfilt;
 wPCA = ops.wPCA(:,1:3);
 Urec = reshape(U, Nchan, size(wPCA,2), Nfilt);
 
