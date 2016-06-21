@@ -1,4 +1,6 @@
-% mexGPUall
+% mexGPUall. For these to complete succesfully, you need to configure the
+% Matlab GPU library first (see README files for platform-specific
+% information)
 
 mex -largeArrayDims mexWtW.cu
 mex -largeArrayDims mexMPreg.cu

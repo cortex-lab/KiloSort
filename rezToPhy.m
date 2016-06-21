@@ -91,4 +91,16 @@ if ~isempty(savePath)
         similarTemplates = rez.simScore;
         writeNPY(similarTemplates, fullfile(savePath, 'similar_templates.npy'));
     end
+    
+     %make params file
+    if ~exist(fullfile(path2folder,'params.py'),'file')
+        fid = fopen(fullfile(path2folder,'params.py'), 'w');
+        fprintf(fid,['dat_path = ''',fname '''\n']);
+        fprintf(fid,'n_channels_dat = %i\n',rez.ops.NchanTOT);
+        fprintf(fid,'dtype = ''int16''\n');
+        fprintf(fid,'offset = 0\n');
+        fprintf(fid,'sample_rate = %i.\n',rez.ops.fs);
+        fprintf(fid,'hp_filtered = False');
+        fclose(fid);
+    end
 end

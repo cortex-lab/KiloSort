@@ -1,8 +1,11 @@
-addpath(genpath('C:\bin\GitHub\KiloSort'))
-addpath(genpath('C:\bin\GitHub\npy-matlab'))
+% default options are in parenthesis after the comment
 
-ops.verbose             = 1;
-ops.showfigures         = 1;
+addpath(genpath('C:\bin\GitHub\KiloSort')) % path to kilosort folder
+addpath(genpath('C:\bin\GitHub\npy-matlab')) % path to npy-matlab scripts
+
+ops.GPU                 = 0; % whether to run this code on an Nvidia GPU (much faster, mexGPUall first)
+ops.verbose             = 1; % whether to print command line progress
+ops.showfigures         = 1; % whether to plot figures during optimization
 
 ops.datatype            = 'dat';  % binary ('dat', 'bin') or 'openEphys'
 ops.fbinary             = 'C:\DATA\Spikes\Piroska\piroska_example.dat'; % will be created for 'openEphys'
@@ -12,13 +15,13 @@ ops.root                = 'C:\DATA\Spikes\Piroska'; % 'openEphys' only: where ra
 ops.fs                  = 25000;        % sampling rate
 ops.NchanTOT            = 32;           % total number of channels
 ops.Nchan               = 32;           % number of active channels 
-ops.Nfilt               = 64;           % number of filters to use (512, should be a multiple of 32)     
+ops.Nfilt               = 64;           % number of filters to use (2-4 times more than Nchan, should be a multiple of 32)     
 ops.nNeighPC            = 12; % visualization only (Phy): number of channnels to mask the PCs, leave empty to skip (12)
 ops.nNeigh              = 16; % visualization only (Phy): number of neighboring templates to retain projections of (16)
 
 % options for channel whitening
 ops.whitening           = 'full'; % type of whitening (default 'full', for 'noSpikes' set options for spike detection below)
-ops.nSkipCov            = 1; % compute whitening matrix from every N-th batch
+ops.nSkipCov            = 1; % compute whitening matrix from every N-th batch (1)
 ops.whiteningRange      = 32; % how many channels to whiten together (Inf for whole probe whitening, should be fine if Nchan<=32)
 
 % define the channel map as a filename (string) or simply an array
@@ -35,7 +38,7 @@ ops.scaleproc           = 200;   % int16 scaling of whitened data
 ops.NT                  = 32*1024+ ops.ntbuff;% this is the batch size (try decreasing if out of memory) 
 % for GPU should be multiple of 32 + ntbuff
 
-% these options can improve/deteriorate results. 
+% the following options can improve/deteriorate results. 
 % when multiple values are provided for an option, the first two are beginning and ending anneal values, 
 % the third is the value used in the final pass. 
 ops.Th               = [4 10 10];    % threshold for detecting spikes on template-filtered data ([6 12 12])
@@ -55,7 +58,7 @@ ops.maskMaxChannels = 5;       % how many channels to mask up/down ([5])
 ops.crit            = .65;     % upper criterion for discarding spike repeates (0.65)
 ops.nFiltMax        = 10000;   % maximum "unique" spikes to consider (10000)
 
-% load predefined principal components 
+% load predefined principal components (visualization only (Phy): used for features)
 dd                  = load('PCspikes2.mat'); % you might want to recompute this from your own data
 ops.wPCA            = dd.Wi(:,1:7);   % PCs 
 
@@ -63,29 +66,27 @@ ops.wPCA            = dd.Wi(:,1:7);   % PCs
 ops.fracse  = 0.1; % binning step along discriminant axis for posthoc merges (in units of sd)
 ops.epu     = Inf;
 
-ops.ForceMaxRAMforDat   = 20e9; %0e9;  % maximum RAM the algorithm will try to use
-ops.GPU                 = 0;
-
+ops.ForceMaxRAMforDat   = 20e9; % maximum RAM the algorithm will try to use; on Windows it will autodetect.
 
 %%
-
-clearvars -except ops idset  tClu tRes time_run dd
+ 
+% clearvars -except ops idset  tClu tRes time_run dd
 
 if strcmp(ops.datatype , 'openEphys')
    ops = convertOpenEphysToRawBInary(ops); 
    
 end
-%%
+%
 [rez, DATA, uproj] = preprocessData(ops);
 
 if strcmp(ops.initialize, 'fromData')
     % do scaled kmeans to initialize the algorithm (not sure if functional yet for CPU)
     optimizePeaks(uproj);
 end
-%%
+%
 [rez] = fitTemplates(ops, rez, DATA); 
 
-%%
+%
 % extracts final spike times (overlapping extraction)
 fullMPMU; 
 
