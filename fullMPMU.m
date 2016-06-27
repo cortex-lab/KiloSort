@@ -1,5 +1,6 @@
 % function rez = fullMPMU(ops, rez, DATA)
 
+lam =  ones(Nfilt, 1, 'single');
 lam(:)    = ops.lam(3);
 
 [W, U, mu, UtU, nu] = decompose_dWU(rez.dWU, ops.Nrank);
