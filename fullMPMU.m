@@ -1,11 +1,11 @@
 % function rez = fullMPMU(ops, rez, DATA)
 
+Nfilt   = ops.Nfilt;
 lam =  ones(Nfilt, 1, 'single');
 lam(:)    = ops.lam(3);
 
 [W, U, mu, UtU, nu] = decompose_dWU(rez.dWU, ops.Nrank);
 
-Nfilt = ops.Nfilt;
 
 pm = exp(-ops.momentum(2));
 Params = double([ops.NT ops.Nfilt ops.Th(3) ops.maxFR 10 ops.Nchan ops.Nrank pm ops.epu]);
@@ -22,7 +22,6 @@ end
 %%
 nt0     = 61;
 Nrank   = ops.Nrank;
-Nfilt   = ops.Nfilt;
 WtW     = zeros(Nfilt,Nfilt,2*nt0-1, 'single');
 for i = 1:Nrank
     for j = 1:Nrank
@@ -49,7 +48,10 @@ end
 %%
 Nbatch_buff = rez.temp.Nbatch_buff;
 Nbatch      = rez.temp.Nbatch;
-
+Nchan       = ops.Nchan;
+if ~ops.GPU
+   fW = rez.fW; % load fft-ed templates 
+end
 % mWtW = mWtW - diag(diag(mWtW));
 
 % rez.WtW = gather(WtW);

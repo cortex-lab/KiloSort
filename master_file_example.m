@@ -8,14 +8,14 @@ ops.verbose             = 1; % whether to print command line progress
 ops.showfigures         = 1; % whether to plot figures during optimization
 
 ops.datatype            = 'dat';  % binary ('dat', 'bin') or 'openEphys'
-ops.fbinary             = 'C:\DATA\Spikes\Piroska\piroska_example.dat'; % will be created for 'openEphys'
+ops.fbinary             = 'C:\DATA\Spikes\Piroska\piroska_example_short.dat'; % will be created for 'openEphys'
 ops.fproc               = 'C:\DATA\Spikes\Piroska\temp_wh.dat'; % residual from RAM of preprocessed data
 ops.root                = 'C:\DATA\Spikes\Piroska'; % 'openEphys' only: where raw files are
 
 ops.fs                  = 25000;        % sampling rate
 ops.NchanTOT            = 32;           % total number of channels
 ops.Nchan               = 32;           % number of active channels 
-ops.Nfilt               = 64;           % number of filters to use (2-4 times more than Nchan, should be a multiple of 32)     
+ops.Nfilt               = 32;           % number of filters to use (2-4 times more than Nchan, should be a multiple of 32)     
 ops.nNeighPC            = 12; % visualization only (Phy): number of channnels to mask the PCs, leave empty to skip (12)
 ops.nNeigh              = 16; % visualization only (Phy): number of neighboring templates to retain projections of (16)
 
@@ -68,13 +68,11 @@ ops.epu     = Inf;
 
 ops.ForceMaxRAMforDat   = 20e9; % maximum RAM the algorithm will try to use; on Windows it will autodetect.
 
-%%
- 
-% clearvars -except ops idset  tClu tRes time_run dd
+%% 
+tic; % start timer
 
 if strcmp(ops.datatype , 'openEphys')
-   ops = convertOpenEphysToRawBInary(ops); 
-   
+   ops = convertOpenEphysToRawBInary(ops);  % convert data, only for OpenEphys
 end
 %
 [rez, DATA, uproj] = preprocessData(ops);

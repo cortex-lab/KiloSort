@@ -231,6 +231,9 @@ if Nbatch_buff<Nbatch
     fclose(fid);
 end
 
+if ~ops.GPU
+   rez.fW = fW; % save fourier space templates if on CPU
+end
 rez.dWU               = gather_try(dWU);
-rez.nsp               = nspikes;
+rez.nspikes               = nspikes;
 % %%

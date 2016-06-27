@@ -93,8 +93,8 @@ if ~isempty(savePath)
     end
     
      %make params file
-    if ~exist(fullfile(path2folder,'params.py'),'file')
-        fid = fopen(fullfile(path2folder,'params.py'), 'w');
+    if ~exist(fullfile(savePath,'params.py'),'file')
+        fid = fopen(fullfile(savePath,'params.py'), 'w');
         fprintf(fid,['dat_path = ''',fname '''\n']);
         fprintf(fid,'n_channels_dat = %i\n',rez.ops.NchanTOT);
         fprintf(fid,'dtype = ''int16''\n');
