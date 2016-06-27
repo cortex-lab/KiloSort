@@ -232,5 +232,5 @@ if Nbatch_buff<Nbatch
 end
 
 rez.dWU               = gather_try(dWU);
-
+rez.nsp               = nspikes;
 % %%

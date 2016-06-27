@@ -5,6 +5,8 @@ lam(:)    = ops.lam(3);
 
 [W, U, mu, UtU, nu] = decompose_dWU(rez.dWU, ops.Nrank);
 
+Nfilt = ops.Nfilt;
+
 pm = exp(-ops.momentum(2));
 Params = double([ops.NT ops.Nfilt ops.Th(3) ops.maxFR 10 ops.Nchan ops.Nrank pm ops.epu]);
 
@@ -73,7 +75,7 @@ if ~isempty(ops.nNeigh)
     rez.cProj = zeros(5e6, nNeigh, 'single');
 
     % sort pairwise templates
-    nsp = sum(nspikes,2);
+    nsp = sum(rez.nspikes,2);
     vld = single(nsp>100);
     cr    = mWtW .* (vld * vld');
     cr(isnan(cr)) = 0;
