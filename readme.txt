@@ -1,4 +1,4 @@
-The paper which describes the algorithms implemented here is available at:
+The paper which describes the algorithms implemented here is available at: http://biorxiv.org/content/early/2016/06/30/061481
 
 This code was written by Marius Pachitariu. It is provided here with no warranty. Please direct all questions and requests to marius10patgmaildotcom. 
 
