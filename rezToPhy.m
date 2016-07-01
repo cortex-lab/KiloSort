@@ -95,7 +95,10 @@ if ~isempty(savePath)
      %make params file
     if ~exist(fullfile(savePath,'params.py'),'file')
         fid = fopen(fullfile(savePath,'params.py'), 'w');
-        fprintf(fid,['dat_path = ''',fname '''\n']);
+        
+        [~, fname, ext] = fileparts(rez.ops.fbinary);
+        
+        fprintf(fid,['dat_path = ''',fname ext '''\n']);
         fprintf(fid,'n_channels_dat = %i\n',rez.ops.NchanTOT);
         fprintf(fid,'dtype = ''int16''\n');
         fprintf(fid,'offset = 0\n');
