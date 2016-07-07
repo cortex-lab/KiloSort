@@ -23,6 +23,10 @@ st      = find((maX < mX + 1e-3) & mX > Th*Th);
 st(st>NT-61) = [];
 
 id      = id(st);
+x = [];
+Cost = [];
+nsp = [];
+
 if ~isempty(id)
     inds = bsxfun(@plus, st', [1:61]');
     dspk = reshape(dataRAW(inds, :), 61, numel(st), ops.Nchan);

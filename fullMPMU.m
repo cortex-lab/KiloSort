@@ -146,45 +146,46 @@ for ibatch = 1:Nbatch
          [st, id, x, errC, PCproj]= cpuMPmuFEAT(Params,data,fW,WtW, mu, lam .* (20./mu).^2, nu, ops);
     end
     
-    if ~isempty(ops.nNeighPC)
-        % PCA coefficients
-        inds            = repmat(st', nt0, 1) + repmat(i1nt0, 1, numel(st));
-        try  datSp      = dataRAW(inds(:), :);
-        catch
-            datSp       = dataRAW(inds(:), :);
+    if ~isempty(st)
+        if ~isempty(ops.nNeighPC)
+            % PCA coefficients
+            inds            = repmat(st', nt0, 1) + repmat(i1nt0, 1, numel(st));
+            try  datSp      = dataRAW(inds(:), :);
+            catch
+                datSp       = dataRAW(inds(:), :);
+            end
+            datSp           = reshape(datSp, [size(inds) Nchan]);
+            coefs           = reshape(Wi' * reshape(datSp, nt0, []), size(Wi,2), numel(st), Nchan);
+            coefs           = reshape(permute(coefs, [3 1 2]), [], numel(st));
+            coefs           = coefs .* maskPC(:, id+1);
+            iCoefs          = reshape(find(maskPC(:, id+1)>0), 3*nNeighPC, []);
+            rez.cProjPC(irun + (1:numel(st)), :) = gather(coefs(iCoefs)');
         end
-        datSp           = reshape(datSp, [size(inds) Nchan]);
-        coefs           = reshape(Wi' * reshape(datSp, nt0, []), size(Wi,2), numel(st), Nchan);
-        coefs           = reshape(permute(coefs, [3 1 2]), [], numel(st));
-        coefs           = coefs .* maskPC(:, id+1);
-        iCoefs          = reshape(find(maskPC(:, id+1)>0), 3*nNeighPC, []);
-        rez.cProjPC(irun + (1:numel(st)), :) = gather(coefs(iCoefs)');
-    end
-    if ~isempty(ops.nNeigh)
-        % template coefficients
-        % transform coefficients
-        PCproj          = bsxfun(@rdivide, ...
-            bsxfun(@plus, PCproj, lam.*mu), sqrt(1+lam));
+        if ~isempty(ops.nNeigh)
+            % template coefficients
+            % transform coefficients
+            PCproj          = bsxfun(@rdivide, ...
+                bsxfun(@plus, PCproj, lam.*mu), sqrt(1+lam));
+            
+            PCproj          = maskTT(:, id+1) .* PCproj;
+            iPP             = reshape(find(maskTT(:, id+1)>0), nNeigh, []);
+            rez.cProj(irun + (1:numel(st)), :) = PCproj(iPP)';
+        end
+        % increment number of spikes
+        irun            = irun + numel(st);
         
-        PCproj          = maskTT(:, id+1) .* PCproj;
-        iPP             = reshape(find(maskTT(:, id+1)>0), nNeigh, []);
-        rez.cProj(irun + (1:numel(st)), :) = PCproj(iPP)';
+        if ibatch==1;
+            ioffset         = 0;
+        else
+            ioffset         = ops.ntbuff;
+        end
+        st                  = st - ioffset;
+        
+        %     nspikes2(1:size(W,2)+1, ibatch) = histc(id, 0:1:size(W,2));
+        STT = cat(2, 20 + double(st) +(NT-ops.ntbuff)*(ibatch-1), ...
+            double(id)+1, double(x), ibatch*ones(numel(x),1));
+        st3             = cat(1, st3, STT);
     end
-    % increment number of spikes
-    irun            = irun + numel(st);
-    
-    if ibatch==1; 
-        ioffset         = 0;
-    else
-        ioffset         = ops.ntbuff;
-    end
-    st                  = st - ioffset;
-    
-%     nspikes2(1:size(W,2)+1, ibatch) = histc(id, 0:1:size(W,2));
-    STT = cat(2, 20 + double(st) +(NT-ops.ntbuff)*(ibatch-1), ...
-        double(id)+1, double(x), ibatch*ones(numel(x),1));
-    st3             = cat(1, st3, STT);
-    
     if rem(ibatch,100)==1
 %         nsort = sort(sum(nspikes2,2), 'descend');
         fprintf(repmat('\b', 1, numel(msg)));
