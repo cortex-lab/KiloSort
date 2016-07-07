@@ -196,20 +196,20 @@ while (i<=Nbatch * ops.nfullpasses+1)
             mexMPregMUcpu(Params,dataRAW,fW,data,UtU,mu, lam .* (20./mu).^2, dWU, nu, ops);
     end
     
-    
-    % compute numbers of spikes
-    nsp                = gather_try(nsp(:));
-    nspikes(:, ibatch) = nsp;
-    
-    % bin the amplitudes of the spikes
-    xround = min(max(1, int32(x)), 100);
-    
-    % this is a hard-coded forgetting factor, needs to become an option
-    dbins = .9975 * dbins;
-    dbins(xround + id * size(dbins,1)) = dbins(xround + id * size(dbins,1)) + 1;
-    
-    % estimate cost function at this time step
-    delta(ibatch) = sum(Cost)/1e3;
+    dbins = .9975 * dbins;  % this is a hard-coded forgetting factor, needs to become an option
+    if ~isempty(id)
+        % compute numbers of spikes
+        nsp                = gather_try(nsp(:));
+        nspikes(:, ibatch) = nsp;
+        
+        % bin the amplitudes of the spikes
+        xround = min(max(1, int32(x)), 100);
+        
+        dbins(xround + id * size(dbins,1)) = dbins(xround + id * size(dbins,1)) + 1;
+        
+        % estimate cost function at this time step
+        delta(ibatch) = sum(Cost)/1e3;
+    end
     
     % update status
     if ops.verbose  && rem(i,20)==1
