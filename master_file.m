@@ -70,6 +70,7 @@ ops.GPU                 = 0;
 %%
 
 clearvars -except ops idset  tClu tRes time_run dd
+tic
 
 if strcmp(ops.datatype , 'openEphys')
    ops = convertOpenEphysToRawBInary(ops); 
