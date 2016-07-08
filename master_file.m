@@ -64,7 +64,7 @@ ops.fracse  = 0.1; % binning step along discriminant axis for posthoc merges (in
 ops.epu     = Inf;
 
 ops.ForceMaxRAMforDat   = 20e9; %0e9;  % maximum RAM the algorithm will try to use
-ops.GPU                 = 0;
+ops.GPU                 = true;
 
 
 %%
