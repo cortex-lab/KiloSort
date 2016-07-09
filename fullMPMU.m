@@ -265,3 +265,5 @@ for n = 1:size(U,2)
     rez.Wraw(:,:,n) = sq(U(:,n,:)) * sq(rez.W(:,n,:))';
 end
 %
+
+fclose(fid);

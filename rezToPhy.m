@@ -26,6 +26,9 @@ end
 amplitudes = rez.st3(:,3);
 
 Nchan = rez.ops.Nchan;
+chanMap0ind = rez.chanMap - 1;
+connected = rez.connected;
+
 try
     load(rez.ops.chanMap);
 catch
