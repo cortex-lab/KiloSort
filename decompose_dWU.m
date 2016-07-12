@@ -8,8 +8,14 @@ mu = zeros(Nfilt, 1, 'single');
 % dmax = zeros(Nfilt, 1);
 
 dWU(isnan(dWU)) = 0;
-parfor k = 1:Nfilt
-    [W(:,:,k), U(:,:,k), mu(k)] = get_svds(dWU(:,:,k), Nrank);
+if ops.parfor
+    parfor k = 1:Nfilt
+        [W(:,:,k), U(:,:,k), mu(k)] = get_svds(dWU(:,:,k), Nrank);
+    end
+else
+    for k = 1:Nfilt
+        [W(:,:,k), U(:,:,k), mu(k)] = get_svds(dWU(:,:,k), Nrank);
+    end
 end
 U = permute(U, [1 3 2]);
 W = permute(W, [1 3 2]);
