@@ -1,4 +1,4 @@
-function  [W, U, mu, UtU, nu] = decompose_dWU(dWU, Nrank)
+function  [W, U, mu, UtU, nu] = decompose_dWU(ops, dWU, Nrank)
 
 [nt0 Nchan Nfilt] = size(dWU);
 
