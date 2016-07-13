@@ -4,7 +4,7 @@ Nfilt   = ops.Nfilt;
 lam =  ones(Nfilt, 1, 'single');
 lam(:)    = ops.lam(3);
 
-[W, U, mu, UtU, nu] = decompose_dWU(rez.dWU, ops.Nrank);
+[W, U, mu, UtU, nu] = decompose_dWU(ops, rez.dWU, ops.Nrank);
 
 
 pm = exp(-ops.momentum(2));
