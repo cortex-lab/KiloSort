@@ -93,7 +93,7 @@ fullMPMU;
 %     rez = merge_posthoc2(rez);
 
 % save matlab results file
-save(fullfile(ops.root,  'rez.mat'), 'rez');
+save(fullfile(ops.root,  'rez.mat'), 'rez', '-v7.3');
 
 % save python results file for Phy
 rezToPhy(rez, ops.root);
