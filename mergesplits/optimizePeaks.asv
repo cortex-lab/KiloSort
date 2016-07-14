@@ -50,47 +50,35 @@ U = normc(U);
 %
 
 for i = 1:10
-     [Uup, Udown] = get_Uupdown(U, ops);
-     
-     mu = repmat(mu, 3, 1);
-     lam = repmat(lam, 3, 1);
-     
+    
     idT = zeros(size(inds));
     dWU = zeros(Nfilt, nProj, 'single');
     nToT = gpuArray.zeros(Nfilt, 1, 'single');
     Cost = gpuArray(single(0));
-    %%
+    
     for ibatch = 1:size(inds,2)
         % find clusters
         clips = reshape(gpuArray(uproj(inds(:,ibatch), :)), nSpikesPerBatch, nProj);
         
-        ci = clips * [Udown U Uup];
+        ci = clips * U;
         
         ci = bsxfun(@plus, ci, (mu .* lam)');
         cf = bsxfun(@rdivide, ci.^2, 1 + lam');
         cf = bsxfun(@minus, cf, (mu.^2.*lam)');
         
-        cf = reshape(cf,nSpikesPerBatch, Nfilt, 3);
+        [max_cf, id] = max(cf, [], 2);
         
-%         [max_cf, id] = max(cf, [], 2);
-        [Mmax, imax] = max(cf, [], 2);
-        [~, i3max] = max(Mmax, [], 3);
-        plot(sq(mean(Mmax,1)))
-        drawnow
+        id = gather(id);
+        %        x = ci([1:nSpikesPerBatch] + nSpikesPerBatch * (id-1)')' - mu(id) .* lam(id);
+        idT(:,ibatch) = id;
         
-%         pause;
+        L = gpuArray.zeros(Nfilt, nSpikesPerBatch, 'single');
+        L(id' + [0:Nfilt:(Nfilt*nSpikesPerBatch-1)]) = 1;
+        dWU = dWU + L * clips;
         
-%         id = gather(id);
-%         idT(:,ibatch) = id;
-%         
-%         L = gpuArray.zeros(Nfilt, nSpikesPerBatch, 'single');
-%         L(id' + [0:Nfilt:(Nfilt*nSpikesPerBatch-1)]) = 1;
-%         dWU = dWU + L * clips;
-%         
-%         nToT = nToT + sum(L, 2);
-%         Cost = Cost + mean(max_cf);
+        nToT = nToT + sum(L, 2);
+        Cost = Cost + mean(max_cf);
     end
-    %%
     dWU  = bsxfun(@rdivide, dWU, nToT);
     
     U = dWU';
@@ -98,10 +86,9 @@ for i = 1:10
     U = normc(U);
     Cost = Cost/size(inds,2);
     
-   
+    keyboard
     disp(Cost)
     
-    keyboard;
 %     plot(sort(log(1+nToT)))
 %     drawnow
 end

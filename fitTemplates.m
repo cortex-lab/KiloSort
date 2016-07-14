@@ -121,7 +121,7 @@ while (i<=Nbatch * ops.nfullpasses+1)
         %         dWU = decompose_dWU(dWU, kcoords);
         
         % parameter update
-        [W, U, mu, UtU, nu] = decompose_dWU(dWU, Nrank);
+        [W, U, mu, UtU, nu] = decompose_dWU(ops, dWU, Nrank);
         
         if ops.GPU
             dWU = gpuArray(dWU);
@@ -212,7 +212,7 @@ while (i<=Nbatch * ops.nfullpasses+1)
     end
     
     % update status
-    if ops.verbose  && rem(i,20)==1
+    if ops.verbose  && rem(i,100)==1
         nsort = sort(round(sum(nspikes,2)), 'descend');
         fprintf(repmat('\b', 1, numel(msg)));
         msg = sprintf('Time %2.2f, batch %d/%d, mu %2.2f, neg-err %2.6f, NTOT %d, n100 %d, n200 %d, n300 %d, n400 %d\n', ...
