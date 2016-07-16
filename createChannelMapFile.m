@@ -1,7 +1,7 @@
 %  create a channel map file
 
 Nchannels = 32;
-connected = ones(Nchannels, 1);
+connected = true(Nchannels, 1);
 chanMap   = 1:Nchannels;
 chanMap0ind = chanMap - 1;
 xcoords   = ones(Nchannels,1);
@@ -14,7 +14,7 @@ save('C:\DATA\Spikes\20150601_chan32_4_900s\chanMap.mat', ...
 %%
 
 Nchannels = 32;
-connected = ones(Nchannels, 1);
+connected = true(Nchannels, 1);
 chanMap   = 1:Nchannels;
 chanMap0ind = chanMap - 1;
 
