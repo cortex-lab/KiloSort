@@ -75,7 +75,7 @@ __global__ void  bestFilter(const double *Params, const float *data,
       for (i=0; i<Nfilt;i++){
           Ci = data[tid0 + NT * i] + mu[i] * lam[i];
           Cf = Ci * Ci / (lam[i] + 1.0f) - lam[i]*mu[i]*mu[i];
-          
+
           // add the shift component
           cdiff = data[tid0+1 + NT * i] - data[tid0-1 + NT * i];
           Cf = Cf + cdiff * cdiff / (epu + nu[i]);
