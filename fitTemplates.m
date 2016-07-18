@@ -121,7 +121,7 @@ while (i<=Nbatch * ops.nfullpasses+1)
         %         dWU = decompose_dWU(dWU, kcoords);
         
         % parameter update
-        [W, U, mu, UtU, nu] = decompose_dWU(dWU, Nrank);
+        [W, U, mu, UtU, nu] = decompose_dWU(ops, dWU, Nrank);
         
         if ops.GPU
             dWU = gpuArray(dWU);
