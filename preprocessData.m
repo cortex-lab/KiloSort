@@ -2,6 +2,7 @@ function [rez, DATA, uproj] = preprocessData(ops)
 
 uproj = [];
 
+
 if ~isempty(ops.chanMap)
     if ischar(ops.chanMap)
         load(ops.chanMap);
@@ -15,12 +16,17 @@ if ~isempty(ops.chanMap)
             yc = [1:1:numel(chanMapConn)]';
         end
     else
+        chanMap = ops.chanMap;
         chanMapConn = ops.chanMap;
         xc = zeros(numel(chanMapConn), 1);
         yc = [1:1:numel(chanMapConn)]';
+        connected = true(numel(chanMap), 1);
         kcoords = ones(ops.Nchan, 1);
     end
 else
+    chanMap  = 1:ops.Nchan;
+    connected = true(numel(chanMap), 1);
+    
     chanMapConn = 1:ops.Nchan;
     kcoords = ones(ops.Nchan, 1);
     xc = zeros(numel(chanMapConn), 1);
@@ -28,6 +34,12 @@ else
 end
 NchanTOT = ops.NchanTOT;
 NT = ops.NT ;
+
+rez.xc = xc;
+rez.yc = yc;
+rez.connected = connected;
+rez.ops.chanMap = chanMap;
+
 
 d = dir(ops.fbinary);
 ops.sampsToRead = floor(d.bytes/NchanTOT/2);
