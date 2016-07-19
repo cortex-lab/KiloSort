@@ -7,7 +7,7 @@ You should be able to run the code on a CPU without compiling any files, but it 
 Windows
 
 Install Visual Studio Community (2012 or 2013)
-Install CUDA (comes with compatible Nvidia drivers). If you get an error of not finding the GPU at the beginning of installation, you should try newer Nvidia drivers. Ignoring the warning appears to install CUDA without proper paths and then compilation does not work. 
+Install CUDA (comes with compatible Nvidia drivers, though it must be installed separately. If you need to download it, look here: https://developer.nvidia.com/cuda-downloads). If you get an error of not finding the GPU at the beginning of installation, you should try newer Nvidia drivers. Ignoring the warning appears to install CUDA without proper paths and then compilation does not work. 
 
 Copy mex_CUDA_win64.xml (or nvcc_msvc120.xml, or a similarly named file, compatible with your Visual Studio installation version; 11 for 2012 and 12 for 2013) from here
 matlabroot/toolbox/distcomp/gpu/extern/src/mex/win64
