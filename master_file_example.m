@@ -72,6 +72,11 @@ ops.ForceMaxRAMforDat   = 20e9; % maximum RAM the algorithm will try to use; on 
 %% 
 tic; % start timer
 
+if ops.GPU
+     % initialize GPU (will erase any existing GPU arrays)
+    gpuDevice(1);
+end
+
 if strcmp(ops.datatype , 'openEphys')
    ops = convertOpenEphysToRawBInary(ops);  % convert data, only for OpenEphys
 end

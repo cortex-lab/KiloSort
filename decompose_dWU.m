@@ -1,4 +1,4 @@
-function  [W, U, mu, UtU, nu] = decompose_dWU(ops, dWU, Nrank)
+function  [W, U, mu, UtU, nu] = decompose_dWU(ops, dWU, Nrank, kcoords)
 
 [nt0 Nchan Nfilt] = size(dWU);
 
@@ -21,6 +21,8 @@ U = permute(U, [1 3 2]);
 W = permute(W, [1 3 2]);
 
 U(isnan(U)) = 0;
+
+U = zeroOutKcoords(U, kcoords);
 
 UtU = abs(U(:,:,1)' * U(:,:,1)) > .1;
 

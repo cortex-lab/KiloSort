@@ -21,9 +21,6 @@ batchstart = 0:NT:NT*(Nbatch-Nbatch_buff);
 
 delta = NaN * ones(Nbatch, 1);
 iperm = randperm(Nbatch);
-if ops.GPU
-    gpuDevice(1);
-end
 
 switch ops.initialize
     case 'fromData'
@@ -50,7 +47,7 @@ switch ops.initialize
         end
         WUinit = dWU;
 end
-[W, U, mu, UtU, nu] = decompose_dWU(ops, dWU, Nrank);
+[W, U, mu, UtU, nu] = decompose_dWU(ops, dWU, Nrank, rez.ops.kcoords);
 W0 = W;
 W0(NT, 1) = 0;
 fW = fft(W0, [], 1);
@@ -121,7 +118,7 @@ while (i<=Nbatch * ops.nfullpasses+1)
         %         dWU = decompose_dWU(dWU, kcoords);
         
         % parameter update
-        [W, U, mu, UtU, nu] = decompose_dWU(ops, dWU, Nrank);
+        [W, U, mu, UtU, nu] = decompose_dWU(ops, dWU, Nrank, rez.ops.kcoords);
         
         if ops.GPU
             dWU = gpuArray(dWU);

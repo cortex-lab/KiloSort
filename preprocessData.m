@@ -39,7 +39,7 @@ rez.xc = xc;
 rez.yc = yc;
 rez.connected = connected;
 rez.ops.chanMap = chanMap;
-
+rez.ops.kcoords = kcoords; 
 
 d = dir(ops.fbinary);
 ops.sampsToRead = floor(d.bytes/NchanTOT/2);
