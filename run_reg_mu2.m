@@ -1,4 +1,4 @@
-function rez = fitTemplates(ops, rez, DATA)
+function rez = run_reg_mu2(ops, rez, DATA)
 
 rng('default');
 rng(1);
@@ -18,9 +18,6 @@ batchstart = 0:NT:NT*(Nbatch-Nbatch_buff);
 
 delta = NaN * ones(Nbatch, 1);
 iperm = randperm(Nbatch);
-if ops.GPU
-    gpuDevice(1);
-end
 
 switch ops.initialize
     case 'fromData'
