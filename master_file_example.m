@@ -85,10 +85,10 @@ end
 
 if strcmp(ops.initialize, 'fromData')
     % do scaled kmeans to initialize the algorithm (not sure if functional yet for CPU)
-    optimizePeaks(uproj);
+    optimizePeaks;
 end
 %
-[rez] = fitTemplates(ops, rez, DATA); 
+[rez] = fitTemplates(ops, rez, DATA, WUinit); 
 
 %
 % extracts final spike times (overlapping extraction)
