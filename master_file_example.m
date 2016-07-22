@@ -88,7 +88,7 @@ if strcmp(ops.initialize, 'fromData')
     optimizePeaks;
 end
 %
-[rez] = fitTemplates(ops, rez, DATA); 
+[rez] = fitTemplates(ops, rez, DATA, WUinit); 
 
 %
 % extracts final spike times (overlapping extraction)
