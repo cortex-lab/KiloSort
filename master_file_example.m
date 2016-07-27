@@ -86,6 +86,8 @@ end
 if strcmp(ops.initialize, 'fromData')
     % do scaled kmeans to initialize the algorithm (not sure if functional yet for CPU)
     optimizePeaks;
+else
+    WUinit = [];
 end
 %
 [rez] = fitTemplates(ops, rez, DATA, WUinit); 
