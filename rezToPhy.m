@@ -103,7 +103,11 @@ if ~isempty(savePath)
         fprintf(fid,'n_channels_dat = %i\n',rez.ops.NchanTOT);
         fprintf(fid,'dtype = ''int16''\n');
         fprintf(fid,'offset = 0\n');
-        fprintf(fid,'sample_rate = %i\n', rez.ops.fs);
+        if mod(rez.ops.fs,1)
+            fprintf(fid,'sample_rate = %i\n',rez.ops.fs);
+        else
+            fprintf(fid,'sample_rate = %i.\n',rez.ops.fs);
+        end
         fprintf(fid,'hp_filtered = False');
         fclose(fid);
     end

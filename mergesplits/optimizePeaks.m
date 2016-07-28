@@ -1,5 +1,5 @@
 % addpath('C:\CODE\GitHub\KiloSort\preDetect')
-
+function WUinit=optimizePeaks(ops,uproj)
 nProj = size(uproj,2);
 nSpikesPerBatch = 4000;
 inds = 1:nSpikesPerBatch * floor(size(uproj,1)/nSpikesPerBatch);

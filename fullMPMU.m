@@ -1,4 +1,4 @@
-% function rez = fullMPMU(ops, rez, DATA)
+function rez = fullMPMU(ops, rez, DATA)
 
 Nfilt   = ops.Nfilt;
 lam =  ones(Nfilt, 1, 'single');
