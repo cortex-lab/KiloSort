@@ -19,6 +19,16 @@ navigate to HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\GraphicsDrivers
 create new DWORD key called TdrLevel, set value to 0,
 restart PC.
 
+If you find that gpuDevice(1); takes more than 2 minutes each time you 
+run then you dont have the space to store its compiled files
+GTX 1080 seems to have this issue. 
+In order to fix this set an environment variable "CUDA_CACHE_MAXSIZE " on the machine to 
+some high value like 1GB.  By default "CUDA_CACHE_MAXSIZE" is 32MB. 
+In Windows you can do this in properties > advanced system settings > environment variables. 
+In order to set the cache to 1GB use CUDA_CACHE_MAXSIZE 1073741824. 
+
+
+
 Linux
 
 Install CUDA (should ask for a compatible recent version of gcc, will install Nvidia drivers if necessary).

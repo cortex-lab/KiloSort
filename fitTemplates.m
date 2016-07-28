@@ -132,7 +132,8 @@ while (i<=Nbatch * ops.nfullpasses+1)
         
         NSP = sum(nspikes,2);
         if ops.showfigures
-            clf
+            set(0,'DefaultFigureWindowStyle','docked')
+            figure;
             subplot(2,2,1)
             for j = 1:10:Nfilt
                 if j+9>Nfilt;
@@ -145,13 +146,13 @@ while (i<=Nbatch * ops.nfullpasses+1)
             end
             axis tight;
             title(sprintf('%d  ', nswitch));
-%             subplot(2,2,2)
-%             plot(W(:,:,1))
-%             title('timecourses of top PC')
-%             
-%             subplot(2,2,3)
-%             imagesc(U(:,:,1))
-%             title('spatial mask of top PC')
+            subplot(2,2,2)
+            plot(W(:,:,1))
+            title('timecourses of top PC')
+            
+            subplot(2,2,3)
+            imagesc(U(:,:,1))
+            title('spatial mask of top PC')
             
             drawnow
         end

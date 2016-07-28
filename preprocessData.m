@@ -1,5 +1,5 @@
 function [rez, DATA, uproj] = preprocessData(ops)
-
+tic;
 uproj = [];
 
 
