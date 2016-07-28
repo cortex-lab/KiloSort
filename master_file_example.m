@@ -27,6 +27,7 @@ ops.whiteningRange      = 32; % how many channels to whiten together (Inf for wh
 
 % define the channel map as a filename (string) or simply an array
 ops.chanMap             = 'C:\DATA\Spikes\Piroska\chanMap.mat'; % make this file using createChannelMapFile.m
+ops.criterionNoiseChannels = 0.2; % fraction of "noise" templates allowed to span all channel groups (see createChannelMapFile for more info). 
 % ops.chanMap = 1:ops.Nchan; % treated as linear probe if a chanMap file
 
 % other options for controlling the model and optimization

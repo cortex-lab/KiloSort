@@ -22,7 +22,9 @@ W = permute(W, [1 3 2]);
 
 U(isnan(U)) = 0;
 
-U = zeroOutKcoords(U, kcoords);
+if numel(unique(kcoords))>1
+    U = zeroOutKcoords(U, kcoords, ops.criterionNoiseChannels);
+end
 
 UtU = abs(U(:,:,1)' * U(:,:,1)) > .1;
 
