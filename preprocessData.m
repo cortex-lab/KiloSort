@@ -60,7 +60,11 @@ Nbatch_buff = floor(4/5 * nint16s/ops.Nchan /(NT-ops.ntbuff)); % factor of 4/5 f
 Nbatch_buff = min(Nbatch_buff, Nbatch);
 
 %% load data into patches, filter, compute covariance
-[b1, a1] = butter(3, ops.fshigh/ops.fs, 'high');
+if isfield(ops,'fslow')&&ops.fslow<ops.fs/2
+    [b1, a1] = butter(3, [ops.fshigh/ops.fs,ops.fslow/ops.fs]*2, 'bandpass');
+else
+    [b1, a1] = butter(3, ops.fshigh/ops.fs*2, 'high');
+end
 
 fprintf('Time %3.0fs. Loading raw data... \n', toc);
 fid = fopen(ops.fbinary, 'r');
