@@ -20,17 +20,18 @@ if ~isempty(ops.chanMap)
         chanMapConn = ops.chanMap;
         xc = zeros(numel(chanMapConn), 1);
         yc = [1:1:numel(chanMapConn)]';
-        connected = true(numel(chanMap), 1);
-        kcoords = ones(ops.Nchan, 1);
+        connected = true(numel(chanMap), 1);        
     end
 else
     chanMap  = 1:ops.Nchan;
     connected = true(numel(chanMap), 1);
     
-    chanMapConn = 1:ops.Nchan;
-    kcoords = ones(ops.Nchan, 1);
+    chanMapConn = 1:ops.Nchan;    
     xc = zeros(numel(chanMapConn), 1);
     yc = [1:1:numel(chanMapConn)]';
+end
+if ~exist('kcoords', 'var')
+    kcoords = ones(ops.Nchan, 1);
 end
 NchanTOT = ops.NchanTOT;
 NT = ops.NT ;
