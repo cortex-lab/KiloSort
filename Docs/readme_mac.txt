@@ -1,3 +1,6 @@
+Assuming gpu functions have been correctly compiled (see below), a "master_file.m" is available that you should copy to a local path and change for each of your experiments. 
+The logic is that the git folder might be updated, and when that happens all extraneous files in that folder will be deleted and any changes you made reverted. 
+
 Mac (instructions from Dan Denman)
 (w/ NVIDIA GeForce GTX 970; OS X 10.11.3, Xcode 7.2.1, CUDA 7.5.21)
 
