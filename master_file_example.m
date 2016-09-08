@@ -4,9 +4,8 @@ addpath(genpath('D:\CODE\GitHub\KiloSort')) % path to kilosort folder
 addpath(genpath('D:\CODE\GitHub\npy-matlab')) % path to npy-matlab scripts
 
 pathToYourConfigFile = 'D:\CODE\Kilosort\configFiles'; % take from Github folder and put it somewhere else (together with the master_file)
-addpath(pathToYourConfigFile)
-
 run(fullfile(pathToYourConfigFile, 'StandardConfig.m'))
+
 tic; % start timer
 %
 if ops.GPU     
