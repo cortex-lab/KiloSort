@@ -43,7 +43,9 @@ U = gpuArray(uBase(itsort(1:Nfilt), :))';
 mu = sum(U.^2,1)'.^.5;
 U = normc(U);
 %
-deltay = zeros(ops.Nchan, numel(indBatch));
+[uniqy, ~, iqy] = unique(rez.yc);
+
+deltay = zeros(numel(uniqy), numel(indBatch));
 
 for i = 1:10
     % resample spatial masks up and down
@@ -75,12 +77,27 @@ for i = 1:10
         cf = bsxfun(@rdivide, ci.^2, 1 + lam');
         cf = bsxfun(@minus, cf, (mu.^2.*lam)');
         
-        cf = reshape(cf,[], Nfilt, 3);
+        cf           = reshape(cf,[], Nfilt, 3);
         [Mmax, imax] = max(cf, [], 2);
-        [~, i3max] = max(Mmax, [], 3);
+        [~, i3max]   = max(Mmax, [], 3);
 %         keyboard;
     
         % determine added correction to delta y
+        dySpikes = get_dySpikes(Mmax) * sigShift;
+        
+        
+        
+    end
+    % smooth out corrections
+    
+    
+    for ibatch = 1:numel(indBatch)
+        % shift clips by the new correction
+        clips   = gpuArray(uproj(indBatch{ibatch}, :))';
+        nSpikes = size(clips,2);
+        clips   = reshape(clips, ops.Nchan, []);
+        clips   = shift_data(clips, deltay(:, ibatch), rez.yc, rez.xc, iCovChans, sigDrift, rez.Wrot);        
+        clips   = reshape(clips, size(U,1), [])';
         
         % determine cluster assignment for this iteration
         [max_cf, id] = max(cf(:,:,2), [], 2);
@@ -98,7 +115,7 @@ for i = 1:10
     U = normc(U);
     Cost = Cost/size(inds,2);
     
-    % smooth out corrections
+    
     
     %     disp(Cost)
     

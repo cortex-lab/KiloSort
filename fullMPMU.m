@@ -264,6 +264,6 @@ for k = 1:size(U,3)
    Urot(:,:,k)  = rez.WrotInv' * Urot(:,:,k);
 end
 for n = 1:size(U,2)
-    rez.Wraw(:,:,n) = sq(Urot(:,n,:)) * sq(rez.W(:,n,:))';
+    rez.Wraw(:,:,n) = mu(n) * sq(Urot(:,n,:)) * sq(rez.W(:,n,:))';
 end
 %
