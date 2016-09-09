@@ -1,3 +1,7 @@
+function [rez] = clusterAndDriftCorrection(rez, uproj, indBatch)
+
+ops = rez.ops;
+
 nProj = size(uproj,2);
 
 uBase = zeros(1e4, nProj);
@@ -31,8 +35,8 @@ uBase = uBase(1:ncurr, :);
  
 %% initialize U
 % compute covariance matrix
-sigDrift = 15;
-sigShift = 20;
+sigDrift = ops.sigDrift; % 15;
+sigShift = ops.sigShift; % 20;
 chanDists= bsxfun(@minus, rez.yc, rez.yc').^2 + bsxfun(@minus, rez.xc, rez.xc').^2;
 iCovChans = my_inv(exp(-chanDists/(2*sigDrift^2)), 1e-6);
 
@@ -56,6 +60,7 @@ allNSpikes = zeros(numel(uniqy), numel(indBatch));
 cmap = colormap('jet');
 cmap = cmap(round(linspace(1, 64, numel(uniqy))), :);
 
+parsmooth = ceil([rez.ops.Drift.chSmooth rez.ops.Drift.tSmooth/(rez.ops.NT/rez.ops.fs)]);
 tic
 %
 for i = 1:niter
@@ -86,7 +91,7 @@ for i = 1:niter
         clips = reshape(clips, ops.Nchan, []);
         
         % resample clips by the delta y
-        clips = shift_data(clips, totdY(iqy, ibatch), rez.yc, rez.xc, iCovChans, sigDrift, rez.Wrot);        
+        clips = shift_data(clips, -totdY(iqy, ibatch), rez.yc, rez.xc, iCovChans, sigDrift, rez.Wrot);        
         clips = reshape(clips, size(U,1), [])';
         
         ci = clips * [Udown U Uup];
@@ -107,11 +112,12 @@ for i = 1:niter
     end
     
     % smooth out corrections
-    nSmoothSpikes = my_conv2(allNSpikes, [5 5], [1 2]);
-    deltay(:,:,i) = my_conv2(alldy, [5 5], [1 2])./nSmoothSpikes; 
+    nSmoothSpikes = my_conv2(allNSpikes, parsmooth, [1 2]);
+    deltay(:,:,i) = my_conv2(alldy, parsmooth, [1 2])./nSmoothSpikes; 
     totdY = sum(deltay(:,:,1:i), 3);
     totdY = bsxfun(@minus, totdY, mean(totdY, 2)); 
-
+    % totdY = totdY - mean(totdY(:));
+    
     for j = 1:size(totdY,1)
         plot(totdY(j, :), 'Color', cmap(j,:))
         hold all
@@ -124,7 +130,7 @@ for i = 1:niter
         clips   = gpuArray(uproj(indBatch{ibatch}, :))';
         nSpikes = size(clips,2);
         clips   = reshape(clips, ops.Nchan, []);
-        clips   = shift_data(clips, totdY(iqy, ibatch), rez.yc, rez.xc, iCovChans, sigDrift, rez.Wrot);        
+        clips   = shift_data(clips, -totdY(iqy, ibatch), rez.yc, rez.xc, iCovChans, sigDrift, rez.Wrot);        
         clips   = reshape(clips, size(U,1), [])';
         %
         ci = clips * U;
@@ -189,6 +195,10 @@ for j = 1:Nfilt
     WUinit(:,:,j) = muinit(j)  * Wrec(:,:,j);
 end
 WUinit = single(WUinit);
-%%
+%
 
-
+rez.totdY   = totdY;
+rez.WUdrift = WUinit;
+rez.iqy = iqy;
+rez.iCovChans = iCovChans;
+rez.ops.initialize = 'fromDrift';

@@ -6,6 +6,9 @@ yminusy = bsxfun(@minus, ycoords - dy, ycoords').^2 + ...
 
 newSamp = exp(- yminusy/(2*sig^2));
 
-shiftM = Wrot * ((newSamp * iCovChans)/Wrot);
+shiftM = newSamp * iCovChans;
+if nargin>5
+    shiftM = Wrot * (shiftM/Wrot);
+end
 
 

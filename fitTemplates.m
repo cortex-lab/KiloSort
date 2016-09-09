@@ -26,9 +26,11 @@ iperm = randperm(Nbatch);
 
 switch ops.initialize
     case 'fromData'
-        WUinit=optimizePeaks(ops,uproj);%does a scaled kmeans 
-        dWU = WUinit(:,:,1:Nfilt);
-        %             dWU = alignWU(dWU);
+        WUinit = optimizePeaks(ops,uproj);%does a scaled kmeans 
+        dWU    = WUinit(:,:,1:Nfilt);
+    case 'fromDriftCorrection'
+        WUinit = rez.WUdrift;
+        dWU    = WUinit(:,:,1:Nfilt);
     otherwise
         initialize_waves0;
         ipck = randperm(size(Winit,2), Nfilt);
@@ -136,6 +138,7 @@ while (i<=Nbatch * ops.nfullpasses+1)
         if ops.showfigures
 %             set(0,'DefaultFigureWindowStyle','docked')
 %             figure;
+            clf
             subplot(2,2,1)
             for j = 1:10:Nfilt
                 if j+9>Nfilt;

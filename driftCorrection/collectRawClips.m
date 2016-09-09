@@ -1,7 +1,7 @@
-function [rez, uproj, indBatch] = collectRawClips(ops)
-tic;
-uproj = [];
+function [rez, uproj, indBatch] = collectRawClips(rez)
 
+ops = rez.ops;
+tic;
 
 if ~isempty(ops.chanMap)
     if ischar(ops.chanMap)
@@ -40,7 +40,7 @@ rez.xc = xc;
 rez.yc = yc;
 rez.connected   = connected;
 rez.ops         = ops;
-rez.ops.chanMap = chanMap;
+% rez.ops.chanMap = chanMap;
 rez.ops.kcoords = kcoords; 
 
 d = dir(ops.fbinary);
@@ -98,7 +98,7 @@ while 1
     fseek(fid, offset, 'bof');
     buff = fread(fid, [NchanTOT NTbuff], '*int16');
     
-    %         keyboard;
+%             keyboard;
     
     if isempty(buff)
         break;
@@ -164,11 +164,11 @@ fprintf('Time %3.0fs. Loading raw data and applying filters... \n', toc);
 
 fid         = fopen(ops.fbinary, 'r');
 
-if strcmp(ops.initialize, 'fromData')
-    i0 = 0;
-    wPCA = ops.wPCA(:, 1:3);
-    uproj = zeros(1e6,  size(wPCA,2) * Nchan, 'single');
-end
+
+i0 = 0;
+wPCA = ops.wPCA(:, 1:3);
+uproj = zeros(3e6,  size(wPCA,2) * Nchan, 'single');
+
 %
 for ibatch = 1:Nbatch    
     offset = max(0, 2*NchanTOT*((NT - ops.ntbuff) * (ibatch-1) - 2*ops.ntbuff));
@@ -216,29 +216,26 @@ for ibatch = 1:Nbatch
     dataRAW = single(dataRAW);
     dataRAW = dataRAW / ops.scaleproc;
     
-    if strcmp(ops.initialize, 'fromData') %&& rem(ibatch, 10)==1
-        % find isolated spikes
-        [row, col, mu] = isolated_peaks(dataRAW, ops.loc_range, ops.long_range, ops.spkTh);
-        
-        % find their PC projections
-        uS = get_PCproj(dataRAW, row, col, wPCA, ops.maskMaxChannels);
-        
-        uS = permute(uS, [2 1 3]);
-        uS = reshape(uS,numel(row), Nchan * size(wPCA,2));
-        
-        if i0+numel(row)>size(uproj,1)
-            uproj(1e6 + size(uproj,1), 1) = 0;
-        end
-        
-        uproj(i0 + (1:numel(row)), :) = gather_try(uS);
-        indBatch{ibatch} = i0 + (1:numel(row));
-        i0 = i0 + numel(row);
+    % find isolated spikes
+    [row, col, mu] = isolated_peaks(dataRAW, ops.loc_range, ops.long_range, ops.spkTh);
+    
+    % find their PC projections
+    uS = get_PCproj(dataRAW, row, col, wPCA, ops.maskMaxChannels);
+    
+    uS = permute(uS, [2 1 3]);
+    uS = reshape(uS,numel(row), Nchan * size(wPCA,2));
+    
+    if i0+numel(row)>size(uproj,1)
+        uproj(1e6 + size(uproj,1), 1) = 0;
     end
+    
+    uproj(i0 + (1:numel(row)), :) = gather_try(uS);
+    indBatch{ibatch} = i0 + (1:numel(row));
+    i0 = i0 + numel(row);
+    
 end
 
-if strcmp(ops.initialize, 'fromData')
-   uproj(i0+1:end, :) = []; 
-end
+uproj(i0+1:end, :) = [];
 Wrot        = gather_try(Wrot);
 rez.Wrot    = Wrot;
 

@@ -1,6 +1,8 @@
-function [rez, DATA, uproj] = preprocessData(ops)
+function [rez, DATA, uproj] = preprocessData(rez)
+
 tic;
 uproj = [];
+ops = rez.ops;
 
 
 if ~isempty(ops.chanMap)
@@ -61,7 +63,7 @@ Nbatch      = ceil(d.bytes/2/NchanTOT /(NT-ops.ntbuff));
 Nbatch_buff = floor(4/5 * nint16s/ops.Nchan /(NT-ops.ntbuff)); % factor of 4/5 for storing PCs of spikes
 Nbatch_buff = min(Nbatch_buff, Nbatch);
 
-%% load data into patches, filter, compute covariance
+%---------- load data into patches, filter, compute covariance -----------%
 if isfield(ops,'fslow')&&ops.fslow<ops.fs/2
     [b1, a1] = butter(3, [ops.fshigh/ops.fs,ops.fslow/ops.fs]*2, 'bandpass');
 else
@@ -118,6 +120,11 @@ while 1
     dataRAW = dataRAW';
     dataRAW = single(dataRAW);
     dataRAW = dataRAW(:, chanMapConn);
+    
+    if ops.doDriftCorrection
+       dataRAW = shift_data(dataRAW', -rez.totdY(rez.iqy, ibatch), rez.yc, rez.xc, ...
+           rez.iCovChans, rez.ops.sigDrift)';  
+    end
     
     datr = filter(b1, a1, dataRAW);
     datr = flipud(datr);
@@ -212,6 +219,11 @@ for ibatch = 1:Nbatch
         dataRAW = dataRAW';
         dataRAW = single(dataRAW);
         dataRAW = dataRAW(:, chanMapConn);
+        
+        if ops.doDriftCorrection
+            dataRAW = shift_data(dataRAW', -rez.totdY(rez.iqy, ibatch), rez.yc, rez.xc, ...
+                rez.iCovChans, rez.ops.sigDrift)';
+        end
         
         datr = filter(b1, a1, dataRAW);
         datr = flipud(datr);
