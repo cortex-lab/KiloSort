@@ -1,4 +1,6 @@
-function rez = fitTemplates(ops, rez, DATA, uproj)
+function rez = fitTemplates(rez, DATA, uproj)
+
+ops = rez.ops;
 
 rng('default');
 rng(1);
@@ -132,8 +134,8 @@ while (i<=Nbatch * ops.nfullpasses+1)
         
         NSP = sum(nspikes,2);
         if ops.showfigures
-            set(0,'DefaultFigureWindowStyle','docked')
-            figure;
+%             set(0,'DefaultFigureWindowStyle','docked')
+%             figure;
             subplot(2,2,1)
             for j = 1:10:Nfilt
                 if j+9>Nfilt;

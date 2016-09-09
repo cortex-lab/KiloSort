@@ -38,7 +38,8 @@ NT = ops.NT ;
 
 rez.xc = xc;
 rez.yc = yc;
-rez.connected = connected;
+rez.connected   = connected;
+rez.ops         = ops;
 rez.ops.chanMap = chanMap;
 rez.ops.kcoords = kcoords; 
 
@@ -231,7 +232,7 @@ for ibatch = 1:Nbatch
     dataRAW = single(dataRAW);
     dataRAW = dataRAW / ops.scaleproc;
     
-    if strcmp(ops.initialize, 'fromData') && rem(ibatch, 10)==1
+    if strcmp(ops.initialize, 'fromData') %&& rem(ibatch, 10)==1
         % find isolated spikes
         [row, col, mu] = isolated_peaks(dataRAW, ops.loc_range, ops.long_range, ops.spkTh);
         
@@ -258,6 +259,9 @@ for ibatch = 1:Nbatch
     
 end
 
+if strcmp(ops.initialize, 'fromData')
+   uproj(i0+1:end, :) = []; 
+end
 Wrot        = gather_try(Wrot);
 rez.Wrot    = Wrot;
 
