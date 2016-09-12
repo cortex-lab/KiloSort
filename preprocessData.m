@@ -1,7 +1,8 @@
-function [rez, DATA, uproj] = preprocessData(rez)
+function [rez, DATA, uproj, ts] = preprocessData(rez)
 
 tic;
 uproj = [];
+ts = [];
 ops = rez.ops;
 
 
@@ -93,6 +94,9 @@ end
 isproc = zeros(Nbatch, 1);
 while 1
     ibatch = ibatch + ops.nSkipCov;
+    if ibatch>Nbatch
+        break;
+    end
     
     offset = max(0, 2*NchanTOT*((NT - ops.ntbuff) * (ibatch-1) - 2*ops.ntbuff));
     if ibatch==1
@@ -184,6 +188,7 @@ if strcmp(ops.initialize, 'fromData')
     i0 = 0;
     wPCA = ops.wPCA(:, 1:3);
     uproj = zeros(1e6,  size(wPCA,2) * Nchan, 'single');
+    ts    = zeros(1e6,  1, 'single');
 end
 %
 for ibatch = 1:Nbatch
@@ -256,9 +261,11 @@ for ibatch = 1:Nbatch
         
         if i0+numel(row)>size(uproj,1)
             uproj(1e6 + size(uproj,1), 1) = 0;
+            ts(1e6 + size(ts,1), 1) = 0;
         end
         
         uproj(i0 + (1:numel(row)), :) = gather_try(uS);
+        ts(i0 + (1:numel(row))) = gather(row) + max(0, (NT - ops.ntbuff) * (ibatch-1) - ops.ntbuff);
         i0 = i0 + numel(row);
     end
     
@@ -273,6 +280,7 @@ end
 
 if strcmp(ops.initialize, 'fromData')
    uproj(i0+1:end, :) = []; 
+   ts(i0+1:end, :) = [];
 end
 Wrot        = gather_try(Wrot);
 rez.Wrot    = Wrot;

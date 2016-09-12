@@ -1,4 +1,4 @@
-function [rez, uproj, indBatch] = collectRawClips(rez)
+function [rez, uproj, indBatch, ts] = collectRawClips(rez)
 
 ops = rez.ops;
 tic;
@@ -168,6 +168,7 @@ fid         = fopen(ops.fbinary, 'r');
 i0 = 0;
 wPCA = ops.wPCA(:, 1:3);
 uproj = zeros(3e6,  size(wPCA,2) * Nchan, 'single');
+ts    = zeros(3e6,  1, 'single');
 
 %
 for ibatch = 1:Nbatch    
@@ -227,15 +228,18 @@ for ibatch = 1:Nbatch
     
     if i0+numel(row)>size(uproj,1)
         uproj(1e6 + size(uproj,1), 1) = 0;
+        ts(1e6 + size(ts,1), 1) = 0;
     end
     
     uproj(i0 + (1:numel(row)), :) = gather_try(uS);
     indBatch{ibatch} = i0 + (1:numel(row));
+    ts(i0 + (1:numel(row))) = gather(row) + max(0, (NT - ops.ntbuff) * (ibatch-1) - ops.ntbuff);
     i0 = i0 + numel(row);
     
 end
 
 uproj(i0+1:end, :) = [];
+ts(i0+1:end, :) = [];
 Wrot        = gather_try(Wrot);
 rez.Wrot    = Wrot;
 

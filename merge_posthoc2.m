@@ -113,7 +113,7 @@ end
 
 iMega = zeros(Nfilt, 1);
 for i = 1:length(iMegaC)
-   iMega(iMegaC{i}) = i; 
+   iMega(iMegaC{i}) = iMegaC{i}(1); 
 end
 rez.iMega = iMega;
 rez.iMegaC = iMegaC;
