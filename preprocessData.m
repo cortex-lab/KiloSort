@@ -2,6 +2,9 @@ function [rez, DATA, uproj] = preprocessData(ops)
 tic;
 uproj = [];
 
+if strcmp(ops.datatype , 'openEphys')
+   ops = convertOpenEphysToRawBInary(ops);  % convert data, only for OpenEphys
+end
 
 if ~isempty(ops.chanMap)
     if ischar(ops.chanMap)
