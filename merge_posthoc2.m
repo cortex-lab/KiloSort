@@ -18,8 +18,8 @@ fmax = zeros(nSpikes,1, 'single');
 pairs = {};
 for testID = 1:Nfilt
     spikesTest = clusterIDs==testID;
-    tfnew = bsxfun(@plus, tf(spikesTest, :), LAM(tfi(:, testID))'.*mu(tfi(:, testID))');
-    tf(spikesTest, :) = bsxfun(@rdivide, tfnew, sqrt(1+LAM(tfi(:, testID)))');
+%     tfnew = bsxfun(@plus, tf(spikesTest, :), LAM(tfi(:, testID))'.*mu(tfi(:, testID))');
+%     tf(spikesTest, :) = bsxfun(@rdivide, tfnew, sqrt(1+LAM(tfi(:, testID)))');
     
     pp = tfi(:, testID);
     pp(pp==testID) = [];
@@ -89,7 +89,7 @@ while 1
             mo = merging_score(f1old - f2old, f1new-f2new, ops.fracse);
             
             
-            if mo<5
+            if mo<3
                 strun = cat(1, strun, new_spikes);
                 run_list(end+1) = ipair;
                 picked(ipair)   = 1;
@@ -113,12 +113,10 @@ end
 
 iMega = zeros(Nfilt, 1);
 for i = 1:length(iMegaC)
-   iMega(iMegaC{i}) = i; 
+   iMega(iMegaC{i}) = iMegaC{i}(1); 
 end
 rez.iMega = iMega;
 rez.iMegaC = iMegaC;
 
 
 rez.st3(:,5) = iMega(rez.st3(:,2));
-
-

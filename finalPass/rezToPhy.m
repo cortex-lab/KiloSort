@@ -21,21 +21,27 @@ spikeTimes = uint64(rez.st3(:,1));
 % [spikeTimes, ii] = sort(spikeTimes);
 spikeTemplates = uint32(rez.st3(:,2));
 if size(rez.st3,2)>4
-%     spikeClusters = uint32(rez.st3(:,5));
+    spikeClusters = uint32(1+rez.st3(:,5));
 end
 amplitudes = rez.st3(:,3);
 
 Nchan = rez.ops.Nchan;
 
-try
-    load(rez.ops.chanMap);
-catch
-   chanMap0ind  = [0:Nchan-1]';
-   connected    = ones(Nchan, 1);
-   xcoords      = ones(Nchan, 1);
-   ycoords      = (1:Nchan)';
-end
+% try
+%     load(rez.ops.chanMap);
+% catch
+%    chanMap0ind  = [0:Nchan-1]';
+%    connected    = ones(Nchan, 1);
+%    xcoords      = ones(Nchan, 1);
+%    ycoords      = (1:Nchan)';
+% end
 % chanMap0 = chanMap(connected>1e-6);
+
+connected   = rez.connected(:);
+xcoords     = rez.xcoords(:);
+ycoords     = rez.ycoords(:);
+chanMap     = rez.ops.chanMap(:);
+chanMap0ind = chanMap - 1;
 
 nt0 = size(rez.W,1);
 U = rez.U;
@@ -63,7 +69,7 @@ if ~isempty(savePath)
     writeNPY(spikeTimes, fullfile(savePath, 'spike_times.npy'));
     writeNPY(uint32(spikeTemplates-1), fullfile(savePath, 'spike_templates.npy')); % -1 for zero indexing
     if size(rez.st3,2)>4
-%         writeNPY(uint32(spikeClusters-1), fullfile(savePath, 'spike_clusters.npy')); % -1 for zero indexing
+        writeNPY(uint32(spikeClusters-1), fullfile(savePath, 'spike_clusters.npy')); % -1 for zero indexing
     end
     writeNPY(amplitudes, fullfile(savePath, 'amplitudes.npy'));
     writeNPY(templates, fullfile(savePath, 'templates.npy'));

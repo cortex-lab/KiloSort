@@ -44,7 +44,9 @@ end
 Nfilt = ops.Nfilt;
 lam = ops.lam(1) * ones(Nfilt, 1, 'single');
 
-U = gpuArray(uBase(itsort(1:Nfilt), :))';
+ind_filt = itsort(rem([1:Nfilt]-1, numel(itsort)) + 1);
+U = gpuArray(uBase(ind_filt, :))';
+U = U + .001 * randn(size(U));
 mu = sum(U.^2,1)'.^.5;
 U = normc(U);
 %
@@ -105,6 +107,8 @@ Wrec = gather(Wrec);
 Nrank = 3;
 W = zeros(nt0, Nfilt, Nrank, 'single');
 U = zeros(Nchan, Nfilt, Nrank, 'single');
+
+Wrec(isnan(Wrec(:))) = 0;
 for j = 1:Nfilt
     [w sv u] = svd(Wrec(:,:,j));
     w = w * sv;

@@ -35,12 +35,16 @@ else
 end
 if ~exist('kcoords', 'var')
     kcoords = ones(ops.Nchan, 1);
+else
+    kcoords = kcoords(connected);
 end
 NchanTOT = ops.NchanTOT;
 NT = ops.NT ;
 
 rez.xc = xc;
 rez.yc = yc;
+rez.xcoords = xcoords;
+rez.ycoords = ycoords;
 rez.connected   = connected;
 rez.ops         = ops;
 rez.ops.chanMap = chanMap;

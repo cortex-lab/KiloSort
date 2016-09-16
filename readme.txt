@@ -10,3 +10,5 @@ However, the best way to use this software is together with Phy (https://github.
 *** NOTE that you need to use a special branch of Phy with Kilosort. Instructions in Docs/phy_installation_with_templates.txt ***
 
 You also need to install npy-matlab (https://github.com/kwikteam/npy-matlab), to provide read/write functions from Matlab to Python, because Phy is written in Python.
+
+You can verify that the code has been installed correctly by running master_eMouse inside the eMouse folder. See first readme_eMouse.txt. You can also use these scripts to understand how to pass the right settings into Kilosort (will depend on your probe, channel map configuration etc), and what you should be seeing in Phy during manual cleanup of Kilosort results. There are many parameters of the simulation which you can tweak to make it harder or easier, and perhaps more similar to your own data. 

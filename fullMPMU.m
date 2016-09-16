@@ -111,6 +111,8 @@ end
 irun = 0;
 i1nt0 = int32([1:nt0])';
 %%
+LAM = lam .* (20./mu).^2;
+
 NT = ops.NT;
 batchstart = 0:NT:NT*(Nbatch-Nbatch_buff);
 
@@ -167,7 +169,7 @@ for ibatch = 1:Nbatch
             % template coefficients
             % transform coefficients
             PCproj          = bsxfun(@rdivide, ...
-                bsxfun(@plus, PCproj, lam.*mu), sqrt(1+lam));
+                bsxfun(@plus, PCproj, LAM.*mu), sqrt(1+LAM));
             
             PCproj          = maskTT(:, id+1) .* PCproj;
             iPP             = reshape(find(maskTT(:, id+1)>0), nNeigh, []);
