@@ -12,10 +12,7 @@ ops.root                = fpath; % 'openEphys' only: where raw files are
 ops.chanMap             = fullfile(fpath, 'chanMap.mat'); % make this file using createChannelMapFile.m		
 % ops.chanMap = 1:ops.Nchan; % treated as linear probe if unavailable chanMap file		
 
-ops.fs                  = 25000;        % sampling rate		
-ops.NchanTOT            = 34;           % total number of channels		
-ops.Nchan               = 32;           % number of active channels 		
-ops.Nfilt               = 64;           % number of filters to use (2-4 times more than Nchan, should be a multiple of 32)     		
+ops.Nfilt               = 64;  % number of clusters to use (2-4 times more than Nchan, should be a multiple of 32)     		
 ops.nNeighPC            = 12; % visualization only (Phy): number of channnels to mask the PCs, leave empty to skip (12)		
 ops.nNeigh              = 16; % visualization only (Phy): number of neighboring templates to retain projections of (16)		
 		

@@ -8,10 +8,10 @@ ops.fbinary             = 'C:\DATA\Spikes\Piroska\piroska_example_short.dat'; % 
 ops.fproc               = 'C:\DATA\Spikes\Piroska\temp_wh.dat'; % residual from RAM of preprocessed data		
 ops.root                = 'C:\DATA\Spikes\Piroska'; % 'openEphys' only: where raw files are		
 		
-ops.fs                  = 25000;        % sampling rate		
-ops.NchanTOT            = 32;           % total number of channels		
-ops.Nchan               = 32;           % number of active channels 		
-ops.Nfilt               = 32;           % number of filters to use (2-4 times more than Nchan, should be a multiple of 32)     		
+ops.fs                  = 25000;        % sampling rate		(omit if already in chanMap file)
+ops.NchanTOT            = 32;           % total number of channels (omit if already in chanMap file)
+ops.Nchan               = 32;           % number of active channels (omit if already in chanMap file)
+ops.Nfilt               = 64;           % number of clusters to use (2-4 times more than Nchan, should be a multiple of 32)     		
 ops.nNeighPC            = 12; % visualization only (Phy): number of channnels to mask the PCs, leave empty to skip (12)		
 ops.nNeigh              = 16; % visualization only (Phy): number of neighboring templates to retain projections of (16)		
 		

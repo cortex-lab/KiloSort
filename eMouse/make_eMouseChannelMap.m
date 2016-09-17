@@ -41,4 +41,7 @@ kcoords = [NaN NaN 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
 % no "adjacency graphs" like in KlustaKwik). 
 % Now we can save our channel map for the eMouse. 
 
-save(fullfile(fpath, 'chanMap.mat'), 'chanMap', 'connected', 'xcoords', 'ycoords', 'kcoords')
+% would be good to also save the sampling frequency here
+fs = 25000; 
+
+save(fullfile(fpath, 'chanMap.mat'), 'chanMap', 'connected', 'xcoords', 'ycoords', 'kcoords', 'fs')

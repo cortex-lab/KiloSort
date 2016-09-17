@@ -8,8 +8,9 @@ xcoords   = ones(Nchannels,1);
 ycoords   = [1:Nchannels]';
 kcoords   = ones(Nchannels,1); % grouping of channels (i.e. tetrode groups)
 
+fs = 25000; % sampling frequency
 save('C:\DATA\Spikes\20150601_chan32_4_900s\chanMap.mat', ...
-    'chanMap','connected', 'xcoords', 'ycoords', 'kcoords', 'chanMap0ind')
+    'chanMap','connected', 'xcoords', 'ycoords', 'kcoords', 'chanMap0ind', 'fs')
 
 %%
 
@@ -24,8 +25,10 @@ ycoords   = repmat(1:Nchannels/4, 4, 1);
 ycoords   = ycoords(:);
 kcoords   = ones(Nchannels,1); % grouping of channels (i.e. tetrode groups)
 
+fs = 25000; % sampling frequency
+
 save('C:\DATA\Spikes\Piroska\chanMap.mat', ...
-    'chanMap','connected', 'xcoords', 'ycoords', 'kcoords', 'chanMap0ind')
+    'chanMap','connected', 'xcoords', 'ycoords', 'kcoords', 'chanMap0ind', 'fs')
 %%
 
 % kcoords is used to forcefully restrict templates to channels in the same

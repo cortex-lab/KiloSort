@@ -1,7 +1,8 @@
 function [rez, DATA, uproj] = preprocessData(ops)
 tic;
 uproj = [];
-nt0 	= getOr(ops, {'nt0'}, 61);
+ops.nt0 	= getOr(ops, {'nt0'}, 61);
+
 
 if strcmp(ops.datatype , 'openEphys')
    ops = convertOpenEphysToRawBInary(ops);  % convert data, only for OpenEphys
@@ -19,12 +20,20 @@ if ~isempty(ops.chanMap)
             xc = zeros(numel(chanMapConn), 1);
             yc = [1:1:numel(chanMapConn)]';
         end
+        ops.Nchan    = sum(connected>1e-6);
+        ops.NchanTOT = numel(connected);
+        if exist('fs', 'var')
+            ops.fs       = fs;
+        end
     else
         chanMap = ops.chanMap;
         chanMapConn = ops.chanMap;
         xc = zeros(numel(chanMapConn), 1);
         yc = [1:1:numel(chanMapConn)]';
-        connected = true(numel(chanMap), 1);        
+        connected = true(numel(chanMap), 1);      
+        
+        ops.Nchan    = numel(connected);
+        ops.NchanTOT = numel(connected);
     end
 else
     chanMap  = 1:ops.Nchan;
@@ -40,14 +49,14 @@ else
     kcoords = kcoords(connected);
 end
 NchanTOT = ops.NchanTOT;
-NT = ops.NT ;
+NT       = ops.NT ;
 
+rez.ops         = ops;
 rez.xc = xc;
 rez.yc = yc;
 rez.xcoords = xcoords;
 rez.ycoords = ycoords;
 rez.connected   = connected;
-rez.ops         = ops;
 rez.ops.chanMap = chanMap;
 rez.ops.kcoords = kcoords; 
 
@@ -66,7 +75,7 @@ nint16s      = memallocated/2;
 
 NTbuff      = NT + 4*ops.ntbuff;
 Nbatch      = ceil(d.bytes/2/NchanTOT /(NT-ops.ntbuff));
-Nbatch_buff = floor(4/5 * nint16s/ops.Nchan /(NT-ops.ntbuff)); % factor of 4/5 for storing PCs of spikes
+Nbatch_buff = floor(4/5 * nint16s/rez.ops.Nchan /(NT-ops.ntbuff)); % factor of 4/5 for storing PCs of spikes
 Nbatch_buff = min(Nbatch_buff, Nbatch);
 
 %% load data into patches, filter, compute covariance
@@ -79,7 +88,7 @@ end
 fprintf('Time %3.0fs. Loading raw data... \n', toc);
 fid = fopen(ops.fbinary, 'r');
 ibatch = 0;
-Nchan = ops.Nchan;
+Nchan = rez.ops.Nchan;
 if ops.GPU
     CC = gpuArray.zeros( Nchan,  Nchan, 'single');
 else
@@ -93,7 +102,7 @@ if strcmp(ops.whitening, 'noSpikes')
     end
 end
 if ~exist('DATA', 'var')
-    DATA = zeros(NT, ops.Nchan, Nbatch_buff, 'int16');
+    DATA = zeros(NT, rez.ops.Nchan, Nbatch_buff, 'int16');
 end
 
 isproc = zeros(Nbatch, 1);
@@ -183,7 +192,7 @@ fidW    = fopen(ops.fproc, 'w');
 
 if strcmp(ops.initialize, 'fromData')
     i0 = 0;
-    ixt = round(linspace(1, size(ops.wPCA,1), nt0));
+    ixt = round(linspace(1, size(ops.wPCA,1), ops.nt0));
     wPCA = ops.wPCA(ixt, 1:3);
     uproj = zeros(1e6,  size(wPCA,2) * Nchan, 'single');
 end
