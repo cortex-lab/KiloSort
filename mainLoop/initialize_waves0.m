@@ -1,41 +1,49 @@
 clear W
 
 tps = [1 5 10 25 40 50 61];
+tps = round(tps * nt0/61);
 vs  = [0 0  0 -2  1 0   0];
 fs= interp1(tps, vs, 1:nt0, 'linear', 'extrap');
 W(:,1,1) = my_conv(fs, 2);
 
 tps = [1 5 10 25 40 50 61];
+tps = round(tps * nt0/61);
 vs  = [0 0  0 -2  1  0  0];
 fs= interp1(tps, vs, 1:nt0, 'linear', 'extrap');
 W(:,1,2) = my_conv(fs, 2);
 
 tps = [1 5 10 15 25 50 61];
+tps = round(tps * nt0/61);
 vs  = [0 0  0 -2  1  0  0];
 fs= interp1(tps, vs, 1:nt0, 'linear', 'extrap');
 W(:,1,3) = my_conv(fs, 2);
 
 tps = [1 5 10 20 30 50 61];
+tps = round(tps * nt0/61);
 vs  = [0 0  0 -2  1  0  0];
 fs= interp1(tps, vs, 1:nt0, 'linear', 'extrap');
 W(:,1,4) = my_conv(fs, 2);
 
 tps = [1 5 10 25 40 50 61];
+tps = round(tps * nt0/61);
 vs  = [0 0  0 -2  0 0   0];
 fs= interp1(tps, vs, 1:nt0, 'linear', 'extrap');
 W(:,1,5) = my_conv(fs, 2);
 
 tps = [1 5 10 25 40 50 61];
+tps = round(tps * nt0/61);
 vs  = [0 0  0 -2  0  0  0];
 fs= interp1(tps, vs, 1:nt0, 'linear', 'extrap');
 W(:,1,6) = my_conv(fs, 2);
 
 tps = [1 5 10 15 25 50 61];
+tps = round(tps * nt0/61);
 vs  = [0 0  0 -2  0  0  0];
 fs= interp1(tps, vs, 1:nt0, 'linear', 'extrap');
 W(:,1,7) = my_conv(fs, 2);
 
 tps = [1 5 10 20 30 50 61];
+tps = round(tps * nt0/61);
 vs  = [0 0  0 -2  0  0  0];
 fs= interp1(tps, vs, 1:nt0, 'linear', 'extrap');
 W(:,1,8) = my_conv(fs, 2);

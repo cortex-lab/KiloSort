@@ -10,7 +10,7 @@ lam(:)    = ops.lam(3);
 
 
 pm = exp(-ops.momentum(2));
-Params = double([ops.NT ops.Nfilt ops.Th(3) ops.maxFR 10 ops.Nchan ops.Nrank pm ops.epu]);
+Params = double([ops.NT ops.Nfilt ops.Th(3) ops.maxFR 10 ops.Nchan ops.Nrank pm ops.epu ops.nt0]);
 
 Params(3) = ops.Th(3);
 Params(4) = 50000;
@@ -22,7 +22,7 @@ else
     U0 = U;
 end
 %%
-nt0     = 61;
+nt0     = rez.ops.nt0;
 Nrank   = ops.Nrank;
 WtW     = zeros(Nfilt,Nfilt,2*nt0-1, 'single');
 for i = 1:Nrank
@@ -96,6 +96,8 @@ end
 if ~isempty(ops.nNeighPC)
     nNeighPC  = ops.nNeighPC;
     load PCspikes
+    ixt = round(linspace(1, size(Wi,1), ops.nt0));
+    Wi = Wi(ixt, 1:3);
     rez.cProjPC = zeros(5e6, 3*nNeighPC, 'single');
     
     % sort best channels
@@ -258,7 +260,7 @@ if Nbatch_buff<Nbatch
 end
 
 % center the templates
-rez.W               = cat(1, zeros(nt0 - 40, Nfilt, Nrank), rez.W);
+rez.W               = cat(1, zeros(nt0 - (ops.nt0-ops.nt0min), Nfilt, Nrank), rez.W);
 rez.WrotInv         = (rez.Wrot/200)^-1;
 %%
 Urot = U;

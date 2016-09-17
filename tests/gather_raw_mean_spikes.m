@@ -1,4 +1,6 @@
 tic
+nt0 = ops.nt0;
+
 if ~isempty(ops.chanMap)
     load(ops.chanMap);
     chanMapConn = chanMap(connected>1e-6);
@@ -28,7 +30,7 @@ ibatch = 0;
 Nchan = ops.Nchan;
 
 Nchans = ops.Nchan;
-ts = [1:1:61]';
+ts = [1:1:nt0]';
 
 clear stimes
 % for iNN = 1:size(rez.W,2)
@@ -36,7 +38,7 @@ clear stimes
 % end
 stimes = gtimes;
 
-Wraw = zeros(61, Nchans, numel(stimes));
+Wraw = zeros(nt0, Nchans, numel(stimes));
 
 while 1
     ibatch = ibatch + 1;
@@ -68,10 +70,10 @@ while 1
         st(st>NT-ops.ntbuff) = [];
         
         if ~isempty(st)
-            inds = repmat(st', 61, 1) + repmat(ts, 1, numel(st));
+            inds = repmat(st', nt0, 1) + repmat(ts, 1, numel(st));
             
             Wraw(:,:,iNN) = Wraw(:,:,iNN) + ...
-                squeeze(sum(reshape(buff(inds, :), 61, numel(st), Nchans),2));
+                squeeze(sum(reshape(buff(inds, :), nt0, numel(st), Nchans),2));
         end
     end
     

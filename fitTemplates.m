@@ -1,5 +1,8 @@
 function rez = fitTemplates(rez, DATA, uproj)
 
+nt0 	= getOr(rez.ops, {'nt0'}, 61);
+rez.ops.nt0min  = ceil(20 * nt0/61);
+
 ops = rez.ops;
 
 rng('default');
@@ -9,7 +12,7 @@ Nbatch      = rez.temp.Nbatch;
 Nbatch_buff = rez.temp.Nbatch_buff;
 
 Nfilt 	= ops.Nfilt; %256+128;
-nt0 	= 61;
+
 ntbuff  = ops.ntbuff;
 NT  	= ops.NT;
 
@@ -38,7 +41,7 @@ switch ops.initialize
             W = cat(3, W, Winit(:, ipck)/Nrank);
             U = cat(3, U, Uinit(:, ipck));
         end
-        W = alignW(W);
+        W = alignW(W, ops);
         
         dWU = zeros(nt0, Nchan, Nfilt, 'single');
         for k = 1:Nfilt
@@ -102,7 +105,7 @@ while (i<=Nbatch * ops.nfullpasses+1)
     end
     
     % some of the parameters change with iteration number
-    Params = double([NT Nfilt Th maxFR 10 Nchan Nrank pm epu]);
+    Params = double([NT Nfilt Th maxFR 10 Nchan Nrank pm epu nt0]);
     
     % update the parameters every freqUpdate iterations
     if i>1 &&  ismember(rem(i,Nbatch), iUpdate) %&& i>Nbatch
@@ -115,7 +118,7 @@ while (i<=Nbatch * ops.nfullpasses+1)
                 replace_clusters(dWU, dbins,  Nbatch, ops.mergeT, ops.splitT, WUinit, nspikes);
         end
         
-        dWU = alignWU(dWU);
+        dWU = alignWU(dWU, ops);
         
         % restrict spikes to their peak group
         %         dWU = decompose_dWU(dWU, kcoords);

@@ -17,18 +17,19 @@
 #include <iostream>
 using namespace std;
 
-const int nt0 = 61,  Nthreads = 1024, lockout = nt0-1, NchanMax = 128, NrankMax = 3;
+const int Nthreads = 1024, NchanMax = 128, NrankMax = 3;
 //////////////////////////////////////////////////////////////////////////////////////////
 __global__ void	Conv1D(const double *Params, const float *data, const float *W, float *conv_sig){    
-  __shared__ float  sW[nt0*NrankMax], sdata[(Nthreads+nt0)*NrankMax]; 
+  __shared__ float  sW[81*NrankMax], sdata[(Nthreads+81)*NrankMax]; 
   float x;
-  int tid, tid0, bid, i, nid, Nrank, NT, Nfilt;
+  int tid, nt0, tid0, bid, i, nid, Nrank, NT, Nfilt;
 
   tid 		= threadIdx.x;
   bid 		= blockIdx.x;
   Nfilt    	=   (int) Params[1];
   NT      	=   (int) Params[0];
   Nrank     = (int) Params[6];
+  nt0       = (int) Params[9];
   
   if(tid<nt0*((int) Params[6]))
       sW[tid]= W[tid%nt0 + (bid + Nfilt * (tid/nt0))* nt0];
@@ -97,12 +98,13 @@ __global__ void  bestFilter(const double *Params, const float *data,
 __global__ void	cleanup_spikes(const double *Params, const float *xbest,
         const float *err, const int *ftype, const bool *UtU, int *st, int *id, float *x,
         float *C, int *counter, float *nsp){
-  int curr_token, indx, maxFR, Nfilt, NTOT, tid, bid, NT, tid0,  j;
-  volatile __shared__ float sdata[Nthreads+2*lockout+1];
-  volatile __shared__ int id_sh[Nthreads+2*lockout+1];
+  int lockout, curr_token, indx, maxFR, Nfilt, NTOT, tid, bid, NT, tid0,  j;
+  volatile __shared__ float sdata[Nthreads+2*81+1];
+  volatile __shared__ int id_sh[Nthreads+2*81+1];
   bool flag=0;
   float err0;
-  
+ 
+  lockout   = (int) Params[9] - 1;
   tid 		= threadIdx.x; 
   bid 		= blockIdx.x;
   
@@ -148,13 +150,14 @@ __global__ void	cleanup_spikes(const double *Params, const float *xbest,
 //////////////////////////////////////////////////////////////////////////////////////////
 __global__ void average_snips(const double *Params, const int *st, const int *id,
         const float *x,  const int *counter, const float *dataraw, float *WU){
-  int tidx, tidy, bid, i, ind, NT, Nchan;
+  int nt0, tidx, tidy, bid, i, ind, NT, Nchan;
   float xsum = 0.0f, pm; 
   Nchan = (int) Params[5];
   
   pm = (float) Params[7];
 
   NT = (int) Params[0];  
+  nt0       = (int) Params[9];
   
   tidx 		= threadIdx.x;
   tidy 		= threadIdx.y;
@@ -181,7 +184,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 {
     /* Declare input variables*/
   double *Params, *d_Params;
-  int blocksPerGrid, NT, maxFR, Nchan;
+  int blocksPerGrid, NT, maxFR, Nchan, nt0;
   int const threadsPerBlock = 1024;
 
   /* Initialize the MathWorks GPU API. */
@@ -193,6 +196,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
   blocksPerGrid	= (int) Params[1];
   maxFR         = (int) Params[3];
   Nchan         = (int) Params[5];
+  nt0           = (int) Params[9];
   cudaMalloc(&d_Params,      sizeof(double)*mxGetNumberOfElements(prhs[0]));
   cudaMemcpy(d_Params,Params,sizeof(double)*mxGetNumberOfElements(prhs[0]),cudaMemcpyHostToDevice);
   

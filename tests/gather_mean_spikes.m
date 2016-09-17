@@ -28,7 +28,7 @@ ibatch = 0;
 Nchan = ops.Nchan;
 
 Nchans = ops.Nchan;
-ts = [1:1:61]';
+ts = [1:1:nt0]';
 
 clear stimes
 % for iNN = 1:size(rez.W,2)
@@ -36,7 +36,7 @@ clear stimes
 % end
 stimes = gtimes;
 
-Wraw = zeros(61, Nchans, numel(stimes));
+Wraw = zeros(nt0, Nchans, numel(stimes));
 for ibatch = 1:Nbatch    
     if ibatch>Nbatch_buff
         offset = 2 * ops.Nchan*batchstart(ibatch-Nbatch_buff); % - ioffset;
@@ -60,10 +60,10 @@ for ibatch = 1:Nbatch
         st(st>NT-ops.ntbuff) = [];
         
         if ~isempty(st)
-            inds = repmat(st', 61, 1) + repmat(ts, 1, numel(st));
+            inds = repmat(st', nt0, 1) + repmat(ts, 1, numel(st));
             
             Wraw(:,:,iNN) = Wraw(:,:,iNN) + ...
-                gather(squeeze(sum(reshape(dataRAW(inds, :), 61, numel(st), Nchans),2)));
+                gather(squeeze(sum(reshape(dataRAW(inds, :), nt0, numel(st), Nchans),2)));
         end
     end
     

@@ -17,16 +17,15 @@
 #include <iostream>
 using namespace std;
 
-const int nt0 = 61,  Nthreads = 1024,   lockout = nt0-1, nblock = 32;
-
+const int Nthreads = 1024,   nblock = 32;
 //////////////////////////////////////////////////////////////////////////////////////////
 
 __global__ void	crossFilter(const double *Params, const float *W1, const float *W2,
         const float *UtU, float *WtW){    
-  __shared__ float shW1[nblock*nt0], shW2[nblock*nt0]; 
+  __shared__ float shW1[nblock*81], shW2[nblock*81]; 
 
   float x;
-  int tidx, tidy , bidx, bidy, i, NT, Nfilt, t;
+  int nt0, tidx, tidy , bidx, bidy, i, NT, Nfilt, t;
 
   tidx 		= threadIdx.x;
   tidy 		= threadIdx.y;
@@ -34,7 +33,8 @@ __global__ void	crossFilter(const double *Params, const float *W1, const float *
   bidy 		= blockIdx.y;
   
   Nfilt = (int) Params[1];
-
+  nt0       = (int) Params[9];
+  
   while(tidx<nt0){
     shW1[tidx + tidy * nt0] = W1[tidx + (tidy+bidx*nblock) * nt0];
     shW2[tidx + tidy * nt0] = W2[tidx + (tidy+bidy*nblock) * nt0];
@@ -67,7 +67,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 {
     /* Declare input variables*/
   double *Params, *d_Params;
-  int Nfilt, NT;
+  int nt0, Nfilt, NT;
 
   /* Initialize the MathWorks GPU API. */
   mxInitGPU();
@@ -76,7 +76,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
   Params  	= (double*) mxGetData(prhs[0]);
   NT		= (int) Params[0];
   Nfilt		= (int) Params[1];
-
+  nt0       = (int) Params[9];
+  
   cudaMalloc(&d_Params,      sizeof(double)*mxGetNumberOfElements(prhs[0]));
   cudaMemcpy(d_Params,Params,sizeof(double)*mxGetNumberOfElements(prhs[0]),cudaMemcpyHostToDevice);
 

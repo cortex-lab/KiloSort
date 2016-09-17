@@ -1,4 +1,4 @@
-function WU = alignWU(WU)
+function WU = alignWU(WU, ops)
 
 [nt0 , Nchan, Nfilt] = size(WU);
 [~, imin] = min(reshape(WU, nt0*Nchan, Nfilt), [], 1);
@@ -17,7 +17,7 @@ for i = 1:Nfilt
     wu = WU(:,iMinChan(i),i);
 %     [~, imin] = min(diff(wu, 1));
     [~, imin] = min(wu);
-    dmax(i) = - (imin- 20);
+    dmax(i) = - (imin- ops.nt0min);
     
     if dmax(i)>0
         WU((dmax(i) + 1):nt0, :,i) = WU(1:nt0-dmax(i),:, i);

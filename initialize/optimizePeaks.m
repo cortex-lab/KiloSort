@@ -99,7 +99,6 @@ Nfilt = ops.Nfilt;
 wPCA = ops.wPCA(:,1:3);
 Urec = reshape(U, Nchan, size(wPCA,2), Nfilt);
 
-nt0 = 61;
 Urec= permute(Urec, [2 1 3]);
 Wrec = reshape(wPCA * Urec(:,:), nt0, Nchan, Nfilt);
 

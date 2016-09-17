@@ -1,6 +1,7 @@
 function [rez, DATA, uproj] = preprocessData(ops)
 tic;
 uproj = [];
+nt0 	= getOr(ops, {'nt0'}, 61);
 
 if strcmp(ops.datatype , 'openEphys')
    ops = convertOpenEphysToRawBInary(ops);  % convert data, only for OpenEphys
@@ -182,7 +183,8 @@ fidW    = fopen(ops.fproc, 'w');
 
 if strcmp(ops.initialize, 'fromData')
     i0 = 0;
-    wPCA = ops.wPCA(:, 1:3);
+    ixt = round(linspace(1, size(ops.wPCA,1), nt0));
+    wPCA = ops.wPCA(ixt, 1:3);
     uproj = zeros(1e6,  size(wPCA,2) * Nchan, 'single');
 end
 %

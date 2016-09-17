@@ -1,5 +1,6 @@
 function [sts, ids, xs, Costs, cprojall] = cpuMPmuFEAT(Params,data,fW,WtW, mu, lam1, nu, ops)
 
+nt0 = ops.nt0;
 
 WtW     = permute(WtW, [1 3 2]);
 
@@ -11,7 +12,7 @@ fdata   = fft(data, [], 1);
 proj    = real(ifft(fdata .* fW(:,:), [], 1));
 proj    = sum(reshape(proj, NT, nFilt, 3),3);
 
-trange = int32([-60:60]);
+trange = int32([-(nt0-1):(nt0-1)]);
 
 xs      = zeros(Params(4), 1, 'single');
 ids     = zeros(Params(4), 1, 'int32');
@@ -31,14 +32,14 @@ for k = 1:30
     id          = int32(id);
     
     st                   = find((maX < mX + 1e-3) & mX > Th*Th);
-    st(st>NT-61 | st<61) = [];
+    st(st>NT-nt0 | st<nt0) = [];
     
     if isempty(st)
        break; 
     end
     id      = id(st);
     
-    % inds = bsxfun(@plus, st', [1:61]');
+    % inds = bsxfun(@plus, st', [1:nt0]');
     
     x       = zeros(size(id));
     Cost    = zeros(size(id));

@@ -17,18 +17,19 @@
 #include <iostream>
 using namespace std;
 
-const int nt0 = 61,  Nthreads = 1024, lockout = nt0-1, NchanMax = 128, block = 32, NrankMax = 3;
+const int  Nthreads = 1024,  NchanMax = 128, block = 32, NrankMax = 3;
 //////////////////////////////////////////////////////////////////////////////////////////
 __global__ void	Conv1D(const double *Params, const float *data, const float *W, float *conv_sig){    
-  volatile __shared__ float  sW[nt0*NrankMax], sdata[(Nthreads+nt0)*NrankMax]; 
+  volatile __shared__ float  sW[81*NrankMax], sdata[(Nthreads+81)*NrankMax]; 
   float x;
-  int tid, tid0, bid, i, nid, Nrank, NT, Nfilt;
+  int tid, tid0, bid, i, nid, Nrank, NT, Nfilt, nt0;
 
   tid 		= threadIdx.x;
   bid 		= blockIdx.x;
   Nfilt    	=   (int) Params[1];
   NT      	=   (int) Params[0];
   Nrank     = (int) Params[6];
+  nt0       = (int) Params[9];
   
   if(tid<nt0*((int) Params[6]))
       sW[tid]= W[tid%nt0 + (bid + Nfilt * (tid/nt0))* nt0];
@@ -94,11 +95,12 @@ __global__ void  bestFilter(const double *Params, const float *data,
 //////////////////////////////////////////////////////////////////////////////////////////
 __global__ void	cleanup_spikes(const double *Params, const float *xbest, const float *err, 
 	const int *ftype, int *st, int *id, float *x, float *C, int *counter){
-  int indx, maxFR, NTOT, tid, bid, NT, tid0,  j;
-  volatile __shared__ float sdata[Nthreads+2*lockout+1];
+  int lockout, indx, maxFR, NTOT, tid, bid, NT, tid0,  j;
+  volatile __shared__ float sdata[Nthreads+2*81+1];
   bool flag=0;
   float err0;
   
+  lockout   = (int) Params[9] - 1;
   tid 		= threadIdx.x;
   bid 		= blockIdx.x;
   
@@ -168,7 +170,9 @@ __global__ void	extractFEAT(const double *Params, const int *st, const int *id,
 //////////////////////////////////////////////////////////////////////////////////////////
 __global__ void	subSpikes(const double *Params, const int *st, const int *id, 
         const float *x, const int *counter, float *dout, const float *WtW){
-  int tid, bid,  NT, ind, tcurr, Nfilt;
+  int nt0, tid, bid,  NT, ind, tcurr, Nfilt;
+  
+ nt0       = (int) Params[9];
   tid 		= threadIdx.x;
   bid 		= blockIdx.x;
   NT 		= (int) Params[0];
@@ -184,8 +188,10 @@ __global__ void	subSpikes(const double *Params, const int *st, const int *id,
 __global__ void	subtract_spikes(const double *Params,  const int *st, 
         const int *id, const float *x, const int *counter, float *dataraw, 
         const float *W, const float *U){
-  int tid, bid, Nblocks, i, NT, ind, Nchan;
-  __shared__ float sh_W[nt0], sh_U[NchanMax];
+  int nt0, tid, bid, Nblocks, i, NT, ind, Nchan;
+  __shared__ float sh_W[81], sh_U[NchanMax];
+  
+  nt0       = (int) Params[9];
   tid 		= threadIdx.x;
   bid 		= blockIdx.x;
   Nblocks   = gridDim.x;
@@ -207,12 +213,13 @@ __global__ void	subtract_spikes(const double *Params,  const int *st,
 }
 //////////////////////////////////////////////////////////////////////////////////////////
 __global__ void getWgradient(const double *Params, const int *st, const int *id, const float *x,  const int *counter, const float *datarez, const float *U, float *dW){
-  int tid, bid, i, ind, NT, Nchan;
+  int nt0, tid, bid, i, ind, NT, Nchan;
   float xprod; 
   volatile __shared__ float sh_U[NchanMax];
-  NT = (int) Params[0];
-    Nchan = (int) Params[5];
-
+  
+  NT        = (int) Params[0];
+  Nchan     = (int) Params[5];
+  nt0       = (int) Params[9];
   tid 		= threadIdx.x;
   bid 		= blockIdx.x;
   while(tid<Nchan){
@@ -232,10 +239,11 @@ __global__ void getWgradient(const double *Params, const int *st, const int *id,
 }
 //////////////////////////////////////////////////////////////////////////////////////////
 __global__ void getUgradient(const double *Params, const int *st, const int *id, const float *x,  const int *counter, const float *datarez, const float *W, float *dU){  
-  int j, tid, bid, i, ind, NT, Nchan;
+  int nt0, j, tid, bid, i, ind, NT, Nchan;
   float xprod; 
-  volatile __shared__ float sh_M[NchanMax*nt0], sh_W[nt0];
+  volatile __shared__ float sh_M[NchanMax*81], sh_W[81];
 
+  nt0       = (int) Params[9];
   NT = (int) Params[0];
     Nchan = (int) Params[5];
 
@@ -270,7 +278,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 {
   /* Declare input variables*/
   double *Params, *d_Params;
-  int blocksPerGrid, NT, maxFR, Nchan;
+  int nt0, blocksPerGrid, NT, maxFR, Nchan;
   int const threadsPerBlock = Nthreads;
 
   /* Initialize the MathWorks GPU API. */
@@ -281,7 +289,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
   NT		= (int) Params[0];
   blocksPerGrid	= (int) Params[1];
   maxFR		= (int) Params[3];
-   Nchan = (int) Params[5];
+  Nchan     = (int) Params[5];
+  nt0       = (int) Params[9];
 
   cudaMalloc(&d_Params,      sizeof(double)*mxGetNumberOfElements(prhs[0]));
   cudaMemcpy(d_Params,Params,sizeof(double)*mxGetNumberOfElements(prhs[0]),cudaMemcpyHostToDevice);
