@@ -19,7 +19,7 @@ make_eMouseChannelMap(fpath);
 % You can vary these to make the simulated data look more like your data.
 % Currently it is set to relatively low SNR for illustration purposes in Phy. 
 make_eMouseData(fpath, useGPU); 
-%%
+%
 % This part runs the normal Kilosort processing on the simulated data
 [rez, DATA, uproj] = preprocessData(ops); % preprocess data and extract spikes for initialization
 rez                = fitTemplates(rez, DATA, uproj);  % fit templates iteratively

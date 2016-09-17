@@ -188,7 +188,7 @@ for ibatch = 1:Nbatch
         st                  = st - ioffset;
         
         %     nspikes2(1:size(W,2)+1, ibatch) = histc(id, 0:1:size(W,2));
-        STT = cat(2, 20 + double(st) +(NT-ops.ntbuff)*(ibatch-1), ...
+        STT = cat(2, ops.nt0min + double(st) +(NT-ops.ntbuff)*(ibatch-1), ...
             double(id)+1, double(x), ibatch*ones(numel(x),1));
         st3             = cat(1, st3, STT);
     end
@@ -260,7 +260,7 @@ if Nbatch_buff<Nbatch
 end
 
 % center the templates
-rez.W               = cat(1, zeros(nt0 - (ops.nt0-ops.nt0min), Nfilt, Nrank), rez.W);
+rez.W               = cat(1, zeros(nt0 - (ops.nt0-1-ops.nt0min), Nfilt, Nrank), rez.W);
 rez.WrotInv         = (rez.Wrot/200)^-1;
 %%
 Urot = U;

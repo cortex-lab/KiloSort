@@ -1,6 +1,7 @@
 function rez = fitTemplates(rez, DATA, uproj)
 
-nt0 	= getOr(rez.ops, {'nt0'}, 61);
+rez.ops.nt0 	= getOr(rez.ops, {'nt0'}, 61);
+nt0             = rez.ops.nt0;
 rez.ops.nt0min  = ceil(20 * nt0/61);
 
 ops = rez.ops;
@@ -220,7 +221,7 @@ while (i<=Nbatch * ops.nfullpasses+1)
         nsort = sort(round(sum(nspikes,2)), 'descend');
         fprintf(repmat('\b', 1, numel(msg)));
         msg = sprintf('Time %2.2f, batch %d/%d, mu %2.2f, neg-err %2.6f, NTOT %d, n100 %d, n200 %d, n300 %d, n400 %d\n', ...
-            toc, i,Nbatch* ops.nfullpasses,nanmedian(mu(:)), nanmean(delta), round(sum(nsort)), ...
+            toc, i,Nbatch* ops.nfullpasses,nanmean(mu(:)), nanmean(delta), round(sum(nsort)), ...
             nsort(min(size(W,2), 100)), nsort(min(size(W,2), 200)), ...
             nsort(min(size(W,2), 300)), nsort(min(size(W,2), 400)));
         fprintf(msg);
