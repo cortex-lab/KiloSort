@@ -20,10 +20,10 @@ if ~isempty(ops.chanMap)
             xc = zeros(numel(chanMapConn), 1);
             yc = [1:1:numel(chanMapConn)]';
         end
-        ops.Nchan    = sum(connected>1e-6);
-        ops.NchanTOT = numel(connected);
+        ops.Nchan    = getOr(ops, 'Nchan', sum(connected>1e-6));
+        ops.NchanTOT = getOr(ops, 'NchanTOT', numel(connected));
         if exist('fs', 'var')
-            ops.fs       = fs;
+            ops.fs       = getOr(ops, 'fs', fs);
         end
     else
         chanMap = ops.chanMap;
