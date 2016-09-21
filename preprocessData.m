@@ -43,10 +43,10 @@ else
     xc = zeros(numel(chanMapConn), 1);
     yc = [1:1:numel(chanMapConn)]';
 end
-if ~exist('kcoords', 'var')
-    kcoords = ones(ops.Nchan, 1);
-else
+if exist('kcoords', 'var')
     kcoords = kcoords(connected);
+else
+    kcoords = ones(ops.Nchan, 1);
 end
 NchanTOT = ops.NchanTOT;
 NT       = ops.NT ;
