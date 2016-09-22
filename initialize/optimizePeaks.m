@@ -1,5 +1,10 @@
 % addpath('C:\CODE\GitHub\KiloSort\preDetect')
 function WUinit=optimizePeaks(ops,uproj)
+if isfield(ops,'nt0')
+    nt0=ops.nt0;
+else
+    nt0=61;
+end
 nProj = size(uproj,2);
 nSpikesPerBatch = 4000;
 inds = 1:nSpikesPerBatch * floor(size(uproj,1)/nSpikesPerBatch);
@@ -97,6 +102,11 @@ end
 Nchan = ops.Nchan;
 Nfilt = ops.Nfilt;
 wPCA = ops.wPCA(:,1:3);
+if nt0~=61
+    wPCA=interp1((1:61)/61,wPCA,(1:nt0)/nt0);%different sampling rate
+%     wPCA=interp1(1:61,wPCA,1:ops.nt0);%shorter ISIs (this one is dangerous if ops.nt0 is really small)
+end
+    
 Urec = reshape(U, Nchan, size(wPCA,2), Nfilt);
 
 Urec= permute(Urec, [2 1 3]);
@@ -127,6 +137,3 @@ for j = 1:Nfilt
     WUinit(:,:,j) = muinit(j)  * Wrec(:,:,j);
 end
 WUinit = single(WUinit);
-%%
-
-
