@@ -1,12 +1,15 @@
 % addpath('C:\CODE\GitHub\KiloSort\preDetect')
 function WUinit=optimizePeaks(ops,uproj)
-nProj = size(uproj,2);
+
+nt0             = ops.nt0;
+
+nProj           = size(uproj,2);
 nSpikesPerBatch = 4000;
-inds = 1:nSpikesPerBatch * floor(size(uproj,1)/nSpikesPerBatch);
-inds = reshape(inds, nSpikesPerBatch, []);
+inds            = 1:nSpikesPerBatch * floor(size(uproj,1)/nSpikesPerBatch);
+inds            = reshape(inds, nSpikesPerBatch, []);
 % Nbatch = size(inds,2);
-iperm = randperm(size(inds,2));
-miniorder = repmat(iperm, 1, ops.nfullpasses);
+iperm           = randperm(size(inds,2));
+miniorder       = repmat(iperm, 1, ops.nfullpasses);
 %     miniorder = repmat([1:Nbatch Nbatch:-1:1], 1, ops.nfullpasses/2);
 
 if ~exist('spikes_merged')

@@ -30,7 +30,7 @@ hold all
 plot(sort(cellfun(@(x) x(1), allMissRates)), '-*r', 'Linewidth', 2)
 plot(sort(cellfun(@(x) x(end), allFPrates)), 'b', 'Linewidth', 2)
 plot(sort(cellfun(@(x) x(end), allMissRates)), 'r', 'Linewidth', 2)
-
+ylim([0 1])
 box off
 
 finalScores = cellfun(@(x) x(end), allScores);

@@ -191,9 +191,11 @@ fid         = fopen(ops.fbinary, 'r');
 fidW    = fopen(ops.fproc, 'w');
 
 if strcmp(ops.initialize, 'fromData')
-    i0 = 0;
-    ixt = round(linspace(1, size(ops.wPCA,1), ops.nt0));
+    i0  = 0;
+    ixt  = round(linspace(1, size(ops.wPCA,1), ops.nt0));
     wPCA = ops.wPCA(ixt, 1:3);
+    
+    rez.ops.wPCA = wPCA; % write wPCA back into the rez structure
     uproj = zeros(1e6,  size(wPCA,2) * Nchan, 'single');
 end
 %

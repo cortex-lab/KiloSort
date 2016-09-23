@@ -17,10 +17,10 @@ if strcmp(ops.datatype , 'openEphys')
 end
 %
 [rez, DATA, uproj] = preprocessData(ops); % preprocess data and extract spikes for initialization
-rez = fitTemplates(rez, DATA, uproj);  % fit templates iteratively
-rez = fullMPMU(rez, DATA);% extract final spike times (overlapping extraction)
+rez                = fitTemplates(rez, DATA, uproj);  % fit templates iteratively
+rez                = fullMPMU(rez, DATA);% extract final spike times (overlapping extraction)
 
-% posthoc merge templates (under construction)
+% AutoMerge. rez2Phy will use for clusters the new 5th column of st3 if you run this)
 %     rez = merge_posthoc2(rez);
 
 % save matlab results file

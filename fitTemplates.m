@@ -1,5 +1,6 @@
 function rez = fitTemplates(rez, DATA, uproj)
 
+ops             = rez.ops;
 nt0             = rez.ops.nt0;
 rez.ops.nt0min  = ceil(20 * nt0/61);
 
@@ -29,8 +30,8 @@ iperm = randperm(Nbatch);
 
 switch ops.initialize
     case 'fromData'
-        WUinit=optimizePeaks(ops,uproj);%does a scaled kmeans 
-        dWU = WUinit(:,:,1:Nfilt);
+        WUinit = optimizePeaks(ops,uproj);%does a scaled kmeans 
+        dWU    = WUinit(:,:,1:Nfilt);
         %             dWU = alignWU(dWU);
     otherwise
         initialize_waves0;

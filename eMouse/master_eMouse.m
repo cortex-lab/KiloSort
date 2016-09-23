@@ -35,7 +35,7 @@ benchmark_simulation(rez, fullfile(fpath, 'eMouseGroundTruth.mat'));
 % save python results file for Phy
 rezToPhy(rez, fpath);
 
-fprintf('Kilosort took %2.2f seconds vs 54.96 seconds on GTX 1080 + M2 SSD \n', toc)
+fprintf('Kilosort took %2.2f seconds vs 72.77 seconds on GTX 1080 + M2 SSD \n', toc)
 
 % now fire up Phy and check these results. There should still be manual
 % work to be done (mostly merges, some refinements of contaminated clusters). 
