@@ -1,6 +1,6 @@
 
 function [spikeTimes, clusterIDs, amplitudes, templates, templateFeatures, ...
-    templateFeatureInds, pcFeatures, pcFeatureInds] = rezToPhy(rez, savePath)
+    templateFeatureInds, pcFeatures, pcFeatureInds] = rezToPhy(rez, savePath, flag)
 % pull out results from kilosort's rez to either return to workspace or to
 % save in the appropriate format for the phy GUI to run on. If you provide
 % a savePath it should be a folder, and you will need to have npy-matlab
@@ -20,8 +20,8 @@ end
 spikeTimes = uint64(rez.st3(:,1));
 % [spikeTimes, ii] = sort(spikeTimes);
 spikeTemplates = uint32(rez.st3(:,2));
-if size(rez.st3,2)>4
-%     spikeClusters = uint32(rez.st3(:,5));
+if size(rez.st3,2)>4 && nargin>2 && flag==1
+    spikeClusters = uint32(rez.st3(:,5));
 end
 amplitudes = rez.st3(:,3);
 

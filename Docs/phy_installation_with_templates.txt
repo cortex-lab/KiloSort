@@ -8,7 +8,7 @@ git clone https://github.com/kwikteam/phy-contrib
 cd phy
 activate phy
 python setup.py develop 
-cd ../phycontrib
+cd ../phy-contrib
 python setup.py develop
 
 Then run 
