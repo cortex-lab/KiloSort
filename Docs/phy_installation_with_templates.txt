@@ -1,15 +1,4 @@
-open git shell and run the following commands where you want Phy installed
-
-git clone https://github.com/kwikteam/phy
-cd phy
-conda env create -n phy
-cd ..
-git clone https://github.com/kwikteam/phy-contrib
-cd phy
-activate phy
-python setup.py develop 
-cd ../phycontrib
-python setup.py develop
+Follow the instructions at https://github.com/kwikteam/phy to install phy with the template-gui extension. 
 
 Then run 
 
@@ -24,8 +13,4 @@ offset = 0
 sample_rate = 30000.
 hp_filtered = False
 
-If you get an error, you might not have some packages. You install these with "pip install package_name". Some of these  are 
-
-pip install click
-pip install tdqm (I think...)
 
