@@ -29,7 +29,7 @@ for i = 1:Nrank
     for j = 1:Nrank
         utu0 = U0(:,:,i)' * U0(:,:,j);
         if ops.GPU
-            wtw0 =  gather(mexWtW2(Params, W(:,:,i), W(:,:,j), utu0));
+            wtw0 =  gather_try(mexWtW2(Params, W(:,:,i), W(:,:,j), utu0));
         else
             wtw0 =  getWtW2(Params, W(:,:,i), W(:,:,j), utu0);
             wtw0 = permute(wtw0, [2 3 1]);
@@ -56,7 +56,7 @@ if ~ops.GPU
 end
 % mWtW = mWtW - diag(diag(mWtW));
 
-% rez.WtW = gather(WtW);
+% rez.WtW = gather_try(WtW);
 %
 clear wtw0 utu0 U0
 %
@@ -165,7 +165,7 @@ for ibatch = 1:Nbatch
             coefs           = reshape(permute(coefs, [3 1 2]), [], numel(st));
             coefs           = coefs .* maskPC(:, id+1);
             iCoefs          = reshape(find(maskPC(:, id+1)>0), 3*nNeighPC, []);
-            rez.cProjPC(irun + (1:numel(st)), :) = gather(coefs(iCoefs)');
+            rez.cProjPC(irun + (1:numel(st)), :) = gather_try(coefs(iCoefs)');
         end
         if ~isempty(ops.nNeigh)
             % template coefficients

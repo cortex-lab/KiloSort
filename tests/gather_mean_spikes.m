@@ -63,7 +63,7 @@ for ibatch = 1:Nbatch
             inds = repmat(st', nt0, 1) + repmat(ts, 1, numel(st));
             
             Wraw(:,:,iNN) = Wraw(:,:,iNN) + ...
-                gather(squeeze(sum(reshape(dataRAW(inds, :), nt0, numel(st), Nchans),2)));
+                gather_try(squeeze(sum(reshape(dataRAW(inds, :), nt0, numel(st), Nchans),2)));
         end
     end
     
