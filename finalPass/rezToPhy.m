@@ -62,8 +62,8 @@ if ~isempty(savePath)
     
     writeNPY(spikeTimes, fullfile(savePath, 'spike_times.npy'));
     writeNPY(uint32(spikeTemplates-1), fullfile(savePath, 'spike_templates.npy')); % -1 for zero indexing
-    if size(rez.st3,2)>4
-%         writeNPY(uint32(spikeClusters-1), fullfile(savePath, 'spike_clusters.npy')); % -1 for zero indexing
+    if size(rez.st3,2)>4 && nargin>2 && flag==1
+        writeNPY(uint32(spikeClusters-1), fullfile(savePath, 'spike_clusters.npy')); % -1 for zero indexing
     end
     writeNPY(amplitudes, fullfile(savePath, 'amplitudes.npy'));
     writeNPY(templates, fullfile(savePath, 'templates.npy'));
