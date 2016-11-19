@@ -175,7 +175,7 @@ end
 
 if ops.whiteningRange<Inf
     ops.whiteningRange = min(ops.whiteningRange, Nchan);
-    Wrot = whiteningLocal(gather(CC), yc, xc, ops.whiteningRange);
+    Wrot = whiteningLocal(gather_try(CC), yc, xc, ops.whiteningRange);
 else
     %
     [E, D] 	= svd(CC);

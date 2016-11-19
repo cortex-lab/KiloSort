@@ -84,7 +84,7 @@ for i = 1:10
         
         % determine cluster assignment for this iteration
         [max_cf, id] = max(cf(:,:,2), [], 2);
-        id = gather(id);
+        id = gather_try(id);
         L = gpuArray.zeros(Nfilt, nSpikes, 'single');
         L(id' + [0:Nfilt:(Nfilt*nSpikes-1)]) = 1;
         dWU = dWU + L * clips;
@@ -115,7 +115,7 @@ nt0 = 61;
 Urec= permute(Urec, [2 1 3]);
 Wrec = reshape(wPCA * Urec(:,:), nt0, Nchan, Nfilt);
 
-Wrec = gather(Wrec);
+Wrec = gather_try(Wrec);
 Nrank = 3;
 W = zeros(nt0, Nfilt, Nrank, 'single');
 U = zeros(Nchan, Nfilt, Nrank, 'single');
@@ -130,7 +130,7 @@ end
 
 Uinit = U;
 Winit = W;
-mu = gather(single(mu));
+mu = gather_try(single(mu));
 muinit = mu;
 
 WUinit = zeros(nt0, Nchan, Nfilt);
