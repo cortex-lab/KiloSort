@@ -149,8 +149,8 @@ __global__ void	extractFEAT(const double *Params, const int *st, const int *id,
 
 //  ind = bid;
   
+  while (tid<Nfilt){
     for(ind=counter[1]+bid;ind<counter[0];ind+=Nfilt){
-//  while(ind<=counter[0]){
       tcurr = st[ind];
       rMax = 0.0f;
       //rMax = dout[tcurr + tid*NT];
@@ -165,6 +165,8 @@ __global__ void	extractFEAT(const double *Params, const int *st, const int *id,
       //d_feat[tid + ind * Nfilt] = dout[tcurr + tid*NT];
                 //+ x[ind] * WtW[nt0 + id[ind]*(2*nt0-1) + (2*nt0-1)*Nfilt*tid];
       //ind += Nfilt;
+    }
+    tid += Nthreads;
   }
  }
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -362,7 +364,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     }
     
     // extract template features before subtraction
-    extractFEAT<<<blocksPerGrid, blocksPerGrid>>>(d_Params, d_st, d_id, 
+    extractFEAT<<<blocksPerGrid, threadsPerBlock>>>(d_Params, d_st, d_id, 
             d_x, d_counter, d_dout, d_WtW, d_lam, d_mu,d_feat);
     
     // subtract the detected spikes
