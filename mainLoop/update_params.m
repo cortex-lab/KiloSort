@@ -2,13 +2,13 @@ function  [W, U, mu, UtU] = update_params(mu, W, U, dWUtot, nspikes)
 
 [Nchan, Nfilt, Nrank] = size(U);
 
-dWUtotCPU = gather(dWUtot);
+dWUtotCPU = gather_try(dWUtot);
 ntot = sum(nspikes,2);
 
 for k = 1:Nfilt
     if ntot(k)>5
-        [Uall, Sv, Vall] = svd(gather(dWUtotCPU(:,:,k)), 0);
         
+        [Uall, Sv, Vall] = svd(gather_try(dWUtotCPU(:,:,k)), 0);
         Sv = diag(Sv);
         sumSv2 = sum(Sv(1:Nrank).^2).^.5;
         for irank = 1:Nrank

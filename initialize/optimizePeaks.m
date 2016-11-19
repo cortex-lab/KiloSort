@@ -73,7 +73,7 @@ for i = 1:10
         
         [max_cf, id] = max(cf, [], 2);
         
-        id = gather(id);
+        id = gather_try(id);
         %        x = ci([1:nSpikesPerBatch] + nSpikesPerBatch * (id-1)')' - mu(id) .* lam(id);
         idT(:,ibatch) = id;
         
@@ -105,7 +105,7 @@ Urec = reshape(U, Nchan, size(wPCA,2), Nfilt);
 Urec= permute(Urec, [2 1 3]);
 Wrec = reshape(wPCA * Urec(:,:), nt0, Nchan, Nfilt);
 
-Wrec = gather(Wrec);
+Wrec = gather_try(Wrec);
 Nrank = 3;
 W = zeros(nt0, Nfilt, Nrank, 'single');
 U = zeros(Nchan, Nfilt, Nrank, 'single');
@@ -122,7 +122,7 @@ end
 
 Uinit = U;
 Winit = W;
-mu = gather(single(mu));
+mu = gather_try(single(mu));
 muinit = mu;
 
 WUinit = zeros(nt0, Nchan, Nfilt);
