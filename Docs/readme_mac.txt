@@ -1,3 +1,7 @@
+***these instructions have not been tested in a long time, and Matlab appears to have simplified this process quite a bit on other platforms. 
+Try running mexGPUall right after installing everything. 
+If that fails, the rest of the instructions below might help. Particularly #7 appears required on Mac. ***
+
 Assuming gpu functions have been correctly compiled (see below), a "master_file.m" is available that you should copy to a local path and change for each of your experiments. 
 The logic is that the git folder might be updated, and when that happens all extraneous files in that folder will be deleted and any changes you made reverted. 
 
