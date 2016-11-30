@@ -9,9 +9,8 @@ Windows
 Install Visual Studio Community (2012 or 2013)
 Install CUDA 7.5 (https://developer.nvidia.com/cuda-75-downloads-archive), not 8.0, which is not yet compatible with Matlab. Comes with compatible Nvidia drivers. If you get a warning of not finding the GPU at the beginning of installation, you should try to install more recent Nvidia graphics drivers, and then try again to install the CUDA drivers without installing the graphics drivers (for GTX10xx series this will be the case). Ignoring the warning appears to install CUDA without proper paths and then compilation does not work.
 
-Copy mex_CUDA_win64.xml (or nvcc_msvc120.xml, or a similarly named file, compatible with your Visual Studio installation version; 11 for 2012 and 12 for 2013) from here
-matlabroot/toolbox/distcomp/gpu/extern/src/mex/win64
-and into the KiloSort folder (or somewhere in your path). The included file with KiloSort will NOT be compatible with your local environment (unless you start changing paths inside it). 
+Try to run mexGPUall. If mexcuda gives you an error, try the following: copy mex_CUDA_win64.xml (or nvcc_msvc120.xml, or a similarly named file, compatible with your Visual Studio installation version; 11 for 2012 and 12 for 2013) from here
+matlabroot/toolbox/distcomp/gpu/extern/src/mex/win64 and into the KiloSort folder (or somewhere in your path). The included file with KiloSort will NOT be compatible with your local environment (unless you start changing paths inside it). 
 
 If your video card is also driving your display, you need to disable the Windows watchdog that kills any process occupying the GPU for too long. 
 start regedit,
@@ -32,6 +31,8 @@ In order to set the cache to 1GB use CUDA_CACHE_MAXSIZE 1073741824.
 Linux
 
 Install CUDA (should ask for a compatible recent version of gcc, will install Nvidia drivers if necessary).
+
+Try to run mexGPUall. If mexcuda gives you an error, try something along the following lines
 
 Append to /home/marius/.bashrc then logout/login:
 export CUDA_HOME=/usr/local/cuda-7.5 
