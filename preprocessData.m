@@ -54,8 +54,13 @@ NT       = ops.NT ;
 rez.ops         = ops;
 rez.xc = xc;
 rez.yc = yc;
-rez.xcoords = xcoords;
-rez.ycoords = ycoords;
+if exist('xcoords')
+   rez.xcoords = xcoords;
+   rez.ycoords = ycoords;
+else
+   rez.xcoords = xc;
+   rez.ycoords = yc;
+end
 rez.connected   = connected;
 rez.ops.chanMap = chanMap;
 rez.ops.kcoords = kcoords; 
