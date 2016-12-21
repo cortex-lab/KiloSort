@@ -32,7 +32,7 @@ ts = [1:1:nt0]';
 
 clear stimes
 for iNN = 1:size(rez.W,2)
-     stimes{iNN} = rez.st3pos(rez.st3pos(:,2)==iNN,1);
+     stimes{iNN} = rez.st3(rez.st3(:,2)==iNN,1);
 end
 %stimes = gtimes;
 
