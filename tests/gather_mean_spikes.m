@@ -31,10 +31,10 @@ Nchans = ops.Nchan;
 ts = [1:1:nt0]';
 
 clear stimes
-% for iNN = 1:size(rez.W,2)
-%     stimes{iNN} = rez.st3pos(rez.st3pos(:,2)==iNN,1);
-% end
-stimes = gtimes;
+for iNN = 1:size(rez.W,2)
+     stimes{iNN} = rez.st3pos(rez.st3pos(:,2)==iNN,1);
+end
+%stimes = gtimes;
 
 Wraw = zeros(nt0, Nchans, numel(stimes));
 for ibatch = 1:Nbatch    
