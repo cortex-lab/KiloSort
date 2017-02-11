@@ -30,6 +30,8 @@ In order to set the cache to 1GB use CUDA_CACHE_MAXSIZE 1073741824.
 
 Linux
 
+UPDATE: for recent video cards/drivers, please see Carl Schoonover's instructions here https://groups.google.com/forum/#!topic/phy-users/g0FSHRI0Nao.
+
 Install CUDA (should ask for a compatible recent version of gcc, will install Nvidia drivers if necessary).
 
 Try to run mexGPUall. If mexcuda gives you an error, try something along the following lines
