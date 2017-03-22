@@ -35,20 +35,35 @@ Kilosort is best used in conjunction with Phy. The .npy and .csv output files ca
 However, in some situations you might need to use the Matlab results structures. Here is an explanation of these variables, available inside the struct called "rez" 
 
 xc, yc: x and y coordinates of each channel on the probe, in the order of channels provided in the channel map (default is linear, 1:1:nChannels). 
+
 connected: whether a channel in the original binary dat is "connected", or "active". Inactive channels are ignored.
+
 Wrot: cross-channel whitening matrix. Wrot * high_pass_filtered_data = post_data, where post_data is the postprocessed data on which the Kilosort algorithm is applied. 
+
 WrotInv: is the matrix inverse of Wrot. WrotInv * post_data = high_pass_filtered_data
+
 ops: keeps all the configuration settings provided by the user, and cumulative information added throghout the Kilosort steps. 
+
 st: first column is the spike time in samples, second column is the spike template, third column is the extracted amplitude, and fifth column is the post auto-merge cluster (if you run the auto-merger). 
+
 mu: mean amplitude for each template
+
 U: low-rank components of the spatial masks for each template
+
 W: low-rank components of the temporal masks for each template
+
 dWU: average of a subset of spikes corresponding to each template. The low-rank decomposition of this matrix results in W and U. 
+
 Wraw: the spike template, un-whitened by the operation Wraw(:,:,n) = Wrotinv' * (U(:,n,:) * W(:,n,:)'), for each template n. 
+
 simScore: correlation between all pairs of templates.
+
 cProj: projections of each detected spike onto the principal components of the channels corresponding to the spike's assigned template. The channel order for each template is available in iNeigh.
+
 iNeigh: for each template, the channels with largest amplitudes are indexed in order (default 12). This indexing is used to sort coefficients in cProj. Notice this is a fundamentally sparse scheme: only the top channels for each template are stored. 
+
 cProjPC: projections of each detected spike onto the top templates most similar to the spike's assigned template. The nearest-template order for each template is available in iNeighPC.
+
 iNeighPC: for each template, the other templates with largest similarity are indexed in order (default 12). This indexing is used to sort coefficients in cProjPC. Notice this is a fundamentally sparse scheme: only the top closest template for each template are stored. 
 
 
