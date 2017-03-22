@@ -1,4 +1,4 @@
-### Fast spike sorting for hundreds of channels ###
+# Fast spike sorting for hundreds of channels #
 
 Implements an integrated template matching framework for detecting and clustering spikes from multi-channel electrophysiological recordings. Very fast when a GPU is available, but can also run on the CPU side. Described in this NIPS paper
 
@@ -16,7 +16,6 @@ If you are running on the GPU, you must run mexGPUall in the CUDA folder after s
 You can verify that the code has been installed correctly by running master_eMouse inside the eMouse folder. See first readme_eMouse.txt. You can also use these scripts to understand how to pass the right settings into Kilosort (will depend on your probe, channel map configuration etc), and what you should be seeing in Phy during manual cleanup of Kilosort results. There are many parameters of the simulation which you can tweak to make it harder or easier, and perhaps more similar to your own data. 
 
 To understand the parameters that can be adjusted in Kilosort, please refer to the example configuration files. The description of each parameter is inline with its assigned (default) setting, which you can change.  
-
 ### Integration with Phy GUI ###
 Kilosort provides a results file called "rez", where the first column of rez.st are the spike times and the second column are the cluster identities. However, the best way to use this software is together with [Phy](https://github.com/kwikteam/phy), which provides a manual clustering interface for refining the results of the algorithm. 
 
