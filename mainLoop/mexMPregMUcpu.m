@@ -11,9 +11,7 @@ fdata   = fft(data, [], 1);
 proj    = real(ifft(fdata .* fW(:,:), [], 1));
 
 if ops.Nrank > 1
-	youproj    = sum(reshape(proj, NT, nFilt, ops.Nrank),3);
-else
-    youproj = proj;
+	proj    = sum(reshape(proj, NT, nFilt, ops.Nrank),3);
 end
 Ci = bsxfun(@plus, proj, (mu.*lam)');
 Ci = bsxfun(@rdivide, Ci.^2,  1 + lam');
