@@ -10,8 +10,9 @@ Th      = Params(3);
 
 fdata   = fft(data, [], 1);
 proj    = real(ifft(fdata .* fW(:,:), [], 1));
-proj    = sum(reshape(proj, NT, nFilt, 3),3);
-
+if ops.Nrank > 1
+    proj    = sum(reshape(proj, NT, nFilt, ops.Nrank),3);
+end
 trange = int32([-(nt0-1):(nt0-1)]);
 
 xs      = zeros(Params(4), 1, 'single');

@@ -9,8 +9,12 @@ Th      = Params(3);
 pm      = Params(8);
 fdata   = fft(data, [], 1);
 proj    = real(ifft(fdata .* fW(:,:), [], 1));
-proj    = sum(reshape(proj, NT, nFilt, 3),3);
 
+if ops.Nrank > 1
+	youproj    = sum(reshape(proj, NT, nFilt, ops.Nrank),3);
+else
+    youproj = proj;
+end
 Ci = bsxfun(@plus, proj, (mu.*lam)');
 Ci = bsxfun(@rdivide, Ci.^2,  1 + lam');
 Ci = bsxfun(@minus, Ci, (lam .* mu.^2)');

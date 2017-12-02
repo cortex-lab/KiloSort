@@ -115,6 +115,7 @@ end
 %%
 Nchan = ops.Nchan;
 Nfilt = ops.Nfilt;
+Nrank = ops.Nrank;
 wPCA = ops.wPCA(:,1:3);
 Urec = reshape(U, Nchan, size(wPCA,2), Nfilt);
 
@@ -122,7 +123,7 @@ Urec= permute(Urec, [2 1 3]);
 Wrec = reshape(wPCA * Urec(:,:), nt0, Nchan, Nfilt);
 
 Wrec = gather_try(Wrec);
-Nrank = 3;
+
 W = zeros(nt0, Nfilt, Nrank, 'single');
 U = zeros(Nchan, Nfilt, Nrank, 'single');
 
