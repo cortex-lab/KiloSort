@@ -23,8 +23,7 @@ NOTE that you need to use a special branch of Phy with Kilosort. Instructions in
 
 You also need to install [npy-matlab](https://github.com/kwikteam/npy-matlab), to provide read/write functions from Matlab to Python, because Phy is written in Python.
 
-Detailed instructions for interpreting results are provided [here](https://github.com/kwikteam/phy-contrib/blob/master/docs/template-
-gui.md).
+Detailed instructions for interpreting results are provided [here](https://github.com/kwikteam/phy-contrib/blob/master/docs/template-gui.md).
 
 NOTE that if you run the auto-merge feature ("merge_posthoc2"), then the fifth column of rez.st contains the final cluster identities. This grouping is then exported to Phy and interpreted the same way a manual merge is interpreted. This means that you can still use Phy's functionality to break the cluster back up. 
 
