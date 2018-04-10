@@ -17,7 +17,7 @@ If you are running on the GPU, you must run mexGPUall in the CUDA folder after s
 
 1. Install matlab R2018a from www.mathworks.com. You can use older versions of matlab but see notes below. 
 2. Install cuda 9.0 from https://developer.nvidia.com/cuda-90-download-archive. This version of CUDA works with Matlab R2018a. For older versions of matlab, skip this for now, and at a later stage it will tell you what version of CUDA you need. Then search on google or the NVIDIA site for that version.
-3. Install visual studio 2013 community from https://www.visualstudio.com/vs/older-downloads/. Installing this should come after installing matlab or else matlab won't find the compiler, and you won't see it in the mex setup list (see below). You should be able to install again on top of an old installation, if you already had it from before matlab installation. 
+3. Install visual studio 2013 community from https://www.visualstudio.com/vs/older-downloads/. Installing this should come after installing matlab or else matlab may not find the compiler, in which case you won't see it in the mex setup list (see below). You should be able to install again on top of an old installation, if you already had it from before matlab installation. 
 4. Now in matlab, choose the compiler:.
 ```matlab
 >> mex -setup C++ % gives an output like below:
