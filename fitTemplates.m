@@ -33,26 +33,40 @@ switch ops.initialize
         dWU    = WUinit(:,:,1:Nfilt);
         %             dWU = alignWU(dWU);
     otherwise
-        initialize_waves0;
-        ipck = randperm(size(Winit,2), Nfilt);
-        W = [];
-        U = [];
-        for i = 1:Nrank
-            W = cat(3, W, Winit(:, ipck)/Nrank);
-            U = cat(3, U, Uinit(:, ipck));
-        end
-        W = alignW(W, ops);
-        
-        dWU = zeros(nt0, Nchan, Nfilt, 'single');
-        for k = 1:Nfilt
-            wu = squeeze(W(:,k,:)) * squeeze(U(:,k,:))';
-            newnorm = sum(wu(:).^2).^.5;
-            W(:,k,:) = W(:,k,:)/newnorm;
+        if ~isempty(getOr(ops, 'initFilePath', [])) && getOr(ops, 'saveInitTemps', 0)            
+            load(ops.initFilePath);
+            dWU = WUinit(:,:,1:Nfilt);
+        else
+            initialize_waves0;
             
-            dWU(:,:,k) = 10 * wu;
+            ipck = randperm(size(Winit,2), Nfilt);
+            W = [];
+            U = [];
+            for i = 1:Nrank
+                W = cat(3, W, Winit(:, ipck)/Nrank);
+                U = cat(3, U, Uinit(:, ipck));
+            end
+            W = alignW(W, ops);
+            
+            dWU = zeros(nt0, Nchan, Nfilt, 'single');
+            for k = 1:Nfilt
+                wu = squeeze(W(:,k,:)) * squeeze(U(:,k,:))';
+                newnorm = sum(wu(:).^2).^.5;
+                W(:,k,:) = W(:,k,:)/newnorm;
+                
+                dWU(:,:,k) = 10 * wu;
+            end
+            WUinit = dWU;
         end
-        WUinit = dWU;
 end
+if getOr(ops, 'saveInitTemps', 1) 
+    if ~isempty(getOr(ops, 'initFilePath', [])) 
+        save(ops.initFilePath, 'WUinit') 
+    else
+       warning('cannot save initialization templates because a savepath was not specified in ops.saveInitTemps'); 
+    end
+end
+
 [W, U, mu, UtU, nu] = decompose_dWU(ops, dWU, Nrank, rez.ops.kcoords);
 W0 = W;
 W0(NT, 1) = 0;
