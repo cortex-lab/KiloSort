@@ -33,7 +33,7 @@ switch ops.initialize
         dWU    = WUinit(:,:,1:Nfilt);
         %             dWU = alignWU(dWU);
     otherwise
-        if ~isempty(getOr(ops, 'initFilePath', [])) && getOr(ops, 'saveInitTemps', 0)            
+        if ~isempty(getOr(ops, 'initFilePath', [])) && ~getOr(ops, 'saveInitTemps', 0)            
             load(ops.initFilePath);
             dWU = WUinit(:,:,1:Nfilt);
         else
@@ -59,7 +59,7 @@ switch ops.initialize
             WUinit = dWU;
         end
 end
-if getOr(ops, 'saveInitTemps', 1) 
+if getOr(ops, 'saveInitTemps', 0) 
     if ~isempty(getOr(ops, 'initFilePath', [])) 
         save(ops.initFilePath, 'WUinit') 
     else
