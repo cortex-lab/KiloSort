@@ -9,9 +9,18 @@ function [spikeTimes, clusterIDs, amplitudes, templates, templateFeatures, ...
 % spikeTimes will be in samples, not seconds
 
 
+outputs = {'amplitudes.npy', 'channel_map.npy', 'channel_positions.npy', 'pc_features.npy', ...
+           'pc_feature_ind.npy', 'similar_templates.npy', 'spike_clusters.npy', 'spike_templates.npy', ...
+           'spike_times.npy', 'templates.npy', 'templates_ind.npy', 'template_features.npy', ...
+           'template_feature_ind.npy', 'whitening_mat.npy', 'whitening_mat_inv.npy'};
+
 fs = dir(fullfile(savePath, '*.npy'));
 for i = 1:length(fs)
-   delete(fullfile(savePath, fs(i).name)); 
+    fname = fs(i).name;
+    % don't delete .npy files which have nothing to do with us
+    if find(strcmp(fname, outputs))
+        delete(fullfile(savePath, fname));
+    end
 end
 if exist(fullfile(savePath, '.phy'), 'dir')
     rmdir(fullfile(savePath, '.phy'), 's');
