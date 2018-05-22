@@ -12,6 +12,11 @@ chsmooth  = 1; % smooth the noise across channels too, with this sig (increase t
 amp_std   = .25; % standard deviation of single spike amplitude variability (increase to make it harder, technically std of gamma random variable of mean 1) (.25)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+if useGPU
+    parallel.gpu.rng('default');
+    parallel.gpu.rng(10191);  % set the seed of the random number generator
+end
+
 rng('default');
 rng(101);  % set the seed of the random number generator
 
