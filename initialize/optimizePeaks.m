@@ -63,7 +63,7 @@ for i = 1:10
     for ibatch = 1:nbatch
         % find clusters
         [b, e] = range_idx(ibatch, nSpikesPerBatch, nspike);
-        arr_rows = min([nspike, nSpikesPerBatch]);
+        arr_rows = e - b + 1;
         if ops.GPU
             clips = reshape(gpuArray(uproj(b:e, :)), arr_rows, nProj);
         else
