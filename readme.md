@@ -12,7 +12,7 @@ Implements an integrated template matching framework for detecting and clusterin
 Pachitariu M, Steinmetz NA, Kadir S, Carandini M and Harris KD (2016). Fast and accurate spike sorting of high-channel count probes with Kilosort. Advances In Neural Information Processing Systems. 4448-4456
 https://papers.nips.cc/paper/6326-fast-and-accurate-spike-sorting-of-high-channel-count-probes-with-kilosort
 
-The following preprint contains slightly different information:
+The following preprint contains slightly more information:
 
 Pachitariu M, Steinmetz NA, Kadir S, Carandini M and Harris KD (2016). Kilosort: realtime spike-sorting for extracellular electrophysiology with hundreds of channels. 
 bioRxiv dx.doi.org/10.1101/061481, [link](http://biorxiv.org/content/early/2016/06/30/061481). 
