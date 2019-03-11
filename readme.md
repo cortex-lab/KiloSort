@@ -1,8 +1,10 @@
 ## Kilosort2 has just been released! Try it out [here](https://github.com/MouseLand/Kilosort2). ##
 
-
-
-
+  
+  
+   
+  
+  
 # Fast spike sorting for hundreds of channels #
 
 Implements an integrated template matching framework for detecting and clustering spikes from multi-channel electrophysiological recordings. Very fast when a GPU is available, but can also run on the CPU side. Described in this NIPS paper
