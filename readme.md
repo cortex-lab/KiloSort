@@ -1,4 +1,4 @@
-## Kilosort2 has just been released! Try it out [here](https://github.com/MouseLand/Kilosort2). ##
+## Kilosort2 has been released! Try it out [here](https://github.com/MouseLand/Kilosort2). ##
 
   
   
