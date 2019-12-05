@@ -29,8 +29,10 @@ end
 spikeTimes = uint64(rez.st3(:,1));
 % [spikeTimes, ii] = sort(spikeTimes);
 spikeTemplates = uint32(rez.st3(:,2));
+clusterIDs = spikeTemplates;
 if size(rez.st3,2)>4
     spikeClusters = uint32(1+rez.st3(:,5));
+    clusterIDs = spikeClusters;
 end
 amplitudes = rez.st3(:,3);
 
