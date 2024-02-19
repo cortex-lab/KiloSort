@@ -72,7 +72,7 @@ NOTE that if you run the auto-merge feature ("merge_posthoc2"), then the fifth c
 
 ### Matlab output structures ###
 
-Kilosort is best used in conjunction with Phy. The .npy and .csv output files can then be loaded back into Matlab, following these general instructions: https://github.com/kwikteam/phy-contrib/blob/master/docs/template-gui.md. For a full example, see the tutorial with Neuropixels results data available here: http://data.cortexlab.net/singlePhase3/ and here: http://data.cortexlab.net/dualPhase3/. 
+Kilosort is best used in conjunction with Phy. The .npy and .csv output files can then be loaded back into Matlab, following these general instructions: https://github.com/kwikteam/phy-contrib/blob/master/docs/template-gui.md. For a full example, see the tutorial with Neuropixels recordings obtained [with a single probe](https://rdr.ucl.ac.uk/articles/dataset/Recording_with_a_Neuropixels_probe/25232962/1) and [with two simultaneous probes](https://rdr.ucl.ac.uk/articles/dataset/Simultaneous_recording_with_two_Neuropixels_probes/25226867/1). 
 
 However, in some situations you might need to use the Matlab results structures. Here is an explanation of these variables, available inside the struct called "rez" 
 
